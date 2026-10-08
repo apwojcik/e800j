@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,200 +18,45 @@
  *
  */
 
-#ifndef __e800j_h__
-#define __e800j_h__
-
-#include "z80.h"
-#include "i8251.h"
-
-#define F_ROM_NAME_LENGTH 256
-
-typedef struct
-{
-    /* ekran */
-    int wwidth,wheight;	/* rozmiary ekranu w trybie okna */
-    int fwidth,fheight;	/* rozmiary ekranu w trybie full-screen  */
-    byte bpp;		/* ilo¶æ bitów/pixel */
-
-    byte use_sdl:1;	/* ustawione przy korzystaniu  z SDL     */
-    byte use_gtk:1;	/* ustawione przy korzystaniu  z GDK     */
-    byte bpalette:1;	/* zmiana palety dla obrze¿a w trybie 8bpp */    
-
-    byte disk_version:1;  /* wersja dyskowa / bezdyskowa   */
-    byte spec_128_memo:1; /* emulacja pamiêci SPECTRUM 128 */
-    byte timex_screen:1;  /* emulacja ekranu TIMEX         */
-    byte sound_ay:1;	  /* emulacja chipu AY-38910A      */
-    byte sound_zx_mute:1; /* wy³±czenie g³o¶niczka ZX SPEC */
-    
-    /* od¶wiezania  */
-    int scr_rfsh;	/* FPS               */
-    int blink_rfsh;	/* co ile ms zmieniæ FLASH ? */
-    int cpu_rfsh;	/* wywo³ania dla CPU */
-    int cpu_tick;	/* ilo¶æ taktów CPU na jedno od¶wierzenie*/
-    int int_rfsh;	/* wywo³ania dla INT - co ile taktów CPU ma wykonaæ INT */
-    int int_tick;	/* wywo³ania dla INT [ms]*/
-    int fdc_rfsh;	/* wywo³ania dla FDC */
-
-    char bas0_fname[F_ROM_NAME_LENGTH];	/* bas 0 */
-    char bas1_fname[F_ROM_NAME_LENGTH];	/* bas 1 */
-    char boot_fname[F_ROM_NAME_LENGTH]; /* boot  */
-
-} e8_config;
-
+#ifndef __E800J_H__
+#define __E800J_H__
+#include "z80_cpu.h"
+#include "zx_scrn.h"
+#include "e800j_sound.h"
+#include "e800j_kbrd.h"
+#include "e800j_fdc.h"
 
 typedef struct
 {
-    byte *screen[2];
-    byte blink:1;
-    byte :7;
+/* elementy komputera */
+    z80     *cpu;
+    zx_scrn *zx;
+    kbrd    *kb;
+    sound   *snd;
+    e800j_fdc *fdc;
+/* pamiêæ */
+    char    *ram;
+    char    *rom;
+    int     ram_size;
+    int	    rom_size;
 
-} tv_screen;
+    char    tcpu;
+    void    *t1;
+    int     cpu_rfsh;
+    int     ifreq;	/* co ile taktów CPU ma zostaæ wywo³ane przerwanie */
+    int     tr;         /* ilo¶æ taktów/wywo³anie   */    
+/* porty I/O */
+    uchar   port_f7;    /* port sterowania pamiêci± */
+    uchar   port_fe;    /* port g³o¶niczka, koloru ramki, wyj magnetofonu */
+/* inne */
+    ushort  mem_mask;   /* maska ostatnich 3 bitów adresu PROM 'MEM' - A6,A7,A8 */
+/* JUNET */
+    ushort  junet_addr; /* adres komputera w sieci junet */
 
-typedef struct
-{
-    /* zawartosci pamiêci sta³ych */
-    byte *rom_bas0;		/* ROM BAS0 E800 Junior 					*/
-    byte *rom_bas1;		/* ROM BAS1 E800 Junior 					*/
-    byte *rom_boot;		/* ROM BOOT E800 Junior 					*/
-    byte *prom_mem;		/* PROM MEM1            					*/
-    byte *prom_jio;		/* PROM J/O1            					*/
-    byte *eprom_tv;		/* EPROM TV             					*/
-    word addr_prom_mask;	/* maska z dodatkowymi 3 bitami sterowania bankami ROM 		*/
-    byte *ram;			/* 64kB RAM             					*/
+    char debug;		/* true -> uruchamia w trybie komend */
+} elwro;
 
-    /* rejestry  */
-    byte reg175;		/* warto¶æ górnych 4 bitów rejestru konfiguracji pamiêci    	*/
-    byte reg373;		/* OUT #FE - kolor ramki, wyjscie na magnetofon, glosniczek 	*/
-    
-    /* flagi operacji na  rejestrach */
-    byte wr175:1;		/* nastapi³ zapis do rejestru 74LS175 - konfiguracja pamiêci	*/
-    byte wr373:1;    		/* nastapi³ zapis do rejestru 74LS373 - port wyj¶ciowy #FE	*/
-    byte wr55:1;		/* nast±pi³ zapis do portu 8255	- LOGABAX			*/
-    byte wr51:1;		/* nast±pi³ zapis do portu 8251	- JUNET				*/
-    byte wr72:1;		/* nast±pi³ zapis do portu 8272	- kontroler FDD			*/
-    byte wrFDC:1;		/* nast±pi³ zapis do karty FDC na porcie #F1			*/
+extern void zx_main(elwro *);
 
-    /* jednobitowe linie wejscia/wyjscia */
-    byte tape_in:1;		/* wejscie  magnetofonu / sieci spektrum			*/
-    byte tape_out:1;		/* wyjscie  magnetofonu						*/
-    byte spkr_out:1;		/* wyjscia  glosnika						*/
-
-/* inne flagi */
-    byte :7;    
-
-    /* struktura sterowania ekranem */        
-    tv_screen	scr;		/* pamieæ ekranu, atrybuty itp					*/
-
-    /* równoleg³y port wej¶cia/wyj¶cia  */
-//    _8255	i8255;		/* drukarka (standard LOGABAX), manipulator (np KEMSTON JSTK)	*/
-
-    /* szeregowy port wejscia/wyjscia   */
-    i8251	*i8251p;	/* sieæ JUNET							*/
-
-    /* karta FDC		*/
-//    str_fdc	fdc;		/* kontroler stacji dysków					*/
-    void	*gui;		/* struktura GUI */
-    void	*cpu;    
-
-    e8_config   *config;
-} e800j;
-
-
-
-#define CONFIG_FNAME "./elwro.cfg"
-
-#define COL_NRM  0xb000
-#define COL_BRT  0xf000
-#define COL_WHT	 0xe000
-
-#define SDL_COL_NRM  0xb0
-#define SDL_COL_BRT  0xf0
-#define SDL_COL_WHT  0xe0
-
-#define ZX_PALETTE	{   {0x0000,0x0000 ,0x0000 ,0x0000 },\
-			    {0x0000,0x0000 ,0x0000 ,COL_NRM},\
-			    {0x0000,COL_NRM,0x0000 ,0x0000 },\
-			    {0x0000,COL_NRM,0x0000 ,COL_NRM},\
-			    {0x0000,0x0000 ,COL_NRM,0x0000 },\
-			    {0x0000,0x0000 ,COL_NRM,COL_NRM},\
-			    {0x0000,COL_NRM,COL_NRM,0x0000 },\
-			    {0x0000,COL_WHT,COL_WHT,COL_WHT},\
-							     \
-    			    {0x0000,0x0000 ,0x0000 ,0x0000 },\
-			    {0x0000,0x0000 ,0x0000 ,COL_BRT},\
-			    {0x0000,COL_BRT,0x0000 ,0x0000 },\
-			    {0x0000,COL_BRT,0x0000 ,COL_BRT},\
-			    {0x0000,0x0000 ,COL_BRT,0x0000 },\
-			    {0x0000,0x0000 ,COL_BRT,COL_BRT},\
-			    {0x0000,COL_BRT,COL_BRT,0x0000 },\
-			    {0x0000,COL_BRT,COL_BRT,COL_BRT},\
-			    {0x0000,0x0000 ,0x0000 ,0x0000 }}
-			    
-#define SDL_ZX_PALETTE	{   {0x00 ,0x00 ,0x00 },\
-			    {0x00 ,0x00 ,SDL_COL_NRM},\
-			    {SDL_COL_NRM,0x00 ,0x00 },\
-			    {SDL_COL_NRM,0x00 ,SDL_COL_NRM},\
-			    {0x00 ,SDL_COL_NRM,0x00 },\
-			    {0x00 ,SDL_COL_NRM,SDL_COL_NRM},\
-			    {SDL_COL_NRM,SDL_COL_NRM,0x00 },\
-			    {SDL_COL_WHT,SDL_COL_WHT,SDL_COL_WHT},\
-							     \
-    			    {0x00 ,0x00 ,0x00 },\
-			    {0x00 ,0x00 ,SDL_COL_BRT},\
-			    {SDL_COL_BRT,0x00 ,0x00 },\
-			    {SDL_COL_BRT,0x00 ,SDL_COL_BRT},\
-			    {0x00 ,SDL_COL_BRT,0x00 },\
-			    {0x00 ,SDL_COL_BRT,SDL_COL_BRT},\
-			    {SDL_COL_BRT,SDL_COL_BRT,0x00 },\
-			    {SDL_COL_BRT,SDL_COL_BRT,SDL_COL_BRT},\
-			    {0,SDL_COL_BRT,0}}
-
-/* testy bitów rejestru konfiguracji pamiêci 74LS157 */
-#define MEM157_JUNET(r)	(r & 0x10)	/* czy ustawiony bit odczytu adresu w sieci   	*/
-#define MEM157_RELOK(r)	(r & 0x20)	/* czy ustawiony bit relokacji pamiêci ekranu 	*/
-#define MEM157_BOOT(r)	(r & 0x40)	/* sprzêtowe maskowanie NMI, od 8251          	*/
-#define MEM157_BIT7(r)	(r & 0x80) 	/* ósmy bit rejestru 				*/
-#define MEM157_BIT67(r)	(r & 0xc0) 	/* ósmy i siódmy bit rejestru 			*/
-#define MEM157_PROM(r)	((MEM157_BIT67(r) >> 1) | (MEM157_RELOK(r) << 3)) /* maska dla adresu prom 	*/
-
-#define Z80E800ROM(zi)	((e800j *)zi->cust)
-
-#define MEM_ROM1(a)	(!(a & 0x01))	/* rom1 'BAS0' za³±czony */
-#define MEM_ROM2(a)	(!(a & 0x10))	/* rom2 'BOOT' za³±czony */
-#define MEM_ROM3(a)	(!(a & 0x02))	/* rom3 'BAS1' za³±czony */
-#define MEM_STAT(a)	(!(a & 0x04))	/* zapis do bufora atrybutów ??*/
-#define MEM_DRAM(a)	(!(a & 0x08))	/* odczyt z DRAM         */
-#define MEM_IAHR(a)	(!(a & 0x20))	/* RST #18               */
-#define ROM_ADDR(a)	(a & 0x1fff)	/* maska adresu          */
-
-#define IO_CFE(a)	(!( a & 0x01))	/* klawiatura           */
-#define IO_CF7(a)	(!( a & 0x02))  /* konfiguracja pamiêci */
-#define IO_CS55(a)	(!( a & 0x04))  /* konfiguracja pamiêci */
-#define IO_CSFDC(a)	(!( a & 0x08))  /* sterowanie FDC       */
-#define IO_CS51(a)	(!( a & 0x10))  /* port szeregowy 8251  */
-#define IO_CF1(a)	(!( a & 0x20))  /* ???                  */
-#define IO_IAL(a)	(!( a & 0x40))  /* RST #18              */
-
-#define A0_A8(a)	(a & 0x1ff)
-#define RST_18		0x18
-#define TEST_A9(a)	(a & 0x200)
-
-#define E800J(a)	((e800j *)a)
-#define A0(a)		(a & 0x01)
-#define A0(a)		(a & 0x01)
-#define A1_A0(a)	(a & 0x03)
-#define A9(a)		(a & 0x0200)
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -19,613 +19,983 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "z80.h"
-#include "z80_cpu.h"
-#include "z80_instr.h"
+#include <assert.h>
+#include <ctype.h>
+#include "z80_core.h"
+#include "z80_dtbl.h"
 #include "z80_debug.h"
 
-void z80_debugger_deasm(Z80 *z, int lines, int pc);
+char fbytes[32];
 
-/* rozwija skrót ³±ñcucha (je¶li taki jest), podany jako parametr w makrze DEBUG przy dekodowaniu intsrukcji */
-char *z80_debugger_decode_string(Z80 *z, char *str, char *tmpstr)
+char* blk[] = DEB_BLOCK_TAB;
+char* ddt[] = DEB_DEC_TABL;
+char* rX[] = TAB_REGSX_NME;
+char* r8[] = TAB_REGS8_NME;
+char* rcnd[] = TAB_RCND_NME;
+
+void dbg_deasm(dbg*);
+void dbg_test(dbg *, unsigned char);
+void dbg_input(dbg *);
+void dbg_cmd(dbg *d);
+
+void dbg_quit(dbg *d);
+void dbg_help(dbg *d);
+void dbg_poke(dbg *d); 
+void dbg_trace(dbg *d);
+void dbg_proc(dbg *d);
+void dbg_var(dbg *d);
+void dbg_memo(dbg *d);
+void dbg_stck(dbg *d);
+void dbg_dasm(dbg *d);
+void dbg_trap(dbg *d);
+void dbg_goto(dbg *d);
+void dbg_regs(dbg *d);
+void dbg_iout(dbg *d);
+void dbg_iin(dbg *d);
+void dbg_bps(dbg *d);
+void dbg_dbps(dbg *d);
+void dbg_bp_delete_all(dbg *d);
+void dbg_bp_delete_first(dbg *d);
+void dbg_sregs(dbg *d);
+void dbg_deasembly(dbg *d);
+
+/********************************************************************************************/
+/* zwraca 1 je¶li ³añcuch t nie jest liczb± */
+char dbg_dcheck(char *t)
 {
-    if(!str) return NULL;
-    switch(*str){
-	case 'U': str = (z->DD_FD ? (z->xy ? "IY":"IX"):"HL"); break;
-	case 'V': str = (z->DD_FD ? z80_hexU(DD,tmpstr):"  "); break;
-	case 'W': str = z80_hex8((z->NNp >> 8) & 0xff,tmpstr); break;
-	case 'K': str = z80_hex8(z->NNp & 0xff,tmpstr); break;
-	case 'O': str = z80_hex8(z->Np,tmpstr); break;
-	case 'Q': str = z80_hex16(PC + (char)z->Np,tmpstr); break;
-	case 'G': str = z80_hex16(z->NNp,tmpstr); break;
-	case 'T': str = z->DD_FD ? z80_hexRTI(DD,z->xy ? "IY":"IX",tmpstr) : "HL   "; break;
-	case 'I': str = z->DD_FD ?  str : str + 2; break;
-	default : str = tmpstr; *str = 0;
-    }
+    return 0;
+}
+
+char *dbg_oc2hexstr(uchar n, char *t)
+{
+    t[0] = n >> 4;
+    t[1] = n & 0x0f;
+    t[2] = '\0';
+    t[0] = t[0] >= 10 ? 'A' + t[0] - 10 : '0' + t[0];
+    t[1] = t[1] >= 10 ? 'A' + t[1] - 10 : '0' + t[1];
+    return t;
+}
+
+char *dbg_xc2hexstr(ushort n, char *t)
+{
+    char t0[3]="", t1[3]="";
+    sprintf(t,"%s%s",dbg_oc2hexstr(n >> 8,t0),dbg_oc2hexstr(n & 0xff,t1));
+    return t;
+}
+
+char *dbg_equalize(char *str,int n)
+{
+    int k = strlen(str);    
+    int i;
+    for(i=k; i < n; i++) strcat(str," ");
     return str;
 }
 
-void z80_debug(Z80 *z, char *str, char *a, char *b, char class);
-
-void z80_set_debug(Z80 *z,char fl)
-{ 
-    z->deb_on = fl; 
-    z->act_freq = fl ? 1 : z->lp_freq;    
-}
-
-void z80_debug_reset(Z80 *z)
+void dbg_resolver(z80 *z, char *code, char *str)
 {
-    void *in,*out,*ex;
+    unsigned int i,j=0,k;
+    char xn[8]="", kn[8]="",fn[8]="";
+    if(code==NULL) return;
+    if(code[0]=='\0') return;
+    for(i=0; i < strlen(code); i++){
+	if(code[i] == '%'){
+	    i++;
+	    switch(code[i]){
+		case 'r': strcat(str + j, r8[z->reg80]); j += strlen(str+j); break;
+		case 'R': strcat(str + j, rX[z->regx0]); j += strlen(str+j); break;
+		case 'z': strcat(str + j, r8[z->reg81]); j += strlen(str+j); break;
+		case 'Z': strcat(str + j, rX[z->regx1]); j += strlen(str+j); break;
+		case 'n': sprintf(kn,"$%s",dbg_oc2hexstr(z->dd,xn)); strcat(str + j, kn); 
+			  j += strlen(str+j); break;
+		case 'N': sprintf(kn,"$%s",dbg_xc2hexstr(z->nn,xn)); strcat(str + j, kn); 
+			  j += strlen(str+j); break;
+		case 'c': strcat(str + j, rcnd[z->reg80]); if(*rcnd[z->reg80]) strcat(str + j, ","); 
+			  j += strlen(str+j); break;
+		case 'm': strcat(str + j, rX[z->regx0]); 
+			  if((z->regx0 == RIX)||(z->regx0 == RIY)){
+			    k = z->dd < 0 ? -z->dd:z->dd; 
+			    sprintf(kn,"%s$%s",z->dd < 0 ? "-":"+",dbg_oc2hexstr(k,fn));
+			    strcat(str + j, kn);
+			  }
+		          j += strlen(str+j); break;
+		case 'b': kn[0]='0'+(z->reg81 & 0x07);kn[1]='\0'; strcat(str + j, kn); 
+			  j += strlen(str+j); break;
+		case 'f': sprintf(kn,"$%s",dbg_oc2hexstr(z->reg80,xn)); strcat(str + j, kn); 
+			  j += strlen(str+j); break;
 
-/*return;*/
-    if(!z->debugger) return;
-    ex = DEB(z)->exit;
-    out = DEB(z)->output;
-    in = DEB(z)->input;
-    memset(z->deb_struct, 0, sizeof(Z80_DEB));
-    z->deb_par_0 = z->deb_par_1 = z->deb_par_2 = NULL;
-    z->deb_par_3 = z->deb_class = z->NNp = z->Np = 0;
-    z->deb_dry   = z->debug_int = z->deb_halt = 0;
-    z->deb_on = 0;
-    DEB(z)->input = in;
-    DEB(z)->output = out;
-    DEB(z)->exit = ex;    
-    DEB(z)->init=1;
-    z->act_freq=z->lp_freq;
-}
+		case 'w': strcat(str + j, blk[(int)z->dd]); j += strlen(str+j); break;
 
-void z80_deb_call(void *zz, char call)
-{
-    Z80 *z=zz;
-
-    if(!z->deb_struct) return;
-
-    switch(call){
-	case 0: z80_debug_reset(z); break;
-	case 1: z80_debug(z,z->deb_par_0, z->deb_par_1, z->deb_par_2, z->deb_par_3); break;
-	case 2: z->deb_class=0xff;z80_debugger_call(z);	break;
-    }
-
-}
-
-void z80_debugger_init(Z80 *z, Z80_DEB *deb, void (*deb_in)(char *), void (*deb_out)(char *), void (*exit_f)(void))
-{
-    if(!z) z = z80_get_struct();
-    z->deb_struct = deb;
-    if(deb){    
-	deb->input  = deb_in;
-	deb->output = deb_out;	
-	deb->exit   = exit_f;
-	z80_debug_reset(z);
-    } else printf("Wrn: deb_struct == NULL !");
-    z->debugger = z80_deb_call;
-}
-
-char z80_debug_test_break(Z80 *z)
-{
-    if(!DEB(z)) return 0;
-/*
-    return ((z->PCp == DEB(z)->addr_brk)||
-	    (z->PCp >= DEB(z)->addr_ghe)||
-	    (z->PCp <= DEB(z)->addr_gle)
-           ) && (DEB(z)->fbreak);
-*/
-    return ((z->old_pc == DEB(z)->addr_brk)
-//	    (z->old_pc >= DEB(z)->addr_ghe)
-//	    (z->old_pc <= DEB(z)->addr_gle)
-           ) && (DEB(z)->fbreak);
-
-}
-
-void z80_debug(Z80 *z, char *str, char *a, char *b, char class)
-{
-    char par_a_str[16];
-    char par_b_str[16];    
-    
-    char tmpstr0[256];
-    char tmpstr1[80];
-    char tmpstr2[256];
-    char *hdr="Adres         Instrukcja         AF | BC | DE | HL | AF'| BC'| DE'| HL'| IX | IY | SP |SZHPNC| I| R\n";
-    char *tmpstr3=hdr;
-
-
-
-
-    if(z->DD_FD) z->old_pc--;
-    if((DEB(z)->cnt >= DEB(z)->instr)&&(DEB(z)->fcnt)){ z->deb_halt=1; DEB(z)->debug_print=1;}
-    
-z->trap = z80_debug_test_break(z);
-    
-    if(z->trap){
-	 z->deb_halt=1; 
-	 DEB(z)->debug_print=1;
-	 DEB(z)->addr_brk = DEB(z)->addr_ghe = DEB(z)->addr_gle = 0x0000;
-    }
-    if(DEB(z)->debug_print){
-	memset(tmpstr0,0,sizeof(tmpstr0));
-	memset(tmpstr1,0,sizeof(tmpstr1));
-	memset(tmpstr2,0,sizeof(tmpstr2));
-	memset(par_a_str,0,sizeof(par_a_str));
-	memset(par_b_str,0,sizeof(par_b_str));
-
-	/* zdekodowanie parametrów - je¶li potrzeba */
-	a = z80_debugger_decode_string(z, a, par_a_str);
-	b = z80_debugger_decode_string(z, b, par_b_str);
-
-	if(!DEB(z)->hdr) tmpstr3="\0";
-	DEB(z)->hdr=0;
-	sprintf(tmpstr0,str,a,b);
-	sprintf(tmpstr1,"%4x %s",z->old_pc,tmpstr0);
-	if(!z->deb_dry){
-	    sprintf(tmpstr2,"\t%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%i%i%i%i%i%i|%2x|%2x",
-		AF,BC,DE,z->Alt ? z->HLr_:z->HLr, 
-		z->AltAF ? z->AFr : z->AFr_,
-		z->Alt ? z->BCr:z->BCr_,
-		z->Alt ? z->DEr:z->DEr_,
-		z->Alt ? z->HLr:z->HLr_, 
-		IX,IY,SP, GET_SF,GET_ZF,GET_HF,GET_PF,GET_NF,GET_CF,I,R );
-	    DEB(z)->deasm = z->old_pc;
-	    z->debug_int=1;
+	    }
+	    continue;
 	}
-	sprintf(tmpstr0,"%s%s%s\n",tmpstr3,tmpstr1,tmpstr2);
-	DEB(z)->output(tmpstr0);
+	str[j++] = code[i];
     }
-    DEB(z)->debug_print=0;
-    if((DEB(z)->fprint) && (DEB(z)->fbreak)) DEB(z)->debug_print=1;
 }
 
-char tmpstr0[8];
-char tmpstr1[8];
-
-char zhex(byte data)
+void dbg_addmach(dbg *deb, uchar n)
 {
-    data &= 0x0f;
-    return (data > 9) ? 'a' - 10 + data : '0' + data;
+    /* je¶li wiêcej ni¿ MAX_BYTES zawijaj */
+    if(deb->len >= MAX_BYTES-1) deb->len = 0;
+    dbg_oc2hexstr(n, deb->mach + deb->len);
+    deb->len += 2;
 }
 
-char *z80_hex8(byte data,char *tmpstr)
+void dbg_call(dbg *deb, uchar mode, uchar data)
 {
-    *tmpstr = zhex((data >> 4) & 0x0f);
-    *(tmpstr+1) = zhex( data & 0x0f);    
-    *(tmpstr+2) = 0;
-    return tmpstr;
-}
-
-char *z80_hex16(word data,char *tmpstr)
-{
-    *tmpstr = zhex((data >> 12) & 0x0f);
-    *(tmpstr+1) = zhex((data >> 8) & 0x0f);    
-    *(tmpstr+2) = zhex((data >> 4) & 0x0f);    
-    *(tmpstr+3) = zhex(data & 0x0f);    
-    *(tmpstr+4) = 0;
-    return tmpstr;
-}
-
-char *z80_hexU(byte data,char *tmpstr)
-{
-    *tmpstr = '+';
-    if(data & 0x80) {
-	data = ~data + 1;
-	*tmpstr = '-';
+    deb->z->exit=deb->console;
+    dbg_test(deb, mode);
+    if(mode == D_FETCH){
+	dbg_addmach(deb, data);
+	return;
     }
-    data &= 0x7f;
-    *(tmpstr+1) = zhex((data >> 4) & 0x0f);
-    *(tmpstr+2) = zhex( data  & 0x0f);    
-    *(tmpstr+3) = 0;
-    return tmpstr;
-}
+    /* jesli instrukcja w toku wyjd¼ */
+    if(deb->z->ipend) return;
 
-char *z80_hexRTI(byte data,char *rg,char *tmpstr)
-{
-    *(tmpstr + 0) = *rg;
-    *(tmpstr + 1) = *(rg+1);
-    *(tmpstr + 2) = '+';
-    if(data & 0x80) {
-	data = ~data + 1;
-	*(tmpstr + 2) = '-';
+    if(mode == D_PRE){
+	if(deb->console) dbg_input(deb);
+	deb->z->exit=deb->console;
+	return;
+    } 
+
+    if(deb->deasm){
+	dbg_deasm(deb);
+	if(deb->out) deb->out(deb->line);
     }
-    data &= 0x7f;
-    *(tmpstr+3) = zhex((data >> 4) & 0x0f);
-    *(tmpstr+4) = zhex( data & 0x0f);    
-    *(tmpstr+5) = 0;
-    return tmpstr;
+
+    /* zakoñczenie deasemblacji instrukcji */
+    deb->len=0;
+    deb->mach[0]=0;
+    deb->line[0]=0;
 }
 
-byte f_z_8(byte c)
+char *dbg_getregs(dbg *d, char *str)
 {
-    if( c < 32 ) c='.';
-    if(c > 127 ) c='.';
-    return c;
+    char af[5], bc[5], de[5], hl[5], af_[5],bc_[5],de_[5],hl_[5];
+    char ix[5], iy[5], sp[5], pc[5], i[3],r[3];
+
+    if(d->noregs) return str;
+
+    dbg_xc2hexstr(*d->z->AF_r,af);
+    dbg_xc2hexstr(*d->z->BC_r,bc);
+    dbg_xc2hexstr(*d->z->DE_r,de);
+    dbg_xc2hexstr(*d->z->HL_r,hl);
+
+    if(d->z->alt_af)
+	dbg_xc2hexstr(d->z->AFs0,af_);
+    else
+	dbg_xc2hexstr(d->z->AFs1,af_);
+
+    if(d->z->alt_rg){
+	dbg_xc2hexstr(d->z->BCs0,bc_);
+	dbg_xc2hexstr(d->z->DEs0,de_);
+	dbg_xc2hexstr(d->z->HLs0,hl_);
+    }else{
+	dbg_xc2hexstr(d->z->BCs1,bc_);
+	dbg_xc2hexstr(d->z->DEs1,de_);
+	dbg_xc2hexstr(d->z->HLs1,hl_);
+    }
+
+    dbg_xc2hexstr(*d->z->IX_r,ix);
+    dbg_xc2hexstr(*d->z->IY_r,iy);
+    dbg_xc2hexstr(*d->z->SP_r,sp);
+    dbg_xc2hexstr(*d->z->PC_r,pc);
+    dbg_oc2hexstr(*d->z->I_r,i);
+    dbg_oc2hexstr(*d->z->R_r,r);
+
+    sprintf(str,
+	"%s %s %s %s  %s %s %s %s  %s %s %s %s  %s %s",
+	af,bc,de,hl,af_,bc_,de_,hl_,ix,iy,sp,pc,i,r
+    );
+    return str;
 }
 
-void z80_displ_mem(Z80 *z)
+void dbg_deasm(dbg *d)
 {
-    int i,j,tmp;
-    char tmps0[128];
-    char tmps1[128];
-    char tmps2[256];
-
-    for(i=0; i < DEB(z)->lines; i++){
-	tmp = DEB(z)->daddr;
-	for(j=0;j < 16;j++){
-	    sprintf(tmps0+j*3,"%2x ",MR(DEB(z)->daddr+j+i*16) & 0xffff);
-	}
-	for(j=0;j < 16;j++){
-	    sprintf(tmps1+j,"%c",f_z_8(MR(DEB(z)->daddr+j+i*16) & 0xffff));
-	}
-	DEB(z)->daddr+=16;
-	sprintf(tmps2,"%4x %s%s\n",tmp,tmps0,tmps1); 
-	DEB(z)->output(tmps2);
-    }    
-}
-
-void dummy_wrmem(void *ptr,word addr, byte data){}
-
-void z80_debugger_deasm(Z80 *z, int lines, int pc)
-{
-    Z80 zz;
-    Z80_DEB db;
-    int i;
-
-    if(lines == 0) return;
+    char a[3],b[3], c[32]="";
+    char tmp[256]="", tmp1[256]="";
     
-    memcpy(&zz,z,sizeof(Z80));
-    memcpy(&db,z->deb_struct,sizeof(Z80_DEB));
-    zz.deb_struct = &db;
-    z80_reset(&zz); 		 	/* mamy teraz kopiê CPU, korzystaj±cego z tych samych zasobów */
-    zz.deb_dry = 1; 		 	/* nie modyfikuje zasobów  */
-    ((Z80_DEB*)(zz.cust))->free=1;	/* nie wchodzi do konsoli  */
-    zz.run = 1; zz.deb_on = 1;  	/* uruchomia z debuggerem  */
-    zz.PCp = DEB(z)->deasm;		/* adres deasemblacji      */
-    zz.debug_int = 1;			/* ignoruj przerwania      */
-    zz.WR_MEM=dummy_wrmem;    		/* nie modyfikuj pamiêci   */
-    zz.PCp = pc;
-    for(i = 0; i < lines; i++){
-	((Z80_DEB *)(zz.deb_struct))->debug_print = 1;
-	zz.deb_halt=0;
-	z80_exe(&zz);
-    }
-    DEB(z)->free=0;
-    DEB(z)->deasm=zz.PCp;
+    sprintf(tmp,"%s%s %s",dbg_oc2hexstr(d->z->adrs >> 8,a),dbg_oc2hexstr(d->z->adrs,b),d->mach);
+    dbg_equalize(tmp, 16);
+    dbg_resolver(d->z,ddt[d->z->cmd_type],c);
+    dbg_equalize(c, 16);
+    sprintf(d->line,"%s%s%s\n",tmp,c,dbg_getregs(d,tmp1));    
+    d->z->dd = d->z->nn = d->z->reg80 = 0;
+    d->z->reg81 = d->z->regx0 = d->z->regx1 = d->z->cmd_type = 0;
 }
 
-void split_cmd(char *src,char **a)
+void dbg_test(dbg *d, unsigned char mode)
 {
-    int i=1;
-    char n=1;
-        
-    for(i=0;i < 4;i++) *(a + i) = NULL;
-
-    if(!src) return;
-
-    *a=src;    
-
-    for(i=1;*src && (i < 5);src++) 
-	    if(*src == ' '){
-		if(n){
-		    if(i < 4) a[i++] = src + 1;
-		    *src=0;
-		    n=0;
-		}
-	    } else n=1;
-}
-
-void z80_console(Z80 *z)
-{
-    char cmdline[256];
-    char temp[256];
-    char stin[256];   
-    char *arg[4];
-    int arg1,arg2,arg3,i;
-
-    DEB(z)->fprint=0;
-    DEB(z)->instr=0;
-    DEB(z)->addr_brk=0;
-    DEB(z)->fwcnt=0;
-    DEB(z)->fcnt=0;
-    DEB(z)->fbreak=0;
-    DEB(z)->fwadr=0;
-    DEB(z)->free=0;
-    DEB(z)->hdr=0;
-
-    z->deb_halt=1;
-    z->act_freq=1;
-    z->trap=0;
-
-    if(DEB(z)->fin){
-	 DEB(z)->output(".\n");	    
-	 DEB(z)->fin = 0;
-    }
-    DEB(z)->input(stin);
-
-    if(!*stin) return;
-    DEB(z)->fin = 0;
-    if( *stin != 'w' ){
-	if(DEB(z)->deb_stdout) printf(">%s\n",stin);
-	sprintf(temp,">%s\n",stin);
-	DEB(z)->output(temp);     
+    if(d->console) return;
+    if(d->trace){
+	if(mode != D_PRE) return; /* je¶li nie na poczatku */
+	if(d->icnt <= 1) d->deasm=1;
+	if(!d->icnt) { 
+	    d->console=1; d->trace=0; d->deasm=0; 
+	    return; 
+	}
+	d->icnt--;
     } else {
-	strcpy(stin,stin+1); /* uciecie pocz±tkowego w*/
+	if(!d->cond) return;
+	if((d->cond == C_PCEQ) && (d->z->adrs == d->addr)) d->console=1,d->cond=0;
+	if((d->cond == C_PCGT) && (d->z->adrs >  d->addr)) d->console=1,d->cond=0;
+	if((d->cond == C_PCLT) && (d->z->adrs <  d->addr)) d->console=1,d->cond=0;
     }
-    z->debug_int=1; /* blokada przerwan */
-    split_cmd(stin,arg);
-    sscanf(arg[0],"%s",cmdline);
-    if((!strcmp(cmdline,"quit"))||(!strcmp(cmdline,"q"))){
-	z80_set_debug(z,0);
-	z80_debug_reset(z);
-        DEB(z)->exit(); 
-    } else
-    if((!strcmp(cmdline,"help"))||(!strcmp(cmdline,"h"))){
-	 DEB(z)->output("Help:\nc - czysc ekran\nq.quit - wyjscie\nh,help - pomoc\n");
-	 DEB(z)->output("t <xxxx> - krok wykonania instrukcji procesora (xxx - ilosc krokow)\n");
-	 DEB(z)->output("p <xxxx> - wykonanie instrukcji lub ich serii \n");	 
-	 DEB(z)->output("d <xxxx> - wyswietlenie zawartosci pamieci spod adresu xxxx\n");	 
-	 DEB(z)->output("u <xxxx>  - deasemblacja zawartosci pamieci spod adresu xxxx\n");	 
-	 DEB(z)->output("a adres data - wpisanie danej pod wskazany adres\n");	 
-	 DEB(z)->output("ff adres nn dd - wypelnienie obszaru pamieci nn od adresu adres wartoscia dd\n");	 
-	 DEB(z)->output("l xxxx - ustawienie xxxx linii wyswietlania \n");	 
-	 DEB(z)->output("pout [0|1] - wyswietlanie instrukcji podczas wykonywania instrukcji \n");	 
-	 DEB(z)->output("stdout [0|1] - kopia wyswietlania na stdout\n");	 
-	 DEB(z)->output("find\n");	 
-	 DEB(z)->output("in_port adres - pobiera i wyswietla wartosc postu o adresie adres\n");	 
-	 DEB(z)->output("out_port adres dana - wysyla dana na port o adresie adres\n");	 
-	 DEB(z)->output("set reg wartosc - ustawienie wartosci rejestru [AF,BC,DE,HL,AF',BC',DE',HL',IX,IY,SP,I,R,PC]\n");	 
-	 DEB(z)->output("r - wyswietla stan rejestrow\n");	 
-	 DEB(z)->output("x <adr> - wyswietla wartosc bajtu spod adresu adr\n");
-	 DEB(z)->output("g addr - pulapka na adres rowny\n");	 
-	 DEB(z)->output("ghe adr - pulapka na adres wiekszy lub rowny \n");	
-	 DEB(z)->output("gle adr - pulapka na adres mniejszy lub rowny \n");	
-	 DEB(z)->output("dump - wykonuje zrzut pamieci RAM do kat bierzacego - plik dump.bin\n");	
-	 DEB(z)->output("c - to samo co u, ale bez echa i 128 instrukcji, a nie okr przez l\n");	
-	 DEB(z)->output("w[instr] - brak echa \n");
-    } else
-    if(!strcmp(cmdline,"dump")){ 
-	FILE *f;
-	int i;
-	f = fopen("./dump.bin","w");
-	if(f){
-	    for(i=0;i < 65536; i++) fputc(MR(i),f);
-	    fclose(f);
-	    DEB(z)->output("Zrzut pamieci wykonano\n");	
-	 } else 
-	   DEB(z)->output("Blad otwarcia pliku do zapisu\n");	
-    } else
-    if(!strcmp(cmdline,"t")) { 
-	if(!arg[1]){
-	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + 1;
-	    DEB(z)->fcnt=1;
-	    DEB(z)->hdr=1;
-	    DEB(z)->proc=0;
-	} else {
-	    sscanf(arg[1],"%x",&arg1);
-	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + arg1;
-	    DEB(z)->fcnt=1;
-	    DEB(z)->hdr=1;
-	    DEB(z)->proc=0;
-	    z->act_freq=z->lp_freq;
-	}
-	DEB(z)->fin = 1;
-    }else
-    if(!strcmp(cmdline,"p")) { 
-	if(!arg[1]){
-	    DEB(z)->proc=1;
-	} else {
-	    sscanf(arg[1],"%x",&arg1);
-	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + arg1;
-	    DEB(z)->fcnt=1;
-	    DEB(z)->hdr=1;
-	    DEB(z)->proc=1;
-	    z->act_freq=z->lp_freq;
-	}
-	DEB(z)->fin = 1;
-    }else
-    if(!strcmp(cmdline,"g")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]) return;
-	sscanf(arg[1],"%x",&arg1);
-	z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->addr_brk = arg1;
-	DEB(z)->fbreak=1;
-	DEB(z)->hdr=1;
-	DEB(z)->proc=0;
-	z->act_freq=z->lp_freq;
-	z->debug_int=0;
-	DEB(z)->fin = 1;
-    }else
-    if(!strcmp(cmdline,"ghe")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]) return;
-	sscanf(arg[1],"%x",&arg1);
-	z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->addr_ghe = arg1;
-	DEB(z)->fbreak=1;
-	DEB(z)->hdr=1;
-	DEB(z)->proc=0;
-	z->act_freq=z->lp_freq;
-	z->debug_int=0;
-	DEB(z)->fin = 1;
-    }else
-    if(!strcmp(cmdline,"gle")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]) return;
-	sscanf(arg[1],"%x",&arg1);
-	z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->addr_gle = arg1;
-	DEB(z)->fbreak=1;
-	DEB(z)->hdr=1;
-	DEB(z)->proc=0;
-	z->act_freq=z->lp_freq;
-	z->debug_int=0;
-	DEB(z)->fin = 1;
-    }else
-    if(!strcmp(cmdline,"pout")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]) return;
-	sscanf(arg[1],"%x",&arg1);
-	DEB(z)->pout=arg1;
-    }else
-    if(!strcmp(cmdline,"stdout")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	}
-	sscanf(arg[1],"%x",&arg1);
-	DEB(z)->deb_stdout=arg1;
-    }else
-    if(!strcmp(cmdline,"d")) { 
-	DEB(z)->fin=1;
-	if(arg[1]){
-	    sscanf(arg[1],"%x",&arg1);
-	    DEB(z)->daddr=arg1;
-	}
-	z80_displ_mem(z);
-    }else
-    if(!strcmp(cmdline,"u")) { 
-	DEB(z)->fin=1;
-	if(arg[1]){
-	    sscanf(arg[1],"%x",&arg1);
-	    DEB(z)->deasm=arg1;
-	}
-	if(!DEB(z)->deasm)DEB(z)->deasm = PC;
-	z80_debugger_deasm(z,DEB(z)->lines, DEB(z)->deasm);
-    }else
-    if(!strcmp(cmdline,"c")) { 
-	DEB(z)->fin=1;
-	if(arg[1]){
-	    sscanf(arg[1],"%x",&arg1);
-	    DEB(z)->deasm=arg1;
-	}
-	if(!DEB(z)->deasm)DEB(z)->deasm = PC;
-	z80_debugger_deasm(z,128, DEB(z)->deasm); /* 128 linii deasemblowanych */
-    }else
-    if(!strcmp(cmdline,"dummy")) { 
-	DEB(z)->fin=1;
-	DEB(z)->deasm = PC;
-    }else
-    if(!strcmp(cmdline,"a")) { 
-	DEB(z)->fin=1;
-	if( !arg[1] || !arg[2]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%x",&arg1);
-	sscanf(arg[2],"%x",&arg2);	
-	arg1 &= 0xffff; arg2 &= 0xff;
-	MW(arg1,arg2);
-    }else
-    if(!strcmp(cmdline,"ff")) { 
-	DEB(z)->fin=1;
-	if( !arg[1] || !arg[2] || !arg[3]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%x",&arg1);
-	sscanf(arg[2],"%x",&arg2);	
-	sscanf(arg[3],"%x",&arg3);	
-	for(i=0;i < arg2; i++){
-	    arg1 &= 0xffff;
-	    MW(arg1,arg2);
-	    arg1++;
-	}
-    }else
-//    if(!strcmp(cmdline,"find")) { 
-//
-//    }else
-    if(!strcmp(cmdline,"set")) { 
-	DEB(z)->fin=1;
-	if( !arg[1] || !arg[2]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%s",cmdline);	
-	sscanf(arg[2],"%x",&arg1);
-	if(!strcmp(cmdline,"AF"))  {z->AFr=arg1;} else
-	if(!strcmp(cmdline,"BC"))  {z->BCr=arg1;} else
-	if(!strcmp(cmdline,"DE"))  {z->DEr=arg1;} else
-	if(!strcmp(cmdline,"HL"))  {z->HLr=arg1;} else
-	if(!strcmp(cmdline,"AF'")) {z->AFr_=arg1;} else
-	if(!strcmp(cmdline,"BC'")) {z->BCr_=arg1;} else
-	if(!strcmp(cmdline,"DE'")) {z->DEr_=arg1;} else
-	if(!strcmp(cmdline,"HL'")) {z->HLr_=arg1;} else
-	if(!strcmp(cmdline,"IX"))  {z->IXp=arg1;} else
-	if(!strcmp(cmdline,"IY"))  {z->IYp=arg1;} else
-	if(!strcmp(cmdline,"SP"))  {z->SPp=arg1;} else
-	if(!strcmp(cmdline,"PC"))  {z->PCp=arg1;} else
-	if(!strcmp(cmdline,"I"))   {z->Ip=arg1;} else
-	if(!strcmp(cmdline,"R"))   {z->Rp=arg1;} 
-	else{
-	    sprintf(temp,"Nieznany rejestr %s\n",cmdline);
-	    DEB(z)->output(temp);
-	    return;
-	}
-    }else
-    if(!strcmp(cmdline,"in_port")) { 
-	DEB(z)->fin=1;
-	if( !arg[1]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%x",&arg1);
-	sprintf(temp,"zawartoscia portu IN[%x] jest: %x\n",arg1, z->io(arg1,0,1,z));
-	DEB(z)->output(temp);
-    }else
-    if(!strcmp(cmdline,"out_port")) { 
-	DEB(z)->fin=1;
-	if( !arg[1] || !arg[2]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%x",&arg1);
-	sscanf(arg[2],"%x",&arg2);
-	z->io(arg1,arg2,1,z);
-    }else
-    if(!strcmp(cmdline,"l")) { 
-	DEB(z)->fin=1;
-	if( !arg[1]){
-	    DEB(z)->output("Za malo danych wejsciowych\n");
-	    return;
-	 }
-	sscanf(arg[1],"%x",&arg1);
-	DEB(z)->lines=arg1;	
-    }else
-    if(!strcmp(cmdline,"x")) { 
-	DEB(z)->fin=1;
-	if(!arg[1]) return;
-	sscanf(arg[1],"%x",&arg1);
-	arg1 &= 0xffff;
-	sprintf(temp,"MEM[%x]=%x\n",arg1,MR(arg1));
-	DEB(z)->output(temp);
-    }else
+}	
 
-    if(!strcmp(cmdline,"r")) { 
-	DEB(z)->fin=1;
-	    sprintf(temp," AF | BC | DE | HL | AF'| BC'| DE'| HL'| IX | IY | SP | PC |SZHPNC| I|\
- R|IFF1|IFF2|IM\n%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%i%i%i%i%i%i|%2x|%2x|%4x|%4x|%2x\n",
-	    z->AFr,z->BCr,z->DEr,z->HLr, z->AFr_,z->BCr_,z->DEr_,z->HLr_, IX,IY,SP,PC,
-	    GET_SF,GET_ZF,GET_HF,GET_PF,GET_NF,GET_CF,I,R,z->IFF1p,z->IFF2p,z->IMr);
-	    DEB(z)->output(temp);
-    }else
-     DEB(z)->output("Nieznane polecenie\n");
+/***********************************************************************************************/
 
-}
-
-void z80_debugger_call(Z80 *z)
+void dbg_input(dbg *d)
 {
+    int i;
+    if(!d->in) return;
+    d->out("dbg# ");
+    for(i=0; ((d->cmdline[i]=d->in()) != '\n') && i < 255; i++);
+    d->cmdline[i]=0;
+    if(i) dbg_cmd(d);
+}
 
-    if(DEB(z)->free) return;
+void dbg_getcmd(dbg *d, char *cmd)
+{
+    char *n=d->cmdline;
+    int i,j,k = strlen(n);
 
-    z->deb_on = 1;
+    /* znajd¼ pocz±tek wyrazu */
+    for(i=0; i < k && n[i] < '!'; i++);
+
+    /* znajd¼ koniec wyrazu */
+    for(j=i; j < k && n[j] > ' '; j++);
+
+    strncpy(cmd,n+i,j-i);
+}
+
+/* analiza sk³adni wprowadzonej linii */
+void dbg_cmd(dbg *d)
+{
+    char cmd[256]="";
+
+    /* pobranie rozkazu debuggera z linii poleceñ */
+    dbg_getcmd(d,cmd);
+    if(!strcmp(cmd,"quit")){ dbg_quit(d); return; }
+    if(!strcmp(cmd,"q"))   { dbg_quit(d); return; }
+    if(!strcmp(cmd,"help")){ dbg_help(d); return; }
+    if(!strcmp(cmd,"h"))   { dbg_help(d); return; }
+    /* instrukcje debuggera */
+    if(!strcmp(cmd,"a")) { dbg_poke(d); return;}
+    if(!strcmp(cmd,"t")) { dbg_trace(d); return;}
+    if(!strcmp(cmd,"p")) { dbg_proc(d); return;}
+    if(!strcmp(cmd,"v")) { dbg_var(d); return;}
+    if(!strcmp(cmd,"d")) { dbg_memo(d); return;}
+    if(!strcmp(cmd,"s")) { dbg_stck(d); return;}
+    if(!strcmp(cmd,"u")) { dbg_dasm(d); return;}
+    if(!strcmp(cmd,"b")) { dbg_trap(d); return;}
+    if(!strcmp(cmd,"g")) { dbg_goto(d); return;}
+    if(!strcmp(cmd,"r")) { dbg_regs(d); return;}
+    if(!strcmp(cmd,"o")) { dbg_iout(d); return;}
+    if(!strcmp(cmd,"i")) { dbg_iin(d); return;}
+    if(!strcmp(cmd,"y")) { dbg_bps(d); return;}
+    if(!strcmp(cmd,"x")) { dbg_dbps(d); return;}
+    if(!strcmp(cmd,"w")) { dbg_sregs(d); return;}
+    d->out("unknown command: "); 
+    d->out(cmd); 
+    d->out("\n");
+}
+
+void dbg_quit(dbg *d)
+{
+     d->z->dbg_on=0;
+     dbg_bp_delete_all(d);
+     d->out("Exit debugger...\n");
+     d->z->force_in = -1;
+     d->console=0;
+}
+
+void dbg_help(dbg *d)
+{
+	d->out(
+	    "Z80 CPU debugger version " DBG_VERSION "\n\n"
+	    "Commands:\n\tq, quit - exit debugger\n"
+	    "\th, help - this text\n"
+	    "\tt [steps] [out] - trace 'steps' instructions.\n"
+//	    "\tp [steps] [out] - proceed 'steps' instructions.\n"
+	    "\tv <address> - display value of variable 8 and 16 bit at given address\n"
+	    "\td [address] [n x 16] - display n lines of memory map (one line - 16 bytes)\n"
+	    "\ts [n] - display stack\n"
+	    "\ta <address data,....> - insert opcodes at specified address, succesive opcodes are comma separated,\n"
+	    "\tu [address] [n] - disassemble code\n"
+	    "\tb [address] [condition] - set trap\n"
+	    "\ty - show all breakpoints\n"
+	    "\tx [nb] - remove breakpoint\n"
+	    "\tg [address] - run\n"
+	    "\tr <register_name=value,....> - set new register value\n"
+	    "\tw - show all registers\n"
+	    "\to <address> <value> - out instruction\n"
+	    "\ti <address> <value> - give next 'in' instruction value\n"
+	    "\n"
+	);
+}
+
+void dbg_trap(dbg *d)
+{
+    char addrs[7]="";
+    char slife[8]="";
+    char cnd[3]="";
+    char cond = 0;
+    int  addr = 0;
+    int  life=1;
+    dbg_bp  *tmp,*n;
     
-//    DEB(z)->debug_print=0;
-    if(DEB(z)->init){
-	if(!z->deb_dry)
-	    DEB(z)->output("Tryb debuggera, h - pomoc, q - wyjscie\n");
-	DEB(z)->init = 0;
-	z->deb_halt = 1;
-	DEB(z)->lines = 16;
+    /* pobranie argumentów komendy */
+    sscanf(d->cmdline,"b %6s %2s %8s", addrs, cnd, slife);
+
+    /* test czy podano drugi parametr */
+    if(cnd[0]){
+	if(!strcmp(cnd,"eq")) cond = 1;
+	if(!strcmp(cnd,"gt")) cond = 2;
+	if(!strcmp(cnd,"lt")) cond = 3;
+	if(!cond){
+	    d->out("unknown condition name: '"); 
+	    d->out(cnd); d->out("' valid conditions are eq,gt,lt\n");
+	    return;
+	}
+    } else cond = 1;
+
+    /* test czy podano pierwszy argument */
+    if(addrs[0]){
+	if(addrs[0] < '0' || addrs[0] > '9'){
+	    addr = *d->z->PC_r;
+	    if(!strcmp(addrs,"eq")) cond = 0;
+	    if(!strcmp(addrs,"gt")) cond = 1;
+	    if(!strcmp(addrs,"lt")) cond = 2;
+	    if(!cond){
+		d->out("unknown condition name: '"); 
+		d->out(addrs); d->out("' valid conditions are eq,gt,lt\n");
+		return;
+	    }
+	} else{
+    	    if(dbg_dcheck(addrs)) { d->out("Address parameter is not a digit.\n"); return; }
+	    addr = strtol(addrs,NULL,0);
+	 }
+
+    } else addr = *d->z->PC_r;
+    
+    if(slife[0]){
+	if(slife[0] < '0' || slife[0] > '9'){
+	    d->out("3-rd is a not numerical argument\n");
+	    return;
+	}
+        if(dbg_dcheck(slife)) { d->out("Life parameter is not a digit.\n"); return; }
+	life = strtol(slife,NULL,0);
     }
-    if(z->deb_halt) z80_console(z);
-    if(DEB(z)->fprint) DEB(z)->debug_print=1;    
-    DEB(z)->cnt++;
+    
+/* argumenty pobrane czas dodaæ pu³apkê do listy */
+    tmp = (dbg_bp*) malloc(sizeof(dbg_bp));
+    tmp->next = NULL;
+    tmp->cond_type = cond;
+    tmp->address = addr;
+    tmp->life = life;
+    n = d->bp;
+    if(!n) d->bp=tmp;
+     else {
+	while(n->next) n=n->next;
+	n->next=tmp;
+     }
+}
+
+void dbg_bps(dbg *d)
+{
+    char *nme[3] = {"eq","gt","lt"};
+    char tmp[256] ="";
+    dbg_bp *bp = d->bp;
+    int i=0;
+    
+    d->out("Breakpoints:\nnb\taddress\tcondition\tlife\n");
+    while(bp){
+	sprintf(tmp,"%3i.\t%6x\t%s\t%6x\n", i++, bp->address, nme[(int)bp->cond_type], bp->life);
+	d->out(tmp);
+	bp=bp->next;
+    }
+}
+
+void dbg_bp_delete(dbg *d, int k)
+{
+    dbg_bp *bp=d->bp, *old_bp;
+    int i=0;
+
+    old_bp=bp;
+    if(!bp) return;
+    while(bp->next && i != k){
+	old_bp = bp;
+	bp = bp->next;
+	i++;
+    }
+    
+    if(!i){
+	old_bp=bp->next;
+	free(bp);
+	d->bp=old_bp;
+	return;
+    }
+    
+    old_bp->next = bp->next;
+    free(bp);
+}
+
+void dbg_bp_delete_first(dbg *d)
+{
+    dbg_bp_delete(d, 0);
+}
+
+void dbg_bp_delete_all(dbg *d)
+{
+    dbg_bp *bp,*b;
+    
+    if(!d->bp) return;
+    
+    bp=d->bp;
+    
+    while(bp->next){
+	b=bp->next;
+	free(bp);
+	bp=b;
+    }
+}
+
+void dbg_dbps(dbg *d)
+{
+    char tmp[6]="";
+    int  k=-1;
+    
+    sscanf(d->cmdline,"x %3s",tmp);
+    if(*tmp){
+      if(dbg_dcheck(tmp)) { d->out("Parameter is not a digit.\n"); return; }
+      k = strtol(tmp,NULL,0);    
+    }
+    dbg_bp_delete(d, k);
+}
+
+unsigned char dbg_peek(dbg *d, int addrs)
+{
+    return d->z->mem_rd(d->z,addrs);
+}
+
+void dbg_memo(dbg *d)
+{
+    char tmp0[8]="", tmp1[8]="", tmp2[128]="", tmp3[64]="";
+    int i,j;
+    unsigned char k;
+        
+    sscanf(d->cmdline,"d %6s %6s",tmp0,tmp1);
+    if(*tmp0){
+     if(dbg_dcheck(tmp0)) { d->out("Parameter is not a digit.\n"); return; }
+     d->daddr = strtol(tmp0,NULL,0);
+    }
+    if(*tmp1){
+     if(dbg_dcheck(tmp1)) { d->out("Parameter is not a digit.\n"); return; }
+     d->dline = strtol(tmp1,NULL,0);    
+    }
+    for(j=0; j < d->dline; j++){
+	*tmp2 = '\0';
+	*tmp3 = '\0';
+	dbg_xc2hexstr(d->daddr, tmp2);
+	strcat(tmp2, "  ");
+	for(i=0; i < 16; i++){
+	    dbg_oc2hexstr(k = dbg_peek(d,d->daddr + i),tmp0);
+	    strcat(tmp2, tmp0);
+	    strcat(tmp2, i < 15 ? ",": "");
+	    tmp0[0] = (k >= ' ' && k < 0x80) ? k : '.';
+	    tmp0[1] = '\0';
+	    strcat(tmp3, tmp0);
+	}    
+	strcat(tmp2, "  ");
+	strcat(tmp2, tmp3);
+	strcat(tmp2, "\n");
+	d->out(tmp2);
+	d->daddr += 16;
+    }
+}
+
+void dbg_var(dbg *d)
+{
+    char tmp0[64]="";
+    int  addr=0;
+    unsigned char obit=0;
+    unsigned short int xbit=0;
+    
+    sscanf(d->cmdline,"v %7s", tmp0);
+    if(!tmp0[0]){
+	d->out("Missing address parameter for v command.\n");
+	return;
+    }
+    if(dbg_dcheck(tmp0)) { d->out("Parameter is not a digit.\n"); return; }
+    addr = strtol(tmp0,NULL,0);
+    if(addr < 0 || addr > 0xffff){
+	d->out("Address parameter is out of range.");
+	return;
+    }
+    obit = dbg_peek(d,addr);
+    xbit = (int)obit * 256 + dbg_peek(d,addr + 1);
+    sprintf(tmp0,"8bit: mem[%x]=%x,  16bit: mem[%x]=%x\n",addr,obit,addr,xbit);
+    d->out(tmp0);        
+}
+
+void dbg_stck(dbg *d)
+{
+    char tmp[8]="";
+    int lines=4;
+    int i=0, t=0;
+    
+    sscanf(d->cmdline,"s %6s",tmp);
+    if(tmp[0]){
+	if(dbg_dcheck(tmp)) { d->out("Parameter is not a digit.\n"); return; }
+	lines=strtol(tmp,NULL,0);
+    }
+    
+    d->out("Stack:\n");
+    for(i=0; i < lines; i++){
+	t = dbg_peek(d, (*d->z->SP_r) + i*2 + 1) * 256 + dbg_peek(d, (*d->z->SP_r) + i*2);
+	dbg_xc2hexstr(t,tmp);
+	strcat(tmp,"\n");
+	d->out(tmp);
+    }
+}
+
+void dbg_pokebyte(dbg *d,int addr, unsigned char data)
+{
+    d->z->mem_wr(d->z, addr, data);
+}
+
+void dbg_poke(dbg *d)
+{
+    char tmp[256]="", t[8]="";
+    int  addr=0,i,k,j, data;
+    
+    sscanf(d->cmdline,"a %6s %250s",t,tmp);
+    if(!t[0]){
+	d->out("Missing address parameter.\n");
+	return;
+    }
+    if(!tmp[0]){
+	d->out("Missing data.\n");
+	return;
+    }
+    if(dbg_dcheck(t)){
+	d->out("Adress parameter is not a digit.\n");
+	return;
+    }
+    addr = strtol(t,NULL,0);
+    i=k=0;
+    do{
+	for(; i < strlen(tmp) && tmp[i] !=','; i++);
+	if(tmp[i] == ',') i++;
+	if(i-k > 7){
+	    d->out("To long data parameter.\n");
+	    return;
+	}
+	for(j=0; j < i-k; j++) t[j] = tmp[k+j];
+	t[j]='\0';
+	if(j > 0) 
+	    if(t[j-1] == ',') t[j-1] = '\0';
+
+	if(dbg_dcheck(t)){
+	    d->out("Data parameter '"); d->out(t); d->out("' is not a digit.\n");
+	    return;
+	}
+	data = strtol(t,NULL,0);
+	if(data < 0 || data > 0xff){
+	    d->out("Data parameter '"); d->out(t); d->out("' is out of range 0..255.\n");
+	    return;
+	}
+	dbg_pokebyte(d, addr, data);	
+	addr++;
+	k=i;
+    }while(i < strlen(tmp));            
+} 
+
+#define M(bit) (f >> bit) & 0x01
+void dbg_sregs(dbg *d)
+{
+    char tmp[1024]="";
+    unsigned char f=*d->z->F_r;
+    char af[5]="",bc[5]="",de[5]="",hl[5]="";
+    char af_[5]="",bc_[5]="",de_[5]="",hl_[5]="";    
+    char ix[5]="",iy[5]="",sp[5]="",pc[5]="";
+
+    dbg_xc2hexstr(*d->z->AF_r,af);
+    dbg_xc2hexstr(*d->z->BC_r,bc);
+    dbg_xc2hexstr(*d->z->DE_r,de);
+    dbg_xc2hexstr(*d->z->HL_r,hl);
+
+    if(d->z->alt_af)
+	dbg_xc2hexstr(d->z->AFs0,af_);
+    else
+	dbg_xc2hexstr(d->z->AFs1,af_);
+
+    if(d->z->alt_rg){
+	dbg_xc2hexstr(d->z->BCs0,bc_);
+	dbg_xc2hexstr(d->z->DEs0,de_);
+	dbg_xc2hexstr(d->z->HLs0,hl_);
+    } else {
+	dbg_xc2hexstr(d->z->BCs1,bc_);
+	dbg_xc2hexstr(d->z->DEs1,de_);
+	dbg_xc2hexstr(d->z->HLs1,hl_);
+    }
+
+    dbg_xc2hexstr(*d->z->IX_r,ix);
+    dbg_xc2hexstr(*d->z->IY_r,iy);
+    dbg_xc2hexstr(*d->z->SP_r,sp);
+    dbg_xc2hexstr(*d->z->PC_r,pc);
+
+    sprintf(tmp,
+	"AF=0x%s  BC=0x%s  DE=0x%s  HL=0x%s\n"
+	"AF'=0x%s BC'=0x%s DE'=0x%s HL'=0x%s\n"
+	"IX=0x%s  IY=0x%s  SP=0x%s  PC=0x%s\n"
+	"I=0x%x R=0x%x IM=%i IFF1=%i IFF2=%i HALT=%i\n"
+	"FLAGS: S Z 5 H 3 V N C\n"
+	"       %i %i %i %i %i %i %i %i\n"
+	"TICKS:  %li\n"
+	"CYCLES: %li\n",
+	af,bc,de,hl,
+	af_,bc_,de_,hl_,
+	ix,iy,sp,pc,
+	d->z->Is,d->z->Rs,d->z->imode,d->z->iff1,d->z->iff2,d->z->halt,
+	M(7),M(6),M(5),M(4),M(3),M(2),M(1),M(0),
+	d->z->ticks,d->z->cycles
+    );
+    d->out(tmp);
+}
+
+char dbg_setreg(dbg *d, char *t)
+{
+    char tmp0[8]="",tmp1[8]="";
+    int i,val;
+    
+    for(i=0; i < strlen(t) && t[i] != '='; i++);
+    if(t[i] != '='){
+	d->out("Missing '=' operator for argument.\n");
+	return 1;
+    }
+    if(i==0){
+	d->out("Missing register name.\n");
+	return 1;
+    }
+    
+    strncpy(tmp0,t,i);
+    tmp0[i]='\0';        
+    strcpy(tmp1,t + i + 1);
+
+    if(!tmp1[0]){
+	d->out("Missing value for register ");
+	d->out(tmp0);
+	d->out(".\n");
+	return 1;
+    }
+
+    if(dbg_dcheck(tmp1)){
+	d->out("Value for register ");
+	d->out(tmp0);
+	d->out(" is not a digit.\n");
+	return 1;
+    }
+
+    val = strtol(tmp1,NULL,0);
+    
+    for(i=0; i < strlen(tmp0); i++) tmp0[i] = tolower(tmp0[i]);
+
+    if(!strcmp(tmp0, "a"))        *d->z->A_r = val;
+    else if(!strcmp(tmp0, "b"))   *d->z->B_r = val;
+    else if(!strcmp(tmp0, "c"))   *d->z->C_r = val;
+    else if(!strcmp(tmp0, "d"))   *d->z->D_r = val;
+    else if(!strcmp(tmp0, "e"))   *d->z->E_r = val;
+    else if(!strcmp(tmp0, "h"))   *d->z->H_r = val;
+    else if(!strcmp(tmp0, "l"))   *d->z->L_r = val;
+    else if(!strcmp(tmp0, "a'"))  { if(d->z->alt_af) d->z->As0 = val; else d->z->As1 = val; } 
+    else if(!strcmp(tmp0, "b'"))  { if(d->z->alt_rg) d->z->Bs0 = val; else d->z->Bs1 = val; } 
+    else if(!strcmp(tmp0, "c'"))  { if(d->z->alt_rg) d->z->Cs0 = val; else d->z->Cs1 = val; } 
+    else if(!strcmp(tmp0, "d'"))  { if(d->z->alt_rg) d->z->Ds0 = val; else d->z->Ds1 = val; } 
+    else if(!strcmp(tmp0, "e'"))  { if(d->z->alt_rg) d->z->Es0 = val; else d->z->Es1 = val; } 
+    else if(!strcmp(tmp0, "h'"))  { if(d->z->alt_rg) d->z->Hs0 = val; else d->z->Hs1 = val; } 
+    else if(!strcmp(tmp0, "l'"))  { if(d->z->alt_rg) d->z->Ls0 = val; else d->z->Ls1 = val; }
+    else if(!strcmp(tmp0, "af"))  *d->z->AF_r = val;
+    else if(!strcmp(tmp0, "bc"))  *d->z->BC_r = val;
+    else if(!strcmp(tmp0, "de"))  *d->z->DE_r = val;
+    else if(!strcmp(tmp0, "hl"))  *d->z->HL_r = val;
+    else if(!strcmp(tmp0, "af'")) { if(d->z->alt_af) d->z->AFs0 = val; else d->z->AFs1 = val; }
+    else if(!strcmp(tmp0, "bc'")) { if(d->z->alt_rg) d->z->BCs0 = val; else d->z->BCs1 = val; }
+    else if(!strcmp(tmp0, "de'")) { if(d->z->alt_rg) d->z->DEs0 = val; else d->z->DEs1 = val; }
+    else if(!strcmp(tmp0, "hl'")) { if(d->z->alt_rg) d->z->HLs0 = val; else d->z->HLs1 = val; }
+    else if(!strcmp(tmp0, "ix"))  *d->z->A_r = val;
+    else if(!strcmp(tmp0, "iy"))  *d->z->A_r = val;
+    else if(!strcmp(tmp0, "sp"))  *d->z->A_r = val;
+    else if(!strcmp(tmp0, "pc"))  *d->z->A_r = val;
+    else if(!strcmp(tmp0, "i"))   *d->z->A_r = val;
+    else if(!strcmp(tmp0, "r"))   *d->z->A_r = val;
+    else {
+	d->out("Unknown register name.\n");
+	return 1;
+    }
+    return 0;
+}
+
+void dbg_regs(dbg *d)
+{
+    int i,j,k;
+    char tmp[1024]="", tmp1[16];
+        
+    sscanf(d->cmdline,"r %s",tmp);
+    
+    if(!tmp[0]){
+	d->out("Missing argument.\n");
+	return;
+    }
+
+    i=k=0;
+    do{
+	tmp1[0]='\0';
+	for(; i < strlen(tmp) && tmp[i] !=','; i++);
+	if(tmp[i] == ',') i++;
+
+	if(i-k > 15){
+    	    d->out("To long argument.\n");
+    	    return;
+	}
+
+	for(j=0; j < i-k; j++) tmp1[j] = tmp[k+j];
+	tmp1[j]='\0';
+	if(j > 0) 
+	    if(tmp1[j-1] == ',') tmp1[j-1] = '\0';
+
+	if(dbg_setreg(d,tmp1)) return;
+
+	k=i;
+    }while(i < strlen(tmp));                
+}
+
+void dbg_goto(dbg *d)
+{
+    char tmp[8]="";
+    d->addr = -1; 
+    d->cond = 0;
+    
+    sscanf(d->cmdline,"g %6s",tmp);
+
+    if(!tmp[0]){
+	if(d->bp){
+	    d->addr = d->bp->address;
+	    d->cond = d->bp->cond_type;
+	    if((--d->bp->life) <= 0) dbg_bp_delete_first(d);
+	}
+    } else {
+	d->cond = C_PCEQ;
+	if(dbg_dcheck(tmp)){
+	    d->out("g command parameter incorrect.");
+	    return;
+	}
+	d->addr = strtol(tmp,NULL,0);
+    }
+    d->console=0;
+}
+
+void dbg_trace(dbg *d)
+{
+    char tmp0[8]="", tmp1[4]="";
+    int outs = 0;
+    int cnt = 0;
+    
+    sscanf(d->cmdline,"t %6s %2s",tmp0,tmp1);
+
+    if(tmp1[0] == '1') outs=1;
+    if(tmp0[0]){
+	if(dbg_dcheck(tmp0)){
+	    d->out("Incorrect parameter.\n");
+	    return;
+	}
+	cnt = strtol(tmp0,NULL,0);
+	if(cnt <= 0){
+	    d->out("Incorrect parameter.\n");	
+	    return;
+	}
+	cnt--;
+    }
+    d->icnt = cnt;
+    d->noregs = 0;    
+    d->deasm = d->icnt ? outs : 1;
+    d->trace = 1;
+    d->console = 0;
 }
 
 
+void dbg_proc(dbg *d)
+{
+    char tmp0[8]="", tmp1[4]="";
+    int outs = 0;
+    int cnt = 0;
+    
+    sscanf(d->cmdline,"p %6s %2s",tmp0,tmp1);
+
+    if(tmp1[0] == '1') outs=1;
+    if(tmp0[0]){
+	if(dbg_dcheck(tmp0)){
+	    d->out("Incorrect parameter.\n");
+	    return;
+	}
+	cnt = strtol(tmp0,NULL,0);
+	if(cnt <= 0){
+	    d->out("Incorrect parameter.\n");	
+	    return;
+	}
+	cnt--;
+    }
+    d->icnt = cnt;
+    d->noregs = 0;    
+    d->deasm = d->icnt ? outs : 1;
+    d->trace = 1;
+    d->console = 0;
+/************** dodaæ ******************/
+}
+
+/* zapis przy deasemblacji ma i¶æ w pustkê */
+void dbg_dummy_wr(void *z, ushort addr, uchar data){}
+void dbg_dummy_output(void *z, ushort addr, uchar data){}
+uchar dbg_dummy_input(void *z, ushort addr){ return 0; }
+
+void dbg_debug(void *z, int mode, uchar data)
+{
+    dbg_call(((z80*)z)->ptx,mode,data);
+}
+
+void dbg_deasembly(dbg *d)
+{
+    int i;
+    z80 z;    
+    dbg dr;
+    
+    z80_reset(&z);
+    z.mem_rd = d->z->mem_rd;
+    z.mem_wr = dbg_dummy_wr;
+    z.output = dbg_dummy_output;
+    z.input  = dbg_dummy_input;
+    z.dbg_on = 1;
+    z.ptx = &dr;
+    z.ptr = d->z->ptr;
+    z.debug  = dbg_debug;
+    z.jmp_off=1;
+    *z.PC_r = d->zaddr;
+    memset(&dr,0,sizeof(dbg));
+    dr.noregs=1;
+    dr.deasm=1;
+    dr.z = &z;
+    dr.out = d->out;
+        
+    for(i=0; i < d->zline; i++) z80_step(&z);    
+    d->zaddr= *z.PC_r;
+}
+
+void dbg_dasm(dbg *d)
+{
+    char tmp0[8]="", tmp1[8]="";
+    
+    sscanf(d->cmdline,"u %6s %6s",tmp0,tmp1);
+
+    if(tmp1[0]){
+	if(dbg_dcheck(tmp1)){
+	    d->out("Incorrect parameter.\n");
+	    return;
+	}
+	d->zline = strtol(tmp1, NULL, 0);
+    }
+
+    if(tmp0[0]){
+	if(dbg_dcheck(tmp0)){
+	    d->out("Incorrect parameter.\n");
+	    return;
+	}
+	d->zaddr = strtol(tmp0, NULL, 0);
+    }
+
+    dbg_deasembly(d);
+}
+
+void dbg_iout(dbg *d)
+{
+    char tmp0[8]="", tmp1[8]="";
+    int addr=0, value=0;
+
+    sscanf(d->cmdline,"o %6s %4s", tmp0, tmp1);
+
+    if(!tmp0[0] || !tmp1[0]){
+	d->out("Missing parameter.\n");
+	return;
+    }
+
+    if(dbg_dcheck(tmp0) || dbg_dcheck(tmp1)){
+	d->out("Incorrect parameter.\n");
+	return;
+    }
+    addr = strtol(tmp0,NULL,0); value = strtol(tmp1,NULL,0);
+    if(addr < 0 || addr > 0xffff || value < 0 || value > 0xff){
+	d->out("Parameter out of range.\n");
+	return;
+    }
+
+    d->z->output(d->z,addr,value);
+}
+
+void dbg_iin(dbg *d)
+{
+    char tmp0[8]="", tmp1[8]="";
+    int addr=0, value=0;
+
+    sscanf(d->cmdline,"i %6s %4s", tmp0, tmp1);
+
+    if(!tmp0[0] || !tmp1[0]){
+	d->out("Missing parameter.\n");
+	return;
+    }
+
+    if(dbg_dcheck(tmp0) || dbg_dcheck(tmp1)){
+	d->out("Incorrect parameter.\n");
+	return;
+    }
+    addr = strtol(tmp0,NULL,0); value = strtol(tmp1,NULL,0);
+    if(addr < 0 || addr > 0xffff || value < 0 || value > 0xff){
+	d->out("Parameter out of range.\n");
+	return;
+    }
+    d->z->force_in = value;
+}
+
+void dbg_sout(char *a){ printf("%s",a); }
+char dbg_sin(){ return getchar(); }
+
+void dbg_init(dbg *d, z80 *z, char deb_on, char console_on)
+{
+    if(!d || !z) return;
+    memset(d,0,sizeof(dbg));
+    d->z   = z;
+    d->out = dbg_sout;
+    d->in  = dbg_sin;
+    d->dline   = 8;
+    d->zline   = 16;
+    d->console = console_on;
+    z->dbg_on  = deb_on;
+    z->ptx     = d;    
+    z->debug   = dbg_debug;
+}
+
+void dbg_set_stream(dbg *d, char (*s_in)(void), void (*s_out)(char *))
+{
+    d->out = s_out;
+    d->in  = s_in;
+}
+
+void dbg_don(dbg *d, char flag)
+{
+    d->z->dbg_on = flag;
+}
+
+void dbg_con(dbg *d, char flag)
+{
+    d->console = flag;
+}

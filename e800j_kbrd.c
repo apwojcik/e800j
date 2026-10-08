@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,35 +18,38 @@
  *
  */
 
+#define _USE_SDL
+
 #include "e800j_kbrd.h"
 
-KBE800J	keyboard;	/* wewnêtrzna zmienna globalna - nie wykorzystywaæ na zewn±trz ! */
-unsigned char keymap_table[] = {KEY_MAP_TABLE}; /* zamiana kodu klawisza na wspó³rzêdne w matrycy */
 
-void key_init(unsigned char mode)
+unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na wspó³rzêdne w matrycy */
+
+void key_init(kbrd *kb)
 {
     int i;
     /* zerowanie ca³ej struktury */
-    for(i=0; i < sizeof(keyboard); i++) *((char *)&keyboard + i) = 0;
-    keyboard.mode = mode;
+    for(i=0; i < sizeof(kbrd); i++) *((char *)kb + i) = 0;
+    kb->mode = KB_MODE_PC;
     /* wype³nienie matrycy klawiatury warto¶ciami 0xff - nie naci¶niêty ¿aden klawisz */
-    for(i=0; i < sizeof(keyboard.matrix); i++) *(keyboard.matrix + i) = 0xff;
+    for(i=0; i < sizeof(kb->matrix); i++) *(kb->matrix + i) = 0xff;
 }
 
-unsigned char key_matrix(unsigned short int addr)
+unsigned char key_matrix(kbrd *kb, unsigned short int addr)
 {
-    unsigned char kbrd;
+    unsigned char kbr;
     int i,j;
 
     /* skanowanie klawiatury dla linii KA0..KA8 */
-    i= 0x8000; kbrd=0xff;
+    i= 0x8000; kbr=0xff;
     for(j = 0; j < 9; i >>= 1, j++) 
-	if( !(addr & i) ) kbrd &= keyboard.matrix[j];
+	if( !(addr & i) )
+	    kbr &= kb->matrix[j];
 
     /* test linii E800J dla KA2 */
-    if( (addr & 0xff)== 0xfb) kbrd &= keyboard.matrix[9];
+    if( (addr & 0xff)== 0xfb) kbr &= kb->matrix[9];
 
-    return kbrd;    
+    return kbr;    
 }
 
 /* 
@@ -61,7 +64,7 @@ state:
     1 - wci¶niêto
     0 - zwolniono
 */
-void key_matrix_update(unsigned char coord, unsigned char  state)
+void key_matrix_update(kbrd *kb, unsigned char coord, unsigned char  state)
 {
     unsigned char col,row;
     
@@ -73,17 +76,17 @@ void key_matrix_update(unsigned char coord, unsigned char  state)
     if( row >= KB_ROWS ) return;
 
     if(state) 
-	keyboard.matrix[row] &= ~col;
+	kb->matrix[row] &= ~col;
     else 
-	keyboard.matrix[row] |= col;
+	kb->matrix[row] |= col;
 }
 
 
-void key_update(int key_code, char state)
+void key_update(kbrd *kb, int key_code, char state)
 {
     int key_idx=0xff;
 
-        if(keyboard.mode == KB_MODE_PC)
+        if(kb->mode == KB_MODE_PC)
     {
 	if(key_code < KEY_CONTROL_CNT) key_idx = key_code;
 	switch(key_code){
@@ -99,10 +102,10 @@ void key_update(int key_code, char state)
 	    case '=' : key_idx = KB_PLUS; break;
 	}
 	if(key_code == KB_ALT_R){
-	    keyboard.alt_r = state;
+	    kb->alt_r = state;
 	    return;
 	}
-	if(keyboard.alt_r){
+	if(kb->alt_r){
 		switch(key_code){
 		    case 'a' : key_code = 0xff; key_idx = KB_A_; break;
 		    case 'c' : key_code = 0xff; key_idx = KB_C_; break;	    
@@ -119,14 +122,66 @@ void key_update(int key_code, char state)
     if((key_code >= 'a') && (key_code <= 'z')) key_idx = key_code - 'a' + KB_LET_START;
     if((key_code >= '0') && (key_code <= '9')) key_idx = key_code - '0' + KB_DIG_START;
     if(key_idx >= KB_ALL_CNT ) return;
-    key_matrix_update(keymap_table[key_idx],state);
-/*
-{ int i;
-for(i=0; i < 10; i++) 
-    printf("%x,",keyboard.matrix[i]);
-    
-    printf("\n");
-}    
-*/
+    key_matrix_update(kb, keymap_table[key_idx],state);
 }
+
+/*
+unsigned int key_joymap(kbrd *kb,  unsigned int key, unsigned int nkey, char state)
+{
+    unsigned char nk=0;
+    if(kb->joy_mode & JOY_KEM){
+
+	if(nkey == 32 ) nk = 0x10; 
+	if(nkey == 273) nk = 0x08; 
+	if(nkey == 274) nk = 0x04; 
+	if(nkey == 276) nk = 0x02; 
+	if(nkey == 275) nk = 0x01; 
+
+	kb->in1f &= ~nk;
+	if(state) kb->in1f |= nk;
+	if(nk) return -1;	
+	return key;
+    }    
+
+    return key;
+}	
+*/
+
+void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
+{
+//    int nkey=key;
+//kb->joy_mode = JOY_KEM;
+    /* mapaowanie klawiszy specjalnych */
+    switch(key){
+	case E8K_ENTER    : key = KB_ENTER; break;
+	case E8K_SHIFT_L  : 
+	case E8K_SHIFT_R  : key = KB_SHIFT; break;	
+	case E8K_CAPS     : key = KB_CAPS;  break;
+	case E8K_SPC      : key = KB_SPACE; break;
+	case E8K_ALT_L    : key = KB_ALT_L; break;
+	case E8K_ALT_R	  : key = KB_ALT_R; break;
+	case E8K_CTRL_L   :
+	case E8K_CTRL_R   : key = KB_CTRL ; break;
+	case E8K_DEL      : key = KB_DEL  ; break;
+	case E8K_BS       : key = KB_BS   ; break;
+	case E8K_F1	  : key = KB_CPJ  ; break;
+	case E8K_F2	  : key = KB_DIR  ; break;
+	case E8K_F3	  : key = KB_LOAD ; break;
+	case E8K_F4	  : key = KB_SAVE ; break;
+	case E8K_F5	  : key = KB_ERASE; break;
+	case E8K_ARROW_L  : key = KB_CUR_L; break;
+	case E8K_ARROW_R  : key = KB_CUR_R; break;
+	case E8K_ARROW_U  : key = KB_CUR_U; break;
+	case E8K_ARROW_D  : key = KB_CUR_D; break;
+	case E8K_ESC	  : key = KB_ESC; break;
+	case E8K_TAB	  : key = KB_TAB; break;
+    }
+    
+//    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
+    if(key < 0) return;
+
+    key_update(kb, key,kb_state);
+}
+
+//unsigned char key_kempston(kbrd *kb){ return kb->in1f & 0x1f; }
 

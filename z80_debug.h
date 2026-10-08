@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,55 +18,83 @@
  *
  */
 
-#ifndef  __z80_debug_h__
-#define  __z80_debug_h__
+#ifndef __Z80_DEBUG__
+#define __Z80_DEBUG__
 
-#include "z80.h"
+#define MAX_BYTES 32
+#define LINE_LEN  256
+#define MAX_CMDCHR 256
 
+#define DBG_VERSION "0.1"
 
+enum{
+    C_PCEQ=1,
+    C_PCGT,
+    C_PCLT,
+    C_CNTR
+};
 
-typedef struct{
-    byte lines; /* ilosc linii instrukcji jaka ma zostac wyswietlona */
-    long  instr; /* ilosc instrukcji do wykonania */
-    word addr_brk; /* pulapka na adresu równy */
-    word addr_ghe; /* pulapka na adres wiêkszy równy  */
-    word addr_gle; /* pulapka na adres mniejszy równy */
-    byte fwcnt:1;
-    byte fcnt:1;
-    byte fbreak:1;
-    byte fwadr:1;
-    byte free:1;
-    byte fprint:1;
-    byte hdr:1;
-    byte pout;
-    byte stdout;
-    word daddr;
-    word deasm;
-    
-    int call_d;
-    byte djnz_d:1;
-    byte debug_print:1;
-    byte init:1;
-    byte fin:1;			/* zmienna, która gdy jest =1 nakazuje deasemblacjê na koncu kroku */
-    byte proc:1;
-    byte deb_stdout:1;
-    long cnt;
-    void (*input)(char *);
-    void (*output)(char *);
-    void (*exit)(void);
-} Z80_DEB;
+typedef struct
+{
+    char cond_type;	/* typ warunku    */
+    int  address;	/* warto¶æ adresu */
+    int  life;		/* ilo¶æ warunków  'czas ¿ycia warunku' */
+    void *next;		/* nastêpny warunek */
+} dbg_bp;
 
-#define DEB(a)	((Z80_DEB*)(a)->deb_struct)
+typedef struct
+{
+    char mach[MAX_BYTES]; 	/* kod maszynowy instrukcji */
+    char cmdline[MAX_CMDCHR];
+    char line[LINE_LEN]; 	/* bufor wyniku zdeasemblowanej linii */
+    int  len;  			/* d³ugo¶æ ³añcucha kodu maszynowego */
+    int  icnt; 			/* licznik instrukcji */
+    char console;   		/* w³±czenie konsoli */    
+    char deasm;			/* w³±czenie wy¶wietlania dekodowanej instr */
+    char noregs;		/* jesli ustawiony, nie wy¶wietla stanu rejestrów */
+    char trace;			/* flaga trybu ¶ledzenia */
+    void (*out)(char *);    	/* funkcja zwrotna do wyrzucania tekstu */
+    char (*in)();
+    z80  *z;
+/* warunek za³aczenia */
+    char cond;
+/* wartosc za³aczenia */
+    int addr;
+/* ilo¶æ instrukcji do wykonania */
+    int cntr;
+    dbg_bp *bp; /* break pointy */
+/* adres przy wy¶wietlaniu mapy pamiêci */
+    int daddr;
+    int dline;
+/* adres deasemblacji */    
+    int zaddr;
+    int zline;
+} dbg;
 
-/**/
-#define DEB_CTL_RESET	0
-#define DEB_CTL_DEASM	1
-#define DEB_CTL_DEBUG	2
-#define DEBUGGER_RESET(z)	z80_deb_call(z,DEB_CTL_RESET)
+enum{
+    DBG_OFF=0,
+    DBG_ON =1
+};
 
-extern void z80_deb_call(void *z, char call);
-extern void z80_debugger_init(Z80 *z, Z80_DEB *deb, void (*deb_in)(char*), void (*deb_out)(char*), void (*exit_f)(void));
-extern void z80_set_debug(Z80 *z,char fl);
-extern char z80_debug_test_break(Z80 *);
+/*
+    funkcja ³±cz±ca debugger z emulacj± CPU i inicjuj±ca debugger
+    komunikaty konsolowe I/O s± wyprowadzane domy¶lnie na stdin/stdout, chyba
+    ¿e zostanie u¿yta funkcja dbg_set_stream.
+*/
+extern void dbg_init(dbg *d, z80 *z, char debugg_on, char console_on);
 
+/*
+    przekierowanie strumienia komunikatów I/O
+*/
+extern void dbg_set_stream(dbg *d, char (*s_in)(void), void (*s_out)(char *));
+
+/*
+    w³±czenie/wy³±czenie debuggera
+*/
+extern void dbg_don(dbg *d, char flag);
+
+/*
+    w³±czenie/wy³±czenie konsoli
+*/
+extern void dbg_con(dbg *d, char flag);
 #endif

@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,26 +18,35 @@
  *
  */
 
-#ifndef __e800j_debug_h__
-#define __e800j_debug_h__
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <gdk/gdkkeysyms.h>
+/* Symulacja karty kontrolera dysków elastycznych Elwro 800 Junior */
+#ifndef _e800j_fdc_h_
+#define _e800j_fdc_h_
+#include "i8272_fdc.h"
 
-#include "e800j_kbrd.h"
-#include "e800j_file.h"
-#include "e800j_main.h"
-#include "z80_debug.h"
-#include "e800j_scrn.h"
-#include "e800j_gui.h"
+#define DEBUG_FDC
 
-void gui_debug_out(char *a);
-void gui_debug_in(char *a);
-void ed_ed(GtkWidget *wg);
-void debugger_destroy(GtkWidget *wg);
-void gui_gtk_debugger(GtkWidget *parwg, e8_gui *gui);
+typedef struct
+{
+    i8272 i8272str;
+    i8272 *i8272;
+    unsigned int drive_mtime;    
+    unsigned int drive_a;
+    unsigned int drive_b;
+} e800j_fdc;
 
+enum
+{
+    FDC_R175_DRIVE_A = 0x01,
+    FDC_R175_DRIVE_B = 0x02,
+    FDC_R175_TC      = 0x04,
+    FDC_R175_RESET   = 0x08
+};
+
+extern void fdc_init(e800j_fdc *fdc);
+
+extern void fdc_wr_r175(e800j_fdc *fdc, unsigned char data);
+extern void fdc_wr_i8272(e800j_fdc *fdc, unsigned char a0, unsigned char data);
+extern unsigned char fdc_rd_i8272(e800j_fdc *fdc, unsigned char a0);
+extern void fdc_reset(e800j_fdc *fdc);
+extern void fdc_clk(e800j_fdc *fdc);
 #endif

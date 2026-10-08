@@ -1,0 +1,51 @@
+Elwro 800 Junior v 0.2
+
+Program ten jest emulatorem popularnego w latach 80 (i na poczatku 90) polskiego komputera szkolnego
+jakim by³ Elwro 800 Junior. Komputer ten ma mo¿liwo¶æ pracy w dwóch trybach: ZX SPECTRUM, z którym
+jest zgodny prawie w 100% (G³ówna ró¿nica polega na zagospodarowaniu obszaru BIOS, gdzie w oryginale 
+miesci³ siê nieu¿ywany obszar wype³niony warto¶ciami #FF. Obszar ten w niektórych programach (zwykle
+grach) by³ niekiedy wykorzystany jako tablica wektorów przerwañ trybu IM2, co powodowa³o niemozliwo¶æ 
+ich uruchomienia ), oraz CP/J. System CP/J jest klonem systemu CP/M i aby w niego wej¶æ nale¿a³o 
+dysponowaæ b±d¼ dyskietk±, b±d¼ byæ pod³±czonym do sieci JUNET.
+
+Program:
+
+Program na dzieñ dzisiejszym jest jedynie szkieletem funkjcjonalno¶ci. Pozwala na uruchamianie 
+programów ZX SPECTRUM, oraz systemu CP/J (zapewne nie wszystkich). Aby u¿ywaæ stacji dysków nale¿y 
+sie zaopatrzeæ w plik CPCEmu DSK. Jesli nie podamy mu pliku dyskietki, zostanie pod³±czona do emulatora
+atrapa napêdu. Aby uruchomiæ emulator z dyskietk± nale¿y wpisac:
+
+elwro -adisk plik.dsk
+
+je¶li chcemy mieæ mo¿liwo¶c zapisu:
+
+elwro -adisk plik.dsk -awr
+
+je¶li chcemy mieæ oba napêdy, w tym jeden RO a drugi RW:
+
+elwro -adisk plik1.dsk -bdisk plik2.dsk -bwr
+
+itp..
+
+Aby dowiedzieæ siê wiêcej o opcjach programu nale¿y uruchomic go z parametrem:
+
+elwro -help
+
+Program zawiera równie¿ debugger/deasembler, aby emulator uruchomiæ w jego trybie nalezy wpisac:
+
+elwro -debug
+
+W tym momencie sterowanie programu przejmuje konsola tekstowa, aby dowiedzieæ siê o mozliwych opcjach 
+debuggera, nalezy wpisaæ h i nacisn±æ enter.
+
+Konfiguracja:
+
+Konfiguracja trzymana jest w pliku e800j.cfg w katalogu biez±cym (o ile nie zosta³o inne miejsce wymuszone).
+Plik konfiguracji jest podzielony na sekcje, z mo¿liwo¶ci± tworzenia ró¿nych profili konfiguracji.
+Podstawow± sekcj± jest 'main', która zawiera nazwê domy¶lnie u¿ytego profilu (mo¿na wymusiæ inny opcj± 
+uruchomienia ). 
+				  
+
+
+
+

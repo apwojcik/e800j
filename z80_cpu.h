@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,279 +18,236 @@
  *
  */
 
-#ifndef __Z80H_CPU__        
-#define __Z80H_CPU__
-
-#define Z80_STR(a)	z = a ? a : z80; /* wybór struktury */
-
-extern char *z80_hex8(byte,char *);
-extern char *z80_hex16(word,char *);
-extern char *z80_hexU(byte,char *);
-extern char *z80_hexRTI(byte,char*,char *);
-extern void z80_debugger_call(Z80*);
-extern void z80_exe(Z80 *);
-extern byte z80_parity_check(byte a);
-extern word z80_mrw(Z80 *z, word a);
-extern void z80_mww(Z80 *z, word c, word d);
-extern byte z80_fetch_byte(Z80 *z);
-
-#ifdef DEBUGGER
-
-#define DEBUG(a,b,c,d)		z->deb_par_0 = a, z->deb_par_1 = b, z->deb_par_2 = c, z->deb_par_3 = d;
-/* parametry dla DEBUG */
-#define DEB_M	0x80
-#define DEB_HL	0x81
-#define DEB_NRM 0x00
-
-#define DEBUGGER_CLEAN		z->deb_par_0 = z->deb_par_1 = z->deb_par_2 = (void *)0, z->deb_par_3 = 0;
-
-#define DRY_RUN_RET	if(z->deb_dry) return;
-#define DEB_DJNZ(a)	if(z->proc){z->djnz_d = a;}
-#define DEB_CALL(a)	if(z->proc){z->call_d += a ? 1: -1;}
-#define DEB_XY(a)	z->xy=a
-
-#define DEB_DFP		" "
-#define DEB_RT  	"U"
-#define DEB_DD		"V"
-#define DEB_NNH 	"W"
-#define DEB_NNL 	"K"
-#define DEB_NS		"O"
-#define DEB_DIS 	"Q"
-#define DEB_HEX16 	"G"
-#define DEB_EP		""
-#define DEB_RTI 	"T"
-#define DEB_DXL		"IXL"
-#define DEB_DXH		"IXH"
-
-#define DEB_CLASS(a)	z->deb_class=a
-#else
-
-
-#endif
-
+/*
+    z80_cpu.h
+    Interfejs biblioteki emulacji Z80
+    
+    Autor: Krzysztof Komarnicki
+    Ver: 0.1
+    Data: 19.08.2006
+    Licencja: GPL v2
+*/
+#ifndef __Z80_CPU_H__
+#define __Z80_CPU_H__
 
 #ifndef BIG_ENDIAN
-#	define SET_A z->Ap =(byte *) &z->AFr+1
-#	define SET_F z->Fp =(byte *) &z->AFr
-#	define SET_B z->Bp =(byte *) &z->BCr+1
-#	define SET_C z->Cp =(byte *) &z->BCr
-#	define SET_D z->Dp =(byte *) &z->DEr+1
-#	define SET_E z->Ep =(byte *) &z->DEr
-#	define SET_H z->Hp =(byte *) &z->HLr+1
-#	define SET_L z->Lp =(byte *) &z->HLr
-#	define SET_A_ z->Ap =(byte *) &z->AFr_+1
-#	define SET_F_ z->Fp =(byte *) &z->AFr_
-#	define SET_B_ z->Bp =(byte *) &z->BCr_+1
-#	define SET_C_ z->Cp =(byte *) &z->BCr_
-#	define SET_D_ z->Dp =(byte *) &z->DEr_+1
-#	define SET_E_ z->Ep =(byte *) &z->DEr_
-#	define SET_H_ z->Hp =(byte *) &z->HLr_+1
-#	define SET_L_ z->Lp =(byte *) &z->HLr_
-#	define SET_IXL z->IXLp =(byte *) &z->IXp+1
-#	define SET_IXH z->IXHp = (byte *) &z->IXp
-#	define SET_IYL z->IYLp =(byte *) &z->IYp+1
-#	define SET_IYH z->IYHp =(byte *) &z->IYp
+#define LITTLE_ENDIAN
+#endif
+
+#ifndef __cplusplus
+#define Z80_CPU(z)	z->
+#define Z80_PTR		z
+#define Z80_CLASS
+#define Z80_STRUCT	z80 *z
+#define Z80_STRUCTC	z80 *z,
+#define Z80_STRUCT_NAME z80
+#define Z80_CLASS_NAME  typedef struct 
 #else
-#	define SET_A z->Ap =(byte *) &z->AFr
-#	define SET_F z->Fp =(byte *) &z->AFr+1
-#	define SET_B z->Bp =(byte *) &z->BCr
-#	define SET_C z->Cp =(byte *) &z->BCr+1
-#	define SET_D z->Dp =(byte *) &z->DEr
-#	define SET_E z->Ep =(byte *) &z->DEr+1
-#	define SET_H z->Hp =(byte *) &z->HLr
-#	define SET_L z->Lp =(byte *) &z->HLr+1
-#	define SET_A_ z->Ap =(byte *) &z->AFr_
-#	define SET_F_ z->Fp =(byte *) &z->AFr_+1
-#	define SET_B_ z->Bp =(byte *) &z->BCr_
-#	define SET_C_ z->Cp =(byte *) &z->BCr_+1
-#	define SET_D_ z->Dp =(byte *) &z->DEr_
-#	define SET_E_ z->Ep =(byte *) &z->DEr_+1
-#	define SET_H_ z->Hp =(byte *) &z->HLr_  
-#	define SET_L_ z->Lp =(byte *) &z->HLr_+1
-#	define SET_IXL z->IXLp =(byte *) &z->IXp
-#	define SET_IXH z->IXHp = (byte *) &z->IXp+1
-#	define SET_IYL z->IYLp =(byte *) &z->IYp
-#	define SET_IYH z->IYHp =(byte *) &z->IYp+1
+#define Z80_CPU(z)	
+#define Z80_PTR		this
+#define Z80_CLASS	z80::
+#define Z80_STRUCT	
+#define Z80_STRUCTC
+#define Z80_STRUCT_NAME
+#define Z80_CLASS_NAME  class z80
 #endif
 
-#define SET_M1(a)	z->M1=a;
-#define GET_M1		(z->M1)
+#ifndef ushort
+#define ushort unsigned short
+#endif
 
-#define SET_AF 		z->AFp = &z->AFr; SET_A; SET_F; z->AltAF=0;
-#define SET_BC 		z->BCp = &z->BCr; SET_B; SET_C;
-#define SET_DE 		z->DEp = &z->DEr; SET_D; SET_E;
-#define SET_HL 		z->HLp = &z->HLr; SET_H; SET_L; z->XYHp = z->Hp; z->XYLp = z->Lp; 
+#ifndef uchar
+#define uchar unsigned char
+#endif
 
-#define SET_AF_ 	z->AFp = &z->AFr_; SET_A_; SET_F_; z->AltAF=1;
-#define SET_BC_ 	z->BCp = &z->BCr_; SET_B_; SET_C_;
-#define SET_DE_ 	z->DEp = &z->DEr_; SET_D_; SET_E_;
-#define SET_HL_ 	z->HLp = &z->HLr_; SET_H_; SET_L_; z->XYHp = z->Hp; z->XYLp = z->Lp; 
+#define Z80_LAST_READ_BYTE(str,data)	((z80*)(str))->last_mem_rd = data
+#define Z80_LAST_WRITE_BYTE(str,data)	((z80*)(str))->last_mem_wr = data
 
-//#define SET_IX 	z->HLp = &z->IXp; SET_IXL; SET_IXH; z->DD_FD=1; DEB_XY(0);
-//#define SET_IY 	z->HLp = &z->IYp; SET_IYL; SET_IYH; z->DD_FD=1; DEB_XY(1);
+#define Z80_DATA_SIZE 1024
 
-#define SET_IX 		z->HLp = &z->IXp;  z->DD_FD=1; DEB_XY(0); z->XYHp = &z->IXHr; z->XYLp = &z->IXLr;
-#define SET_IY 		z->HLp = &z->IYp;  z->DD_FD=1; DEB_XY(1); z->XYHp = &z->IYHr; z->XYLp = &z->IYLr; 
+Z80_CLASS_NAME
+{
+#ifdef __cplusplus
+public:
+#endif
+    union{
+	struct {
+    /* rejestry p-value */
+	    union{
+		ushort *regs16[8];
+		struct{ ushort *AF_r, *BC_r, *DE_r, *HL_r, *IX_r, *IY_r, *SP_r, *PC_r; };
+	    };
+	    union{
+		uchar *regs8[20];
+		struct{
+		    uchar *A_r, *F_r, *B_r, *C_r, *D_r, *E_r, *H_r, *L_r;
+		    uchar *XH_r, *XL_r, *YH_r, *YL_r, *I_r, *R_r;
+		    uchar *MHL_r, *MIX_r, *MIY_r, *MSP_r, *MBC_r, *MDE_r;
+		};
+	    };
+/* Rejestry l-value */
+	    union{
+		struct{ ushort AFs0, BCs0, DEs0, HLs0, AFs1, BCs1, DEs1, HLs1, IXs, IYs; };
+		struct{
+		    uchar  Fs0, As0, Cs0, Bs0, Es0, Ds0, Ls0, Hs0, Fs1, As1;
+    		    uchar  Cs1, Bs1, Es1, Ds1, Ls1, Hs1, XLs, XHs, YLs, YHs;
+		};
+	    };
+	    ushort SPs, PCs;
+	    uchar  Is, Rs;
+    	    uchar  MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
+/* rejestry niejawne CPU */
+	    uchar  iff1;
+	    uchar  iff2;    
+/* stany CPU */
+	    uchar  imode;   /* tryb przerwañ                                       */    
+	    uchar  intr;    /* wywo³anie przerwania maskowalnego                   */
+	    uchar  inmi;    /* wywo³anie przerwania niemaskowalnego                */
+	    uchar  halt;    /* CPU jest w stanie HALT                              */
+/* flagi dodatkowe, pomocnicze */
+	    uchar  alt_rg;  /* flaga okre¶laj±ca który bank rejestrów jest aktywny */
+	    uchar  alt_af;  /* flaga okre¶laj±ca który bank AF jest aktywny  */
+	    uchar  ipend;   /* je¶li ustawiona to instrukcja w toku */ 
+	    uchar  irupt;   /* wykonuje przerwanie */
+/* zmienne sterowania CPU */
+	    int    pref_cb_ed;
+	    int    pref_dd_fd;
+	    int    ibus;
+	    char   bus[8];    /* bajty wystawione na magistrale w trybie IM 0 */
+	    int    call_cnt;   /* licznik co ile ma byæ wywo³ana procedura w petli */
+/* liczniki */
+	    long int cycles;  /* przechowuje ilo¶æ cykli  */
+	    long int ticks;   /* przechowuje ilo¶æ taktów */
+	    int	 _tic;	      /* ilo¶æ taktów na wykonan± instrukcjê */
+/* parametry wywo³ania instrukcji */
+	    uchar p0,p1,p2;
+	    uchar b, c, t;
+	    uchar a, o, x;
+/* zmienne tymczasowe */    
+	    uchar dd0, dd1, dd3;
+	    ushort dd2;
+/* dodatkowe informacje dla debuggera i flagi steruj±ce */
+	    uchar  int_off;	 	/* je¶li ustawiona ignorowane s± przerwania i instrukcja HALT */
+	    uchar  jmp_off;	 	/* je¶li ustawione nie wykonywane s± skoki przez jp, djnz, jr, call, ret */
+	    uchar  dbg_on;	 	/* za³±czenie debuggera */    
+	    uchar  cpu_off;	 	/* ustawienie ignoruje wywo³anie funkcji CPU */
+	    uchar  djnz;       		/* cpu wykonuje instrukcjê DJNZ */
+	    ushort adrs;         	/* warto¶æ PC pod któr± zaczyna siê instrukcja */
+	    uchar cmd_type;	 	/* typ instrukcji */
+	    uchar reg80;	 	/* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
+	    uchar reg81;	 	/* rejestr 8 bit   drugi parametr */    
+    	    uchar regx0;	 	/* rejestr 16 bit  pierwszy parametr */
+	    uchar regx1;	 	/* rejestr 16 bit  drugi parametr */    
+	    uchar exit;			/* powoduje wyj¶cie z pêtli */
+	    char  dd;		 	/* sta³a 8 bitowa  */
+	    ushort nn;		 	/* sta³a 16 bitowa */
+	    uchar  last_in_data;	/* ostatnio pobrana dana z portu */
+	    ushort last_in_addr;	/* ostatni adres pobierania danych z portu */
+	    uchar  last_out_data;	/* ostatnio wpisana dana do portu */
+	    ushort last_out_addr;	/* ostatni adres odwo³ania do portu wyj¶ciowego */
+	    ushort last_mem_rd;		/* ostatnio odczytana dana z pamiêci */
+	    ushort last_mem_wr;		/* ostatnio zapisana dana do pamiêci */
+	    unsigned int nested;	/* wskazuje zag³êbienie podprogramów */
+	    int    force_in;		/* jesli > 0 warto¶c bêdzie odczytana przez IN */
+	}; /*koniec struktury */
+	char z80_data[Z80_DATA_SIZE];   /* maksymalny dopuszczalny rozmiar pola danych */
+    }; /* koniec unii */
+#ifdef __cplusplus
+public:
+    void z80_reset();
+    void z80_nmi();
+    void z80_int(uchar *bus);
+    void z80_loop(int cnt, int call, void *param);
 
-
-#define SET_UNI_NRM 	SET_BC; SET_DE;SET_HL;z->Alt=0;
-#define SET_UNI_ALT 	SET_BC_; SET_DE_;SET_HL_;z->Alt=1;
-
-#define A		(*z->Ap)
-#define B		(*z->Bp)
-#define C		(*z->Cp)
-#define D		(*z->Dp)
-#define E		(*z->Ep)
-#define F		(*z->Fp)
-#define L		(*z->Lp)
-#define H		(*z->Hp)
-#define I		(z->Ip)
-#define R		(z->Rp)
-#define IXH		(z->IXHp)
-#define IXL		(z->IXLp)
-#define IYH		(z->IYHp)
-#define IYL		(z->IYLp)
-
-#define XL 		(*z->XYLp)
-#define XH 		(*z->XYHp)
-
-
-#define AF		(*z->AFp)
-#define BC		(*z->BCp)
-#define DE		(*z->DEp)
-#define HL		(*z->HLp)
-#define IX		(z->IXp)
-#define IY		(z->IYp)
-#define PC		(z->PCp)
-#define SP		(z->SPp)
-
-#define IFF1		(z->IFF1p)
-#define IFF2		(z->IFF2p)
-#define IM_		z->IMr
-#define SET_HALT(a)	z->Halt_state=a
-
-#define T		z->Tr
-
-#define BIT_TST	0
-#define BIT_RES	1
-#define BIT_SET	2
-
-/* cykle maszynowe, takty, i po dd lub fd */
-#define TICKS(mach, ticks, mach_dd, ticks_dd) if(z->DD_FD) { z->mach += mach_dd;z->ticks+=ticks_dd } \
-						else { z->mach += mach;z->tics+=ticks } 
-#define TICKS_RST	z->mach = z->ticks= 0;
-
-#define IO(a,b,c) 	z->io(a,b,c,z)
-
-#define MASK_CF		1
-#define MASK_NF 	2
-#define MASK_PF 	4
-#define MASK_HF 	16
-#define MASK_ZF 	64
-#define MASK_SF 	128
-
-/* ustawia znacznik */
-#define SET_CF(a) 	F = (a) ? (F | MASK_CF) : (F & ~MASK_CF);
-#define SET_NF(a) 	F = (a) ? (F | MASK_NF) : (F & ~MASK_NF);
-#define SET_PF(a) 	F = (a) ? (F | MASK_PF) : (F & ~MASK_PF);
-#define SET_HF(a) 	F = (a) ? (F | MASK_HF) : (F & ~MASK_HF);
-#define SET_ZF(a) 	F = (a) ? (F | MASK_ZF) : (F & ~MASK_ZF);
-#define SET_SF(a) 	F = (a) ? (F | MASK_SF) : (F & ~MASK_SF);
-/* pobieranie wartosci znacznika, wynikiem jest 1 jesli ustawiony lub 0 */
-#define GET_CF		((F & MASK_CF) ? 1:0)
-#define GET_NF		((F & MASK_NF) ? 1:0)
-#define GET_PF		((F & MASK_PF) ? 1:0)
-#define GET_HF		((F & MASK_HF) ? 1:0)
-#define GET_ZF		((F & MASK_ZF) ? 1:0)
-#define GET_SF		((F & MASK_SF) ? 1:0)
-
-#define GNZ		0
-#define GZ		1
-#define GNC		2
-#define GC		3
-#define GPO		4
-#define GPE		5
-#define GP		6
-#define GM		7
-
-/* sprawdza stan znaczników, zwraca 1 lub 0 */
-#define FLAG_TEST(a) 	z80_test_flag(z,a)
-
-/* ustawia flagi zgodnie z wartosci± parametru a*/
-#define SET_TEST_SF(a)	SET_SF((a) & MASK_SF);
-#define SET_TEST_ZF(a)	SET_ZF(!(a));
-#define SET_TEST_PF(a)	SET_PF(z80_parity_check(a) ? MASK_PF:0);
-
-#ifdef DEBUGGER
-#define N		(z->Np=z80_fetch_byte(z))
-#define NN		(z->NNp=z80_fetch_word(z))
+    virtual void   callback(void *param);
+    virtual uchar  mem_rd(void *ptr, ushort addr);		/* funkcja odczytu z pamiêci */
+    virtual void   mem_wr(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiêci */
+    virtual uchar  input(void *ptr, ushort addr);		/* funkcja odczytu IO        */
+    virtual void   output(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do IO      */
+    virtual void   debug(void *ptr, int mode, uchar data);	/* funkcja debuggera         */
 #else
-#define N		(z80_fetch_byte(z))
-#define NN		(z80_fetch_word(z))
+/* funkcje zewnêtrzne */
+    uchar  (*mem_rd)(void *ptr, ushort addr);			/* funkcja odczytu z pamiêci */
+    void   (*mem_wr)(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiêci */
+    uchar  (*input) (void *ptr, ushort addr);			/* funkcja odczytu IO        */
+    void   (*output)(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do IO      */
+    void   (*debug) (void *ptr, int mode, uchar data);		/* funkcja debuggera         */
+#endif
+    void   *ptr;      						/* dowolny wska¼nik          */
+    void   *ptx;      						/* dowolny wska¼nik          */
+} Z80_STRUCT_NAME;
+
+/* ID instrukcji i index w tabeli DEB_DEC_TABL */
+enum
+{
+    D_NOP=1, D_LDB, D_LDBN, D_LDBRM, D_LDBMR, D_LDBMN, D_LDBMNR, D_LDW,
+    D_LDWN, D_LDWRMN, D_LDWMNR, D_HALT, D_IM, D_DI, D_EI, D_JR, D_JP,
+    D_DJNZ, D_CALL, D_RST, D_RET, D_RETI, D_RETN, D_POP, D_PUSH, D_EXX,
+    D_EX, D_DAA, D_SCF, D_CCF, D_CPL, D_BIT, D_BITM, D_RES, D_RESM, D_SET,
+    D_SETM, D_AND, D_ANDN, D_ANDM, D_OR, D_ORN, D_ORM, D_XOR, D_XORN, D_XORM,
+    D_RLC, D_RLCM, D_RRC, D_RRCM, D_RL, D_RLM, D_RR, D_RRM, D_SLA, D_SLAM, D_SRA,
+    D_SRAM, D_SLI, D_SLIM, D_SRL, D_SRLM, D_RRD, D_RLD, D_INA, D_OUTA, D_INBC, D_OUTBC,
+    D_ADD8, D_ADDN8, D_ADDM8, D_ADC8, D_ADCN8, D_ADCM8,
+    D_SUB8, D_SUBN8, D_SUBM8, D_SBC8, D_SBCN8, D_SBCM8, D_CP, D_CPN, D_CPM,
+    D_INC8, D_INCM8, D_DEC8, D_DECM8, D_INCX, D_DECX, D_NEG, D_ADDX, D_ADCX, D_SBCX,D_LDBL,D_JPHL,
+    D_LDBRMN, D_EXSP, D_CPBL, D_INBL, D_OUTBL
+};
+
+/* tryby debuggera */
+enum
+{
+    D_PRE    = 0x00,
+    D_FETCH  = 0xfe,
+    D_FLUSH  = 0xff,
+    D_TESTIN = 0xfd
+};
+
+#define TAB_REGS8_NME { "A","F","B","C","D","E","H","L","XH","XL"\
+			,"YH","YL","I","R","(HL)","(IX)","(IY)","(SP)","(BC)","(DE)" }
+#define TAB_REGSX_NME { "AF","BC","DE","HL","IX","IY","SP","PC","AF","AF'" }
+#define TAB_RCND_NME  { "","NZ","Z","NC","C","PO","PE","P","M" }
+#define DEB_DEC_TABL	\
+{\
+    "-","NOP","LD   %r,%z","LD   %r,%n","LD   %r,(%m)","LD   (%m),%r","LD   (%m),%f","LD   (%N),%r",\
+    "LD   %R,%Z","LD   %R,%N  ","LD   %R,(%N)","LD   (%N),%R","HALT","IM   %n","DI","EI","JR   %c%N",\
+    "JP   %c%N","DJNZ %N","CALL %c%N","RST  %n","RET  %c","RETI","RETN","POP  %R","PUSH %R","EXX",\
+    "EX   %R,%Z","DAA","SCF","CCF","CPL","BIT  %b,%r","BIT  %b,(%m)","RES  %b,%r","RES  %b,(%m)",\
+    "SET  %b,%r","SET  %b,(%m)","AND  %r","AND  %n","AND  (%m)","OR   %r","OR   %n","OR   (%m)",\
+    "XOR  %r","XOR  %n","XOR  (%m)","RLC  %r","RLC  (%m)","RRC  %r","RRC  (%m)","RL   %r","RL   (%m)",\
+    "RR   %r","RR   (%m)","SLA  %r","SLA  (%m)","SRA  %r","SRA  (%m)","SLI  %r","SLI  (%m)","SRL  %r",\
+    "SRL  (%m)","RRD","RLD","IN   A,(%n)","OUT  (%n),A","IN   %r,(C)","OUT  (C),%r","ADD  %r",\
+    "ADD  %n","ADD  (%m)","ADC  %r","ADC  %n","ADC  (%m)","SUB  %r","SUB  %n","SUB  (%m)","SBC  %r",\
+    "SBC  %n","SBC  (%m)","CP   %r","CP   %n","CP   (%m)","INC  %r","INC  (%m)","DEC  %r","DEC  (%m)",\
+    "INC  %R","DEC  %R","NEG","ADD  %R,%Z","ADC  %R,%Z","SBC  %R,%Z","LD%w","JP  (%R)","LD %r,(%N)",\
+    "EX   (SP),%R", "CP%w", "IN%w", "OUT%w"\
+}
+
+#ifndef __cplusplus
+/* reset CPU */
+
+extern void z80_init(
+    z80 *, 						/* wska¼nik na objekt z80  */
+    uchar (*mem_rd)(void *z, ushort addr), 		/* funkcja odczytu pamiêci */
+    void  (*mem_wr)(void *z, ushort addr, uchar data),	/* funkcja zapisu pamiêci  */
+    uchar (*io_rd)(void *z, ushort addr), 		/* funkcja odczytu I/O     */
+    void  (*io_wr)(void *z, ushort addr, uchar data),	/* funkcja zapisu I/O      */
+    void *ptr,						/* wska¼nik do w³asnego u¿ytku 1 */
+    void *ptx						/* wska¼nik do w³asnego u¿ytku 1 */
+    );
+
+extern void z80_reset(z80*);
+
+extern void z80_step(z80*);
+/* wykonuje petlê zadan± ilo¶ci± taktów, w trakcie wywo³uje funkcjê 
+   callback z parametrem callback_param (jesli nie NULL) 
+   icall ilo¶æ obiegów pêtli, po których zostanie wywo³any callback
+   zwraca ilo¶æ nadmiarowych taktów, nie mieszczacych siê w zadanych ilo¶ciach taktów do wykonania
+   funkcja callback przyjmuje dwa parametry, pierwszym z nich jest przepisywany wska¼nik
+   callback_param, za¶ drugim liczba taktów CPU.
+*/
+extern void z80_loop(z80*, int cnt, int icall, void (*callback)(z80*,void *), void *callback_param);
+extern void z80_nmi(z80*);
+extern void z80_int(z80*, uchar *bus);
 #endif
 
-#define DD		((signed char)z->dd)
-#define GET_DD 		{if(z->DD_FD) z->dd=z80_fetch_byte(z);}
-
-#define MR(a) 		(z->RD_MEM(z,(a)))
-#define MW(a,b)		(z->WR_MEM(z,(a),(b)))
-#define MRW(a)		z80_mrw(z,a)
-#define MWW(a,b)	z80_mww(z,a,b)
-
-#define MEM(a) 		{tmp=MR(HL+DD); a; MW(HL+DD,tmp);}
-
-#define COM_RLCA	0
-#define COM_RRCA	1
-#define COM_RLA		2
-#define COM_RRA		3
-#define COM_RLC		4
-#define COM_RRC		5
-#define COM_RL		6
-#define COM_RR		7
-#define COM_SLA		8
-#define COM_SLI		9
-#define COM_SRA		10
-#define COM_SRL		11
-#define COM_RRD		12
-#define COM_RLD		13
-#define REG		(*reg)
-
-#define MASK_53F	0x28
-#define SET_53F(a)	F = (F & ~MASK_53F) | (a & MASK_53F)
-
-
-#define CARRY_FLAGS	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x04,0x04,0x04,0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x04,0x04,0x04,0x04,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x04,0x04,0x04,0x04,0x04,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x04,0x04,0x04,0x04,0x04,0x04,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x11,0x11,0x11,0x11,0x11,0x11,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x11,0x11,0x11,0x11,0x11,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x11,0x11,0x11,0x11,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x11,0x11,0x11,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x11,0x11,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x11,0x15,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x04,0x04,0x04,0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x04,0x04,0x04,0x04,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x04,0x04,0x04,0x04,0x04,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x04,0x04,0x04,0x04,0x04,0x04,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x11,0x11,0x11,0x11,0x11,0x11,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x11,0x11,0x11,0x11,0x11,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x11,0x11,0x11,0x11,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x11,0x11,0x11,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x11,0x11,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x00,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x11,0x15,0x15,0x15,0x15,0x15,0x15,0x15,\
-			0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15}
-
 #endif
-

@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -19,120 +19,80 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include <time.h>
-
-#include "z80.h"
+#include "z80_cpu.h"
 #include "e800j.h"
-#include "e800j_kbrd.h"
-#include "i8251.h"
-#include "i8272.h"
+#include "e800j_io.h"
+#include "e800j_msg.h"
 
-
-#define HW_PRINT	printf
-#define I8272_USE
-
-/* Ustawianie portów wyj¶ciowych */
-void out_mem_74157(byte data, e800j *e8)
-{ 
-//    HW_PRINT("OUT MEM SN74LS157: %x\n", data);
-    e8->reg175 = (data & 0xf0); 
-    e8->addr_prom_mask = (data & 0xc0) | ((data & 0x20) << 3);
-}
-
-void out_fe_74373(byte data, e800j *e8)
-{ 
-//    HW_PRINT("OUT FE SN743LS73: %x\n",data);
-    e8->wr373 = 1;
-    e8->reg373 = data;
-}
-
-void out_par_8255(byte data, e800j *e8)
-{ 
-//    HW_PRINT("OUT PAR 8255: %x\n",data);
-
-}
-
-void out_ser_8251(byte data, e800j *e8, word addr)
-{ 
-//    HW_PRINT("OUT SER 8251: %x\n",data);
-    i8251_write(e8->i8251p, data, A0(addr));
-}
-
-void out_fdc_8272(byte data, e800j *e8,word addr)
-{ 
-    HW_PRINT("OUT FDC 8272: %x\n",data);
-#ifdef I8272_USE
-    i8272_wr(addr,data);    
-#endif
-}
-
-void out_fdc_74157(byte data, e800j *e8)
-{ 
-    HW_PRINT("OUT FDC SN74LS157: %x\n",data);
-
-}
-
-/* Czytanie z portów wej¶cia */
-byte in_kbrd(word addr, e800j *e8)
+enum
 {
-    byte t = key_matrix(addr) & (e8->tape_in ? 0xff:0xbf);
-//printf("IN %x=%x\n",addr,t);
-    return t;
-}
+    PORT_CFE = 0x01,
+    PORT_CF7 = 0x02,
+    PORT_CS55 = 0x04,
+    PORT_CSFDC = 0x08,
+    PORT_CS51 = 0x10,
+    PORT_CF1 = 0x20,
+    PORT_IAL = 0x40
+};
 
-byte in_8255(word addr, e800j *e8)
+unsigned char prom_io[512] = PROM_IO;
+
+
+uchar io_read(void *z, ushort addr)
 {
-    return 0xff;
-}
-
-byte in_8251(word addr, e800j *e8)
-{
-    return i8251_read(e8->i8251p,addr & 0x01);
-}
-
-byte in_8272(word addr, e800j *e8)
-{
-//struct timespec tm,tr;
-byte aa = i8272_rd(addr);
-//long a;
-#ifndef I8272_USE
-aa = 0xff;
-#else
-printf("IN FDC %x=%x\n",addr,aa);
-#endif
-
-//tm.tv_sec=0;
-//tm.tv_nsec=1000000;
-//nanosleep(&tm,&tr);
-//if(aa==0xf0) exit(0);
-    return aa;
-//    return 0xff;
-}
-
-
-unsigned char io(word addr,byte data, byte type, Z80 *z)
-{
-    e800j *e8 = (e800j *)z->cust;
-    byte  ctrl = *(e8->prom_jio + (addr & 0x1ff));
-
-    if(!type){
-/* IOW */
-	if(IO_CF7(ctrl))   { e8->wr175 = 1; out_mem_74157(data,e8); return 0; }
-	if(IO_CFE(ctrl))   { e8->wr373 = 1; out_fe_74373(data,e8);  return 0; }
-	if(IO_CS55(ctrl))  { e8->wr55  = 1; out_par_8255(data,e8);  return 0; } 
-	if(IO_CS51(ctrl))  { e8->wr51  = 1; out_ser_8251(data,e8,addr);  return 0; } 
-	if(IO_CSFDC(ctrl)) { e8->wr72  = 1; out_fdc_8272(data,e8,addr);  return 0; }  	
-	if(IO_CF1(ctrl))   { e8->wrFDC = 1; out_fdc_74157(data,e8); return 0; }  		
-    } else {
-/* IOR */
-	if(IO_CFE(ctrl))   return in_kbrd(addr,e8);
-	if(IO_CS55(ctrl))  return in_8255(addr,e8);
-	if(IO_CS51(ctrl))  return in_8251(addr,e8);
-	if(IO_CSFDC(ctrl)) return in_8272(addr,e8);	
+    elwro *el = (elwro*)((z80*)z)->ptr;
+    uchar adec = ~prom_io[addr & 0x1ff]; 
+    uchar dout = 0xff;
+    
+    
+    if(adec & PORT_CFE){
+	dout = key_matrix(el->kb, addr);
+    
     }
-    return 0xff;
+
+    if(adec & PORT_CSFDC) dout = fdc_rd_i8272(el->fdc, addr & 0x01);
+    
+    if(adec & PORT_CS51){}
+    if(adec & PORT_CS55){}
+
+    return dout;
 }
+
+void io_write(void *z, ushort addr, uchar data)
+{
+    elwro *el = (elwro*)((z80*)z)->ptr;
+    uchar adec = ~prom_io[addr & 0x1ff]; 
+    
+    if(adec & PORT_CF7){
+	el->mem_mask = (data & 0xc0) | ( (data & 0x20) << 3 );
+	
+	if(data & RELOK_R175){
+	    if(!(el->port_f7 & RELOK_R175)) 
+		msg_printf(MSG_MSG, "Relocate screen at 0xE000 address\n");
+		el->zx->zx_patt = el->ram + 0xE000;
+		el->zx->zx_attr = el->ram + 0xF800;
+	} else {
+	    if(el->port_f7 & RELOK_R175) 
+		msg_printf(MSG_MSG, "Relocate screen at 0x4000 address\n");
+		el->zx->zx_patt = el->ram + 0x4000;
+		el->zx->zx_attr = el->ram + 0x5800;
+	}
+	el->port_f7  = data;	
+    }
+    if(adec & PORT_CFE){
+	el->zx->border_color = data & 0x07;
+	snd_beeper(data, z);
+//	tape_save(data, z);
+    }
+    if(adec & PORT_CF1) fdc_wr_r175(el->fdc, data);
+    if(adec & PORT_CSFDC) fdc_wr_i8272(el->fdc, addr & 0x01, data);
+
+    if(adec & PORT_CS51){}
+    if(adec & PORT_CS55){}
+
+}
+
+
+
 

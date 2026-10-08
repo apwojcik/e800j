@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -21,147 +21,36 @@
 #ifndef __e800j_file_h__
 #define __e800j_file_h__
 
-#include <stdio.h>
-#include "z80.h"
+#include "z80_cpu.h"
 #include "e800j.h"
+/* 
+ Czyta parametry wej¶ciowe programu poszukuj±c opcji -f, po jej znalezieniu jako 
+  nazwê snapshotu uznaje nastêpny parametr, a nastêpnie wczytuje snapshot
+*/
+extern void file_get_cline(int argc, char **argv, z80 *c, char *ram, char *reg373, char rest);
+/*
+ Wczytuje snapshot:
+ c - struktura CPU Z80,
+ ram - bufor pamiêci ZX SPECTRUM/ JUNIOR
+ reg373 - kolor ramki
+ rest - jesli TRUE, to niezgodnosæ sprzêtu emulowanego przerwie spowoduje wyj¶cie z funkcji,
+        warto¶æ FALSE wygeneruje jedynie ostrze¿enie na konsoli
+*/
+extern int file_snap_load(const char *fname, z80 *c, char *ram, char *reg373, char rest);
+//extern int file_snap_save(const char *fname, z80 *c, char *ram, char *reg373);
+// xx - jesli 1 to brak opcji nie generuje b³êdu
+extern char *file_find_cfg_option(const char *cfg,const char *name,const char *str,const char *err, int lvl, int xx);
+extern char *file_find_cfg_section(const char *cfg,const char *name,const char *str,const char *err, int lvl);
 
-/* Hw_mode  dla wersji v2 */
-#define H2W_48K		0
-#define H2W_48K_IF	1
-#define H2W_SAMRAM	2
-#define H2W_128K	3
-#define H2W_128K_IF	4
-
-/* Hw_mode  dla wersji v3 */
-#define H3W_48K_MGT	3
-#define H3W_128K	4
-#define H3W_128K_IF	5
-#define H3W_128K_MGT	6
-
-/* Hw_mode rozszerzone przez emulatory */
-#define HW_SPEC_3	7
-#define HW_SPEC_3m	8
-#define HW_PENTAGON	9
-#define HW_Scorpion	10
-#define HW_DIDAKTIK	11
-#define HW_SPEC_2	12
-#define HW_SPEC_2A	13
-#define HW_TC2048	14
-#define HW_TC2068	15
-#define HW_TS2068	128
-
-/* znaczenie numerów stron */
-#define PG_ROM_BAS	0
-#define PG_IFACE_ROM	1
-#define PG_ROM_RST	2
-#define PG_0		3	/* sam ram            */
-#define PG_1		4	/* 8000...bfff        */
-#define PG_2		5	/* c000...ffff        */
-#define PG_3		6	/* shadow 8000...bfff */
-#define PG_4		7	/* shadow c000...bfff */
-#define PG_5		8	/* 4000...7fff        */
-#define PG_6		9	/* page 6 - spec 128  */
-#define PG_7		10	/* page 7 - spec 128  */
-#define PG_MFCE		11      /* Multiface ROM      */
-
-#ifndef byte
-#define byte		unsigned char 
-#endif
-#ifndef word
-#define word		unsigned short int
+extern char *file_get_profile(const char *cfg, char *str);
+extern int file_bios_load(const char *cfg, char *rom, char *profile, int romsize);
+extern char file_init(elwro*, char *cpath, int argc, char **argv);
+/*  przeszukuje parametry wej¶ciowe wywo³ania w poszukiwaniu opcji, 
+    jesli znajdzie zwraca jej numer, inaczej zwraca 0
+*/
+extern int  file_lookup_option(int argc, char **argv, const char *name);
+extern void file_option_param(int argc, char **argv, int pos, int min, int max, int *val);
+extern void file_help();
 #endif
 
-typedef struct
-{
-//    byte A;
-//    byte F;
-    byte AF[2];
-    byte BC[2];
-    byte HL[2];
-    union{
-	word Next_Version; /* jesli jest ==0 to znaczy ¿e wersja 2 lub 3 formatu z80 */
-	byte PC[2];
-    };
-    byte SP[2];
-    byte I;
-    byte R; /* ignorowany bit siódmy */
-    union{
-	byte Byte_12;
-	struct{
-	    byte R7:1;
-	    byte Border:3; /* kolor obrze¿a ekranu */
-	    byte SamROM:1;
-	    byte Compressed:1;
-	    byte :2;
-	};
-    };
-    byte DE[2];
-    byte BCa[2];
-    byte DEa[2];
-    byte HLa[2];
-//    byte Aa;
-//    byte Fa;
-    byte AFa[2];
-    byte IY[2];
-    byte IX[2];
-    byte IFF1; /* flip-flop */
-    byte IFF2;
-    union{
-	byte Byte_29;
-	struct{
-	    byte IM:2; /* IM0...IM2*/
-	    byte Issue_2:1; /* wersja druga emulacji */
-	    byte If2:1;	/* podwojona czêstotliwo¶c przerwañ */
-	    byte Video_sync:2; /* predkosc synchronizacji video */
-	    byte Joystick:2;        
-	};
-    };
-} z80_fst_hdr;
 
-
-typedef struct{
-    byte Hdr_length[2];
-    byte PC[2];
-    byte Hw_mode;
-    union{
-	byte LS259;	/* dla trybu SamRAM stan bitów rejestru 74LS259  */
-	byte OUT_7FFD;	/* dla trybu ZX128 zawiera ostatni OUT do 0x7ffd */
-	byte OUT_F4;	/* dla trybu Timex zawiera ostatni OUT do 0xf4   */
-    };
-    union{
-	byte Paged; 	/* zawiera 0xff jezeli stronicowany ROM Interface I */
-	byte OUT_FF;	/* w trybie Timex zawiera ostatni OUT do 0xff       */
-    };
-    byte R_emul:1;
-    byte LDIR_emul:1;
-    byte AY_emul:1;
-    byte :3;
-    byte FAB_emul:1;
-    byte MH:1;
-    byte OUT_fffD;
-    byte Sound_reg[16];
-    byte LT_sc[2];
-    byte HT_sc;
-    byte Spectator;
-    byte MGT_ROM_paged;
-    byte Multiface_ROM_paged;
-    byte L_ROM_RAM;
-    byte H_ROM_RAM;
-    byte KB_map[10];
-    byte KEY_map[10];
-    byte MGT_type;
-    byte DIBT_stat;
-    byte DIF;
-    byte OUT_1FFD; 
-} z80_scd_hdr;
-
-typedef struct
-{
-    byte length[2];
-    byte page_nr;
-} memo_block;
-
-extern int	load_z80(e800j *e8, FILE *f,const char *fname, char **msg);
-extern byte	load_rom(e800j *e8,char *fname_bas0,char *fname_bas1, char *fname_boot);
-extern void	file_load_config(e800j *e8, const char *fname);
-#endif

@@ -1,4 +1,4 @@
-/* Elwro 800 Junior emulator
+/* Elwro 800 Junior emulator v 0.2
  * Copyright (C) 2006 Krzysztof Komarnicki
  * Email: krzkomar@wp.pl
  *
@@ -18,50 +18,70 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "z80.h"
+#include "e800j_mem.h"
+#include "z80_cpu.h"
 #include "e800j.h"
 
-void mem_wr(Z80 *z, word addr, byte data)
+/* tablica mapowania pamiêci - obraz pamiêci PROM 'MEM' Elwro 800 junior */
+unsigned char prom_mem[512] = PROM_MEM;
+
+
+/*********************************************************************************************/
+/*                                   ZX SPECTRUM 48K                                         */
+/*                                         PAMIÊÆ                                            */
+/*********************************************************************************************/
+
+uchar mem_zx48_read(void *z, ushort addr)
 {
-//    static long cnt=0;
-    if(addr < 16384){
-//	 printf("%4i Proba zapisu do ROM pod adres 0x%x, adres instr:%x\n",cnt++,addr, z->PCp);
-//exit(1);
-//	 return;
-    }
-    *(((e800j *)z->cust)->ram+addr) = data;
+    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
+    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
 }
 
-byte mem_rd(Z80 *z, word addr)
+void mem_zx48_write(void *z, ushort addr, uchar data)
 {
-    byte ctrl, data=0;
-    e800j *e8 = (e800j *)z->cust;
-    byte *m = e8->ram;
-    word rom_addr  = ROM_ADDR(addr);
-    word ctrl_addr = (addr >> 10) & 0x3f;
+    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+}
 
-    ctrl_addr |= e8->addr_prom_mask;
-    ctrl = *(e8->prom_mem + ctrl_addr );
+/*********************************************************************************************/
+/*                                   ELWRO 800 JUNIOR                                        */
+/*                                         PAMIÊÆ                                            */
+/*********************************************************************************************/
 
-/*
-    if(MEM_IAHR(ctrl)) 
-	if(z->M1 && !TEST_A9(addr) && IO_IAL(*(e8->prom_jio + A0_A8(addr))) )
-	{
-#ifdef DEBUG_HW_MSG
-	    printf("|-->HW Elwro RST #18\n");
-#endif
-	    return RST_18;
-	}
-*/
-    if(MEM_ROM1(ctrl)) data = *(e8->rom_bas0 + rom_addr);
-    if(MEM_ROM2(ctrl)) data = *(e8->rom_boot + rom_addr);
-    if(MEM_ROM3(ctrl)) data = *(e8->rom_bas1 + rom_addr);
-    if(MEM_DRAM(ctrl)) data = *(m + addr);
+uchar mem_e800j_read(void *z, ushort addr)
+{
+    elwro *el = (elwro*)((z80 *)z)->ptr;
+    uchar bank = ~prom_mem[(el->mem_mask | (addr >> 10)) & 0x1ff];
+    ushort romaddr = addr & 0x1fff;
 
-    return data;    
+//    if(bank & 0x20); /* RST 48 */
+    if(bank & 0x01) return el->rom[ 0x0000 + romaddr ];  /* BAS0 */
+    if(bank & 0x02) return el->rom[ 0x2000 + romaddr ];  /* BAS1 */
+    if(bank & 0x10) return el->rom[ 0x4000 + romaddr ];  /* BOOT */
+    if(bank & 0x08) return el->ram[ addr ]; // pamiêæ RAM
+    if(bank & 0x04) return el->ram[ addr ]; // pamiêæ atrybutów
+
+    return 0xff;
+}
+
+void mem_e800j_write(void *z, ushort addr, uchar data)
+{
+    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+}
+
+/*********************************************************************************************/
+/*                                   ZX SPECTRUM 128K                                        */
+/*                                         PAMIÊÆ                                            */
+/*********************************************************************************************/
+
+uchar mem_zx128_read(void *z, ushort addr)
+{
+//    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
+//    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
+    return 0xff;
+}
+
+void mem_zx128_write(void *z, ushort addr, uchar data)
+{
+//    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
 }
 
