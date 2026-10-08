@@ -28,7 +28,9 @@
 typedef struct{
     byte lines; /* ilosc linii instrukcji jaka ma zostac wyswietlona */
     long  instr; /* ilosc instrukcji do wykonania */
-    word addr_brk; /* pulapka adresu */
+    word addr_brk; /* pulapka na adresu równy */
+    word addr_ghe; /* pulapka na adres wiêkszy równy  */
+    word addr_gle; /* pulapka na adres mniejszy równy */
     byte fwcnt:1;
     byte fcnt:1;
     byte fbreak:1;
@@ -45,14 +47,14 @@ typedef struct{
     byte djnz_d:1;
     byte debug_print:1;
     byte init:1;
-    byte :1;
+    byte fin:1;			/* zmienna, która gdy jest =1 nakazuje deasemblacjê na koncu kroku */
     byte proc:1;
     byte deb_stdout:1;
     long cnt;
     void (*input)(char *);
     void (*output)(char *);
     void (*exit)(void);
-        
+
 } Z80_DEB;
 
 #define DEB(a)	((Z80_DEB*)(a)->deb_struct)
@@ -66,4 +68,6 @@ typedef struct{
 extern void z80_deb_call(void *z, char call);
 extern void z80_debugger_init(Z80 *z, Z80_DEB *deb, void (*deb_in)(char*), void (*deb_out)(char*), void (*exit_f)(void));
 extern void z80_set_debug(Z80 *z,char fl);
+extern char z80_debug_test_break(Z80 *);
+
 #endif

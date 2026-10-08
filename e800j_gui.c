@@ -90,9 +90,10 @@ int expose_dr(GtkWidget *wg, GdkEventExpose *ev,config *cf)
 
 void gui_put_pixel(int color,int x,int y)
 {
-    int sx,sy;
-    int zx, zy, scale_x,scale_y;
+//    int sx,sy;
+//    int zx, zy, scale_x,scale_y;
 
+/*
     zx = cfg.xx << 8;
     zy = cfg.yy << 8;
     
@@ -104,8 +105,9 @@ void gui_put_pixel(int color,int x,int y)
     
     scale_x= (cfg.xx / 256) + 1;
     scale_y= (cfg.yy / 192) + 1;
-    
-    gdk_draw_rectangle(cfg.pix,cfg.gc[color],TRUE,sx,sy,scale_x,scale_y);
+*/    
+//    gdk_draw_rectangle(cfg.pix,cfg.gc[color],TRUE,sx,sy,scale_x,scale_y);
+    gdk_draw_point(cfg.pix,cfg.gc[color],x,y);
 }
 
 
@@ -278,7 +280,7 @@ void debugger()
     z80_set_debug(cfg.ptr,1);
 }
 
-void gui_setup(void *ptr)
+void gui_setup(void *ptr, void *argc, void *argv)
 {
     int i;
     GtkWidget *wg, *tt,*tk,*k;
@@ -289,7 +291,7 @@ void gui_setup(void *ptr)
 
 
     cfg.ptr=ptr;
-    gtk_init(NULL,NULL);
+    gtk_init(argc, argv);
     for(i=0; i<16; i++) gdk_color_alloc(gdk_colormap_get_system(),&gcc[i]);
 
 
@@ -315,7 +317,13 @@ void gui_setup(void *ptr)
     gtk_toolbar_append_item(GTK_TOOLBAR(tk),"RST","Start",NULL,NULL,GTK_SIGNAL_FUNC(reset),NULL);
     gtk_toolbar_append_item(GTK_TOOLBAR(tk),"Debug","Start",NULL,NULL,GTK_SIGNAL_FUNC(debugger),NULL);
 
-    k=gtk_drawing_area_new();
+/* pasek opisu klawiszy funkcyjnych */
+    k = gtk_frame_new(NULL); 
+    gtk_container_add(GTK_CONTAINER(tt),k);
+    tk = gtk_label_new("F1 - CP/J  F2 - DIR  F3 - LOAD  F4 - SAVE  F5 - ERASE");
+    gtk_container_add(GTK_CONTAINER(k),tk);    
+
+    k = gtk_drawing_area_new();
     gtk_drawing_area_size(GTK_DRAWING_AREA(k),256*cfg.zoom_x,192*cfg.zoom_y);
     gtk_container_add(GTK_CONTAINER(tt),k);
 

@@ -23,9 +23,6 @@
 
 #define Z80_STR(a)	z = a ? a : z80; /* wybór struktury */
 
-extern char tmpstr0[];
-extern char tmpstr1[];
-
 extern char *z80_hex8(byte,char *);
 extern char *z80_hex16(word,char *);
 extern char *z80_hexU(byte,char *);
@@ -37,9 +34,6 @@ extern word z80_mrw(Z80 *z, word a);
 extern void z80_mww(Z80 *z, word c, word d);
 extern byte z80_fetch_byte(Z80 *z);
 
-
-
-
 #ifdef DEBUGGER
 
 #define DEBUG(a,b,c,d)		z->deb_par_0 = a, z->deb_par_1 = b, z->deb_par_2 = c, z->deb_par_3 = d;
@@ -50,29 +44,24 @@ extern byte z80_fetch_byte(Z80 *z);
 
 #define DEBUGGER_CLEAN		z->deb_par_0 = z->deb_par_1 = z->deb_par_2 = (void *)0, z->deb_par_3 = 0;
 
-//#define DEBUGGER_CALL		z->deb_class=0xff; 
-//if(z->debug){z->old_pc=PC; z80_debugger_call(z);if(z->deb_halt) return;}
-
-
 #define DRY_RUN_RET	if(z->deb_dry) return;
 #define DEB_DJNZ(a)	if(z->proc){z->djnz_d = a;}
 #define DEB_CALL(a)	if(z->proc){z->call_d += a ? 1: -1;}
 #define DEB_XY(a)	z->xy=a
 
+#define DEB_DFP		" "
+#define DEB_RT  	"U"
+#define DEB_DD		"V"
+#define DEB_NNH 	"W"
+#define DEB_NNL 	"K"
+#define DEB_NS		"O"
+#define DEB_DIS 	"Q"
+#define DEB_HEX16 	"G"
+#define DEB_EP		""
+#define DEB_RTI 	"T"
 
 
 #define DEB_CLASS(a)	z->deb_class=a
-#define DEB_DFP	" "
-#define DEB_RT  (z->DD_FD ? (z->xy ? "IY":"IX"):"HL")
-#define DEB_DD	(z->DD_FD ? z80_hexU(DD,tmpstr0):"  ")
-#define DEB_NNH z80_hex8((z->NNp >> 8) & 0xff,tmpstr0)
-#define DEB_NNL z80_hex8(z->NNp & 0xff,tmpstr1)
-#define DEB_NS	z80_hex8(z->Np,tmpstr1)
-#define DEB_DIS z80_hex16(PC + (char)z->Np,tmpstr1)
-#define DEB_HEX16 z80_hex16(z->NNp,tmpstr0)
-#define DEB_EP	""
-#define DEB_RTI z->DD_FD  ? z80_hexRTI(DD,DEB_RT,tmpstr0) : "HL   "
-
 #else
 
 

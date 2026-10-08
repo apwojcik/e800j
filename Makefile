@@ -1,9 +1,10 @@
 
 
 libs = e800j_main.o z80.o z80_debug.o e800j_kbrd.o e800j_file.o e800j_gui.o e800j_io.o e800j_mem.o\
-       e800j_scrn.o i8251.o z80_instr.o
+       e800j_scrn.o i8251.o z80_instr.o i8272.o
 
-opts = -Wall -g
+#opts = -Wall -O3 -fomit-frame-pointer
+opts = -Wall -g 
 
 gtk_conf=`pkg-config --cflags gtk+-2.0`
 gtk_libs=`pkg-config --libs gtk+-2.0`
@@ -11,9 +12,10 @@ gtk_libs=`pkg-config --libs gtk+-2.0`
 ALL:elwro
 
 elwro:$(libs)
-	gcc -o elwro  $(libs) $(gtk_libs) -lspectrum
+	gcc -o elwro  $(libs) $(gtk_libs) -lspectrum 
+#-pg
 
-e800j_main.o: e800j_main.c e800j_prom.h e800j_file.h e800j.h e800j_kbrd.h e800j_main.h
+e800j_main.o: e800j_main.c e800j_prom.h e800j_file.h e800j.h e800j_kbrd.h e800j_main.h i8272.h
 	gcc -c $(opts) e800j_main.c
 
 e800j_kbrd.o: e800j_kbrd.c e800j_kbrd.h
@@ -36,6 +38,9 @@ e800j_gui.o: e800j_gui.c e800j_gui.h
 
 i8251.o: i8251.c i8251.h
 	gcc -c $(opts) i8251.c
+
+i8272.o: i8272.c i8272.h
+	gcc -c $(opts) i8272.c
 
 
 z80.o: z80.h z80.c z80_instr.h z80_cpu.h

@@ -39,7 +39,7 @@ byte z80_parity_check(byte a)
 
 void z80_reset(Z80 *zz)
 {
-    int freq,i;
+    int freq,i,int_cnt,nmi_cnt;
     void *io, *rd, *wr, *cust, *deb, *deb_str;
     Z80 *z;
 
@@ -51,7 +51,9 @@ void z80_reset(Z80 *zz)
     deb  = z->debugger;
     freq=z->lp_freq;
     deb_str = z->deb_struct;
-
+    int_cnt = z->int_cnt;
+    nmi_cnt = z->nmi_cnt;
+    
     for(i=0;i < sizeof(Z80);i++) *((byte*)z+i)=0;
 
     z->io=io;
@@ -61,6 +63,8 @@ void z80_reset(Z80 *zz)
     z->cust = cust;
     z->debugger = deb;
     z->deb_struct = deb_str;
+    z->int_cnt = int_cnt;
+    z->nmi_cnt = nmi_cnt;
 
     SET_UNI_NRM;
     SET_AF;
@@ -114,13 +118,15 @@ word z80_get_word(Z80 *z, word addr)
 byte z80_fetch_byte(Z80 *z)
 {
     byte tmp;
-    
+
     if(z->INT_FETCH){
 	tmp = *(z->INT_DATA + z->INT_f);
 	z->INT_f++;
     }else{
+
 	tmp = z80_get_byte(z,PC);
 	PC++;
+
     }   
     return tmp; 
 }
@@ -194,10 +200,9 @@ void z80_exe(Z80 *zz)
     Z80 *z;
 
     Z80_STR(zz);
-
-
 #ifdef DEBUGGER
     if((z->debugger) && (z->deb_on)){	/* czy w trybie debuggera ? */
+	z->trap = z80_debug_test_break(z);
 	z->debugger(z,DEB_CTL_DEBUG);	/* wywo³aj debuggera        */
 	if(z->deb_halt) return;
     }
@@ -408,7 +413,7 @@ LB_DD_FD:
 	case 0xb3: OR(E);		DEBUG("OR        E         %s%s",DEB_DFP,DEB_DFP,DEB_NRM);break;
 	case 0xb4: OR(H);		DEBUG("OR        H         %s%s",DEB_DFP,DEB_DFP,DEB_NRM);break;
 	case 0xb5: OR(L);		DEBUG("OR        L         %s%s",DEB_DFP,DEB_DFP,DEB_NRM);break;
-	case 0xb6: GET_DD;OR(HL+DD);	
+	case 0xb6: GET_DD;OR(MR(HL+DD));	
 					DEBUG("OR        (%s%s)   ",     DEB_RT,DEB_DD,DEB_M);break;
 	case 0xb7: OR(A);		DEBUG("OR        A         %s%s",DEB_DFP,DEB_DFP,DEB_NRM);break;
 	case 0xb8: CP(B);		DEBUG("CP        B         %s%s",DEB_DFP,DEB_DFP,DEB_NRM);break;
@@ -1005,6 +1010,8 @@ LB_DD_FD:
 #ifdef DEBUGGER
 	if((z->debugger) && (z->deb_on)){	/* czy w trybie debuggera ? */
 	    z->debugger(z,DEB_CTL_DEASM);	/* wywo³aj debuggera i deasembluj wykonan± instrukcjê */
+	    z->INT_FETCH=0; 			/* instrukcje pobieramy z pamiêci */
+	    z->DD_FD = 0;    
 	    if(z->debug_int)  return; /* pomiñ obs³ugê IRQ (ale po instrukcji HALT wejd¼ w ni± ) */
 	}
 #endif

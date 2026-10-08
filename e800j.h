@@ -60,6 +60,8 @@ typedef struct
     byte tape_in:1;		/* wejscie  magnetofonu / sieci spektrum			*/
     byte tape_out:1;		/* wyjscie  magnetofonu						*/
     byte spkr_out:1;		/* wyjscia  glosnika						*/
+
+/* inne flagi */
     byte :7;    
 
     /* struktura sterowania ekranem */        
@@ -76,7 +78,7 @@ typedef struct
 } e800j;
 
 
-#define COL_NRM  0xa000
+#define COL_NRM  0xb000
 #define COL_BRT  0xf000
 #define COL_WHT	 0xe000
 #define ZX_PALETTE	{   {0x0000,0x0000 ,0x0000 ,0x0000 },\

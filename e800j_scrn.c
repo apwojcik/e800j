@@ -25,12 +25,10 @@
 #include "z80.h"
 #include "e800j.h"
 #include "e800j_gui.h"
+#include "e800j_scrn.h"
 
-int vid_addr( int pix_nb)
-{
-    pix_nb >>= 3;
-    return (pix_nb & 0x181f) | ((pix_nb & 0x700) >> 3) | ((pix_nb & 0xe0) << 3);
-}
+
+byte zx_scr_map[192] = ZX_SCR_MAP;
 
 int blink_attr(Z80 *z)
 {
@@ -38,28 +36,69 @@ int blink_attr(Z80 *z)
     return 1;
 }
 
+void draw_zx_byte(byte x, byte y, byte data, byte attr)
+{
+    int i;
+    byte fg_color;
+    byte bg_color;
+    
+    fg_color = (attr & 0x7) | ((attr & 0x40) >> 3);
+    bg_color = (attr & 0x78) >> 3;
+    x <<= 3;    
+    for(i=0;i < 8;i++, data <<=1 )
+	gui_put_pixel((data & 0x80) ? fg_color: bg_color,x++,y);
+}
+
+byte scr_bcp_pix[6144];
+byte scr_bcp_attr[6144];
+
 void scr_rfsh(Z80 *z)
 {
-    int x,y,pix_nb,i,k;
-    int fg_color, bg_color;
+    int x = 0, k;
     char pix,attr;
+    int y_pix=0, y_attr=0;
+    byte *scr_map, *scr_attr=NULL, *scr_pix;
+    static byte n=1;
+    word pix_offs=0;
+    word atr_offs=0;
+
     byte *screen = ((e800j*)z->cust)->scr.screen[ (MEM157_RELOK(((e800j*)z->cust)->reg175)) ? 1:0];
     byte blink   = ((e800j*)z->cust)->scr.blink ? 0xff:0;
 
-    fg_color = pix = pix_nb = bg_color = 0;
+    if(n){
+	for(k=0; k < 6144; k++) scr_bcp_pix[k] = 0;
+	for(k=0; k < 1024; k++) scr_bcp_attr[k] = 0;
+    }
+    
+    scr_map = zx_scr_map;
+    scr_pix = screen;
+    scr_attr = screen + 6144;
+    
 
-    for(y=0;y < 192; y++)
-	for(k=x=0;k < 32; k++)
-	{	
-	    attr = *(screen + 6144 + k + 32*(y/8));	
+    for(k = 0; k < 6144; k++, pix_offs++, atr_offs++){
+
+	x = k & 0x1f;
+	if(!x){
+	     y_pix    = *(scr_map++);
+	     y_attr   = (y_pix << 2) & 0xe0;
+	     atr_offs = ((y_pix >> 3) << 5);
+	}
+	attr = *(scr_attr + atr_offs);
+	pix  = *(scr_pix  + pix_offs) ^ ((attr & 0x80) ? blink : 0);
 	
-	    fg_color = (attr & 0x7) | ((attr & 0x40) >> 3);
-	    bg_color = (attr & 0x78) >> 3;
-	    pix = *(screen + vid_addr(pix_nb));
-	    pix ^= (attr & 0x80) ? blink:0;
-	    for(i=0;i < 8;i++, pix_nb++, pix <<=1 )
-		gui_put_pixel((pix & 0x80) ? fg_color: bg_color,x++,y);
-    }	
+	if( n ||
+	(pix != *(scr_bcp_pix + pix_offs)) ||
+	( attr != *(scr_bcp_attr + pix_offs))
+	){
+	
+	    *(scr_bcp_pix + pix_offs)  = pix;
+	    *(scr_bcp_attr + pix_offs) = attr;
+	    
+	    draw_zx_byte(x, y_pix, pix, attr);
+	}
+
+    }
+
+    n=0;
     gui_screen_rfsh();
 }
-

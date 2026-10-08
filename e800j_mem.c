@@ -27,7 +27,7 @@
 
 void mem_wr(Z80 *z, word addr, byte data)
 {
-    static long cnt=0;
+//    static long cnt=0;
     if(addr < 16384){
 //	 printf("%4i Proba zapisu do ROM pod adres 0x%x, adres instr:%x\n",cnt++,addr, z->PCp);
 //exit(1);
@@ -47,6 +47,7 @@ byte mem_rd(Z80 *z, word addr)
     ctrl_addr |= e8->addr_prom_mask;
     ctrl = *(e8->prom_mem + ctrl_addr );
 
+/*
     if(MEM_IAHR(ctrl)) 
 	if(z->M1 && !TEST_A9(addr) && IO_IAL(*(e8->prom_jio + A0_A8(addr))) )
 	{
@@ -55,6 +56,7 @@ byte mem_rd(Z80 *z, word addr)
 #endif
 	    return RST_18;
 	}
+*/
     if(MEM_ROM1(ctrl)) data = *(e8->rom_bas0 + rom_addr);
     if(MEM_ROM2(ctrl)) data = *(e8->rom_boot + rom_addr);
     if(MEM_ROM3(ctrl)) data = *(e8->rom_bas1 + rom_addr);

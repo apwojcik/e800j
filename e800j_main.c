@@ -33,6 +33,9 @@
 #include "e800j_io.h"
 #include "i8251.h"
 #include "z80_debug.h"
+#include "i8272.h"
+
+//int init_irq = 5000;
 
 byte int_str[5]={0xff,0xff,0xff,0xff,0xff};
 
@@ -42,21 +45,30 @@ void int_irq(){
 
 int rfsh(Z80 *z)
 {
-
     scr_rfsh(z);
 
 /* os³uga seriala */
     if(E800J(z->cust)->wr51){
 	E800J(z->cust)->wr51 = 0;
-printf("8251 TxD: %x\n",i8251_txd(E800J(z->cust)->i8251p));
+//printf("8251 TxD: %x\n",i8251_txd(E800J(z->cust)->i8251p));
     }
-    int_irq();
+/* normalne wywo³anie przerwania co 20ms */
+//    if(!init_irq)
+	    int_irq();
     return 1;
 }
 
+void fdc_ck(){ int i; for(i=0;i<4;i++) i8272_ck(); }
+
 int cpu()
 {
-    z80_exec(NULL,NULL,NULL);
+//    if(init_irq){
+//	z80_exec(NULL,int_irq,NULL);
+//	init_irq--;
+//	return 1;
+//    }
+    z80_exec(NULL,int_irq,fdc_ck);
+//    z80_exec(NULL,NULL,NULL);
     return 1;
 }
 
@@ -120,17 +132,18 @@ int main(int argc, char **argv)
     e800j_init_mem(&e8, ram, rom, prom_mem, prom_jio, eprom_tv);
     e800j_init_io(&e8, &serial);
 
-    z80_init(&z80, &e8, 10000, io, mem_rd, mem_wr);
+    z80_init(&z80, &e8, 5000, io, mem_rd, mem_wr);
+    z80.nmi_cnt = 100;   /* FDC freq */  
+    z80.int_cnt = 1000;  /* INT freq */  
     z80_debugger_init(&z80, &debugger, gui_debug_in, gui_debug_out, kill_me);
 
     key_init(KB_MODE_PC);
-    i8251_reset(&serial);
-
+    i8272_ini(NULL,NULL);
     reset();
-    
+//    z80.int_cnt = 1000;  /* INT freq init */      
     z80_set_run(NULL,1);
 
-    gui_setup(&z80);
+    gui_setup(&z80, &argc, &argv);
     gui_timer(rfsh, 20, &z80);
     gui_timer(blink_attr, 500, &z80);
     gui_timer(cpu, 15, &z80);

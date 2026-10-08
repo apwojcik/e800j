@@ -132,13 +132,13 @@ extern unsigned char key_matrix(unsigned short int addr);
 #define KEY_Z__		0x84	/* ¼ */
 #define KEY_N_		0x85	/* ñ */
 #define KEY_A_		0x86	/* ± */
-#define KEY_Z_		0x90	/* ¿ */
+#define KEY_Z_		0x97	/* ¿ */
 #define KEY_CUR_D	0x91
 #define KEY_CUR_U	0x92
 #define KEY_CUR_R	0x93
 #define KEY_CUR_L	0x94
 #define KEY_C_		0x95	/* æ */
-#define KEY_DIR		0x97
+#define KEY_DIR		0x90
 
 /* elementy tablicy mapowania */
 /* cyfry: 0...9 */
@@ -208,9 +208,9 @@ extern unsigned char key_matrix(unsigned short int addr);
 #define KB_LET_START	KB_DIG_START + KEY_DIGITS_CNT
 #define KB_ALL_CNT	KB_LET_START + KEY_LETTERS_CNT
 
-#define KB_LOAD		'j' - 'a' + KB_LET_START
-#define KB_SAVE		's' - 'a' + KB_LET_START
-#define KB_ERASE	'7' - '0' + KB_DIG_START
-#define KB_CPJ		'6' - '0' + KB_DIG_START
+#define KB_LOAD		'j' //- 'a' + KB_LET_START
+#define KB_SAVE		's' //- 'a' + KB_LET_START
+#define KB_ERASE	'7' //- '0' + KB_DIG_START
+#define KB_CPJ		'6' //- '0' + KB_DIG_START
 
 #endif

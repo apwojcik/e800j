@@ -50,7 +50,7 @@ void gui_put_pixel(int color,int x,int y);
 void gui_screen_rfsh();
 void gui_debug_out(char *a);
 void gui_debug_in(char *a);
-void gui_setup(void *ptr);
+void gui_setup(void *ptr, void *argc, void *argv);
 void gui_timer(void *func,long time,void *ptr);
 void gui_start();
 

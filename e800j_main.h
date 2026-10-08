@@ -25,8 +25,8 @@
 #define DEBUG_HW_MSG
 
 //#define ZX
-//#define JR_1
-#define JR_2
+#define JR_1
+//#define JR_2
 //#define JR_3
 
 #ifdef ZX

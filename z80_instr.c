@@ -50,7 +50,7 @@ void z80_bit_alu(Z80 *z, byte reg, byte type)
     }
 }
 
-
+#ifdef ALU_BIT_ADDER
 byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z)
 {
     byte  si, c4, c7, c8;
@@ -115,7 +115,8 @@ word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z)
     return si;
 }
 
-/*
+
+#else
 byte z80_alu_add(byte a,byte b, byte sub, byte cy, Z80 *z)
 {
     byte ai, xi, si;
@@ -185,7 +186,7 @@ word z80_alu_add16(word a,word b, byte sub, byte cy, Z80 *z)
 
     return si;
 }
-*/
+#endif
 
 void z80_push(Z80 *z, word reg)
 {

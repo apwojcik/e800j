@@ -20,6 +20,8 @@
 
 #ifndef __z80_instr_h__
 #define __z80_instr_h__
+/* alternatywna metoda ALU */
+#define ALU_BIT_ADDER
 
 #define BIN_ALU_FL(a)	SET_TEST_SF(A);SET_TEST_ZF(A);SET_TEST_PF(A);SET_HF(a);SET_NF(0);SET_CF(0);
 #define ILLEGAL 
@@ -139,10 +141,13 @@
 #define OTIR			z80_rep(z,z80_outi,0,1);DEB_CLASS(25);
 #define OTDR			z80_rep(z,z80_outi,1,1);DEB_CLASS(25);
 
+#ifdef ALU_BIT_ADDER
 extern byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z);
 extern word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z);
-//extern byte z80_alu_add(byte a, byte b, byte sub, byte cy, Z80 *z);
-//extern word z80_alu_add16(word a, word b, byte sub, byte cy, Z80 *z);
+#else
+extern byte z80_alu_add(byte a, byte b, byte sub, byte cy, Z80 *z);
+extern word z80_alu_add16(word a, word b, byte sub, byte cy, Z80 *z);
+#endif
 
 extern void z80_push(Z80 *z, word reg);
 extern void z80_pop(Z80 *z, word *reg);

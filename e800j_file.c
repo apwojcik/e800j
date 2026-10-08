@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define RUN_AT_START
 #define LIBSPECTRUM_USE
 
 #ifdef LIBSPECTRUM_USE
@@ -140,9 +141,11 @@ printf("|-> nie obs³ugiwana wersja  formatu (2 lub 3)\n");
     z->BCr  = (hdr_1.BC[1] << 8)  + hdr_1.BC[0];
     z->DEr  = (hdr_1.DE[1] << 8)  + hdr_1.DE[0]; 
     z->HLr  = (hdr_1.HL[1] << 8)  + hdr_1.HL[0]; 
+
     z->BCr_ = (hdr_1.BCa[1] << 8) + hdr_1.BCa[0]; 
     z->DEr_ = (hdr_1.DEa[1] << 8) + hdr_1.DEa[0]; 
     z->HLr_ = (hdr_1.HLa[1] << 8) + hdr_1.HLa[0]; 
+
     z->SPp  = (hdr_1.SP[1] << 8)  + hdr_1.SP[0]; 
     z->Ip   = hdr_1.I;
     z->Rp   = hdr_1.R;
@@ -203,7 +206,7 @@ char copy_snapshot(Z80 *z, libspectrum_snap *snap)
 	    printf("Nie obs³ugiwany typ komputera: %s\n",libspectrum_machine_name(machine));
 	    return 0;
 	}	
-
+    z80_reset(z);
 /* ustawienie rejestrów */
     z->Ar  = libspectrum_snap_a(snap);		z->Fr  = libspectrum_snap_f(snap);
     z->Ar_ = libspectrum_snap_a_(snap);		z->Fr_ = libspectrum_snap_f_(snap);
@@ -220,7 +223,9 @@ char copy_snapshot(Z80 *z, libspectrum_snap *snap)
     z->IMr   = libspectrum_snap_im(snap);
     z->Halt_state = libspectrum_snap_halted(snap);
 
+#ifdef RUN_AT_START
     z->run = 1;
+#endif
 /* kopiowanie pamiêci */
     for(i=0; i < 16; i++)
     if(libspectrum_snap_pages(snap,i)){

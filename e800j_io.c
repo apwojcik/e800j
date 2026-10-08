@@ -22,17 +22,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+
 #include "z80.h"
 #include "e800j.h"
 #include "e800j_kbrd.h"
 #include "i8251.h"
+#include "i8272.h"
+
 
 #define HW_PRINT	printf
+#define I8272_USE
 
 /* Ustawianie portów wyj¶ciowych */
 void out_mem_74157(byte data, e800j *e8)
 { 
-    HW_PRINT("OUT MEM SN74LS157: %x\n", data);
+//    HW_PRINT("OUT MEM SN74LS157: %x\n", data);
     e8->reg175 = (data & 0xf0); 
     e8->addr_prom_mask = (data & 0xc0) | ((data & 0x20) << 3);
 }
@@ -45,20 +50,22 @@ void out_fe_74373(byte data, e800j *e8)
 
 void out_par_8255(byte data, e800j *e8)
 { 
-    HW_PRINT("OUT PAR 8255: %x\n",data);
+//    HW_PRINT("OUT PAR 8255: %x\n",data);
 
 }
 
 void out_ser_8251(byte data, e800j *e8, word addr)
 { 
-    HW_PRINT("OUT SER 8251: %x\n",data);
+//    HW_PRINT("OUT SER 8251: %x\n",data);
     i8251_write(e8->i8251p, data, A0(addr));
 }
 
-void out_fdc_8272(byte data, e800j *e8)
+void out_fdc_8272(byte data, e800j *e8,word addr)
 { 
     HW_PRINT("OUT FDC 8272: %x\n",data);
-    
+#ifdef I8272_USE
+    i8272_wr(addr,data);    
+#endif
 }
 
 void out_fdc_74157(byte data, e800j *e8)
@@ -87,7 +94,21 @@ byte in_8251(word addr, e800j *e8)
 
 byte in_8272(word addr, e800j *e8)
 {
-    return 0xff;
+//struct timespec tm,tr;
+byte aa = i8272_rd(addr);
+//long a;
+#ifndef I8272_USE
+aa = 0xff;
+#else
+printf("IN FDC %x=%x\n",addr,aa);
+#endif
+
+//tm.tv_sec=0;
+//tm.tv_nsec=1000000;
+//nanosleep(&tm,&tr);
+//if(aa==0xf0) exit(0);
+    return aa;
+//    return 0xff;
 }
 
 
@@ -102,7 +123,7 @@ unsigned char io(word addr,byte data, byte type, Z80 *z)
 	if(IO_CFE(ctrl))   { e8->wr373 = 1; out_fe_74373(data,e8);  return 0; }
 	if(IO_CS55(ctrl))  { e8->wr55  = 1; out_par_8255(data,e8);  return 0; } 
 	if(IO_CS51(ctrl))  { e8->wr51  = 1; out_ser_8251(data,e8,addr);  return 0; } 
-	if(IO_CSFDC(ctrl)) { e8->wr72  = 1; out_fdc_8272(data,e8);  return 0; }  	
+	if(IO_CSFDC(ctrl)) { e8->wr72  = 1; out_fdc_8272(data,e8,addr);  return 0; }  	
 	if(IO_CF1(ctrl))   { e8->wrFDC = 1; out_fdc_74157(data,e8); return 0; }  		
     } else {
 /* IOR */

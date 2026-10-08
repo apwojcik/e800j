@@ -132,7 +132,8 @@ typedef struct
     byte debug_int:1;		/* jesli =1 pomijaj obslugê IRQ		*/
     byte deb_halt:1;		/* nie dekoduj/wykonuj instrukcji       */
 
-    byte :5;
+    byte trap:1;	/* nakazuje przerwaæ wykonanie instrukcji i powrót do debuggera */
+    byte :4;
 
     byte *INT_DATA;	/* zawarto¶æ magistrali danych, przy obs³udze INT */
     word INT_f;		/* indeks tablicy INT_DATA                        */
