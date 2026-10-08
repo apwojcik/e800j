@@ -21,6 +21,7 @@
 #ifndef __Z80H__
 #define __Z80H__
 
+#define BIGENDIAN
 #define DEBUGGER	/* Czy ma byæ wkompilowany debugger */
 
 #ifndef _word_
@@ -41,30 +42,54 @@ typedef unsigned char byte;
 
 typedef struct
 {
-    byte *Ap;
-    byte *Fp;
-    byte *Bp;
-    byte *Cp;
-    byte *Dp;
-    byte *Ep;
-    byte *Hp;
-    byte *Lp;
+    byte *Ap,*Fp;
+    byte *Bp,*Cp;
+    byte *Dp,*Ep;
+    byte *Hp,*Lp;
 
     word *AFp;
     word *BCp;
     word *DEp;
     word *HLp;
-    
-    word AFr;
-    word BCr;
-    word DEr;
-    word HLr;
 
-    word AFr_;
-    word BCr_;
-    word DEr_;
-    word HLr_;
+    union{
+	struct{    
+	    word AFr;
+	    word BCr;
+	    word DEr;
+	    word HLr;
 
+	    word AFr_;
+	    word BCr_;
+	    word DEr_;
+	    word HLr_;
+	};
+#ifndef BIGENDIAN
+	struct{
+	    byte Ar,Fr;
+	    byte Br,Cr;
+	    byte Dr,Er;
+	    byte Hr,Lr;
+
+	    byte Ar_,Fr_;
+    	    byte Br_,Cr_;
+	    byte Dr_,Er_;
+	    byte Hr_,Lr_;
+	};
+#else
+	struct{
+	    byte Fr,Ar;
+	    byte Cr,Br;
+	    byte Er,Dr;
+	    byte Lr,Hr;
+
+	    byte Fr_,Ar_;
+	    byte Cr_,Br_;
+	    byte Er_,Dr_;
+	    byte Lr_,Hr_;
+	};
+#endif    
+    };
     union{
 	struct{
 	    word IXp;
@@ -90,79 +115,80 @@ typedef struct
     byte Alt:1;
     byte AltAF:1;
     byte Halt_state:1;
-    byte DD_FD:1;
+
     byte INT:1;
     byte NMI:1;    
-    byte *INT_DATA; /* zawarto¶æ magistrali danych, przy obs³udze INT */
-    word INT_f;
-
-    byte :1;
-    byte :1;
     byte INT_FETCH:1; /* flaga wskazuj±ca, ¿e jest cykl pobrania rozkazu z magistrali danych       */
     byte M1:1;	      /* flaga wskazuj±ca na cykl M1 procesora - pobieranie/dekodowanie instrukcji */
-    byte :4;
+    byte run:1;	      /* stopuje/wznawia pracê CPU 	                   */
+    byte DD_FD:1;     /* wskazuje, ¿e HL jest przemianowane na IX lub IY   */
+    byte xy:1;	      /* wskazuje, czy rejestrem w operacji jest IX czy IY */    
+    byte busack:1;    /* zezwolenie na korzystanie z magistrali            */	
+    byte busrq:1;     /* rz±danie korzystania z magistrali	           */
 
+    /* flagi dla debuggera */
+    byte deb_on:1;		/* 1 - debugger w³±czony		*/
+    byte deb_dry:1;		/* dekoduj instrukcjê, ale nie wykonuj  */
+    byte debug_int:1;		/* jesli =1 pomijaj obslugê IRQ		*/
+    byte deb_halt:1;		/* nie dekoduj/wykonuj instrukcji       */
+
+    byte :5;
+
+    byte *INT_DATA;	/* zawarto¶æ magistrali danych, przy obs³udze INT */
+    word INT_f;		/* indeks tablicy INT_DATA                        */
+    
     byte *cust;	/* wska¼nik struktury zewn przekazywany do funkcji IO/MEM */
     byte (*io)(word addr, byte data, byte type, void *);
     void (*WR_MEM)(void *z80,word addr, byte data);
     byte (*RD_MEM)(void *z80,word addr);
-    void (*deb_in)(char *);
-    void (*deb_out)(char *);
-    void (*exit)(void);
 /* po ka¿dym wykonaniu instrukcji pola te s± na nowo ustawiane */
-    byte ticks; /* takty */
-    byte mach;  /* cykle maszynowe */
-    byte dd;
+//    byte ticks; /* takty */
+//    byte mach;  /* cykle maszynowe */
+    byte dd;	  /* ofset dla adresowania za pomoc± rej indeksowych */
     int  lp_freq;
     int  act_freq;
-#ifdef DEBUGGER
-    word old_pc;
-    word NNp;
-    byte Np;
-    int  call_d; /* call zwieksza, ret zmniejsza */
-    byte xy:1;    
-    byte djnz_d:1;    
-    byte debug_print:1;
-    byte deb_halt:1;
-    byte dry_run:1;
-    byte proc:1;
-    byte run:1;
-    byte deb_stdout:1;
-    byte debug:1;
-    byte debug_int:1;
-    byte :6;
-    byte deb_class; /* rodzaj instrukcji */
-    long cnt;
-#endif
+    int  int_cnt; /* co ile cykli ma siê wykonaæ INT */
+    int  nmi_cnt; /* co ile cykli ma siê wykonaæ NMI */
+    word old_pc;  /* warto¶æ PC na pocz±tku wywo³ania funkcji z80_exe() */
+
+/* poni¿sze pola s³u¿± do obs³ugi debuggera  */
+    void (*debugger)(void *z, char );	/* funkcja po³±czenia z debuggerem	*/
+    void *deb_struct;			/* wewnêtrzna struktura debuggera	*/
+    char *deb_par_0;			/* nazwa instrukcji			*/
+    char *deb_par_1;			/* pierwszy parametr			*/
+    char *deb_par_2;			/* drugi parametr			*/
+    byte  deb_par_3;			/* reakcja na HL			*/
+    byte deb_class; 			/* klasa instrukcji 			*/
+    word NNp;				/* dodatkowa warto¶æ 2B kodu rozkazu	*/
+    byte Np;				/* jw, ale 1B				*/
+
 }Z80;
 
-
 /*************************************************************************************************/
-extern void z80_init(Z80 *z,int freq, void *io, void *rd, void *wr, void *deb_in, void *deb_out, void *exit, void *ptr);
+extern void z80_init(Z80 *z, void *ptr, int freq, void *io, void *rd, void *wr);
 /*
                    ..::inicjuje strukture Z80::..
+    z  : struktura Z80, je¶li warto¶æ inna ni¿ NULL, wówczas wewnêtrzna struktura jest ustawiana
+    ptr : dodatkowy wska¼nik, przekazywany do funkcji obs³ugi pamiêci i I/O, mo¿na pod niego podpi±æ
+	  w³asne struktury danych
     freq : ilosc wykonanych instrukcji na jedno wywolanie z80_exec()
     io : funkcja obslugi instrukcji in/out
     rd : funkcja obslugi odczytu pamieci
     wr : funkcja obslugi zapisu do pamieci
-    deb_in : funkcja wejscia dla debuggera
-    deb_out: funkcja wyjscia dla debuggera
-    exit: funkcja wyjscia z debbugera
-    ptr : dodatkowy wska¼nik, przekazywany do funkcji obs³ugi pamiêci i I/O, mo¿na pod niego podpi±æ
-	  w³asne struktury danych
 */
 /*************************************************************************************************/
 
 extern void z80_reset(Z80 *z);
 /*
 	..::Reset procesora::..
+	z- jesli NULL, uzyj struktury wewn
 */
 /*************************************************************************************************/
 
 extern void z80_send_int(Z80 *z, byte *data);
 /*
     ..::Wysyla sygnal przerwania INT::..
-    
+	z- jesli NULL, uzyj struktury wewn    
     data : dane wystawione na magistrale danych (istotne dla trybu IM0, IM2 )
 
 */
@@ -171,31 +197,36 @@ extern void z80_send_int(Z80 *z, byte *data);
 extern void z80_send_nmi(Z80 *z);
 /*
     ..::Wysyla sygnal przerwania NMI::..
+	z- jesli NULL, uzyj struktury wewn
     Uwaga: wa¿ne zbocze opadaj±ce
 */
 /*************************************************************************************************/
 extern void z80_exe(Z80 *z);
 /*
     ..::Wykonuje pojedyncz± instrukcjê::..
+	z- jesli NULL, uzyj struktury wewn
 */
 /*************************************************************************************************/
-extern void z80_exec(Z80 *z);
+extern void z80_exec(Z80 *z, void (*irqm)(void),void (*irqn)(void));
 /*
     ..::Wykonuje seriê instrukcji::..
+	z- jesli NULL, uzyj struktury wewn
+    irqm - funkcja wywo³ania INT, jesli NULL to nieaktywne
+    irqn - funkcja wywo³ania NMI, jesli NULL to nieaktywne
 */
 
 /*************************************************************************************************/
 extern void z80_set_run(Z80 *z, char flag);
 /*
+	z- jesli NULL, uzyj struktury wewn
     flag=1 - uruchamia b±dz flag=0 - zatrzymuje procesor
     domyslnie jest zatrzymany
 */
 
-extern void z80_set_debug(Z80 *z, char flag);
-/*
-    flag=1 - wlacza flag=0 - wylacza debugger
-    domyslnie jest wylaczony
-*/
 /*************************************************************************************************/
+extern Z80 *z80_get_struct(void);
+/*
+    Zwraca warto¶c wewnêtrznej (domy¶lnej) struktury Z80
+*/
 
 #endif

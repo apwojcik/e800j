@@ -27,10 +27,11 @@
 
 void mem_wr(Z80 *z, word addr, byte data)
 {
+    static long cnt=0;
     if(addr < 16384){
-	 printf("Proba zapisu do ROM pod adres 0x%x, adres instr:%x\n",addr, z->PCp);
+//	 printf("%4i Proba zapisu do ROM pod adres 0x%x, adres instr:%x\n",cnt++,addr, z->PCp);
 //exit(1);
-	 return;
+//	 return;
     }
     *(((e800j *)z->cust)->ram+addr) = data;
 }
@@ -49,7 +50,9 @@ byte mem_rd(Z80 *z, word addr)
     if(MEM_IAHR(ctrl)) 
 	if(z->M1 && !TEST_A9(addr) && IO_IAL(*(e8->prom_jio + A0_A8(addr))) )
 	{
+#ifdef DEBUG_HW_MSG
 	    printf("|-->HW Elwro RST #18\n");
+#endif
 	    return RST_18;
 	}
     if(MEM_ROM1(ctrl)) data = *(e8->rom_bas0 + rom_addr);

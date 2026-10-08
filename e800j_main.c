@@ -32,6 +32,13 @@
 #include "e800j_mem.h"
 #include "e800j_io.h"
 #include "i8251.h"
+#include "z80_debug.h"
+
+byte int_str[5]={0xff,0xff,0xff,0xff,0xff};
+
+void int_irq(){
+    z80_send_int(NULL,int_str);
+}
 
 int rfsh(Z80 *z)
 {
@@ -43,21 +50,20 @@ int rfsh(Z80 *z)
 	E800J(z->cust)->wr51 = 0;
 printf("8251 TxD: %x\n",i8251_txd(E800J(z->cust)->i8251p));
     }
-
-    z80_send_int(z,"\0773");
+    int_irq();
     return 1;
 }
 
-int cpu(Z80 *z)
+int cpu()
 {
-    z80_exec(z);
+    z80_exec(NULL,NULL,NULL);
     return 1;
 }
 
-void reset(Z80 *z)
+void reset()
 {
     int i;
-    e800j *e8 = (e800j *)z->cust;
+    e800j *e8 = (e800j *)z80_get_struct()->cust;
 
     for(i=0; i < 65536; i++) e8->ram[i] = random();
 
@@ -65,13 +71,14 @@ void reset(Z80 *z)
     
     e8->reg175 = 0;
     e8->addr_prom_mask=0;
-    z80_reset(z);    
+    z80_reset(NULL);    
+    z80_set_run(NULL,1);
 }
 
-void run_cpu(Z80 *z)
+void run_cpu()
 {
-    z80_set_run(z,1);
-    z80_set_debug(z,0);
+    z80_set_run(NULL,1);
+    z80_set_debug(z80_get_struct(),0);
 }
 
 void kill_me(){ exit(0); }
@@ -99,6 +106,7 @@ void e800j_init_io(e800j *e8, i8251 *serial)
 int main(int argc, char **argv)
 {
     Z80		z80;
+    Z80_DEB	debugger;
     i8251	serial;
 //    i8255	parallel;
     e800j	e8;    
@@ -111,11 +119,17 @@ int main(int argc, char **argv)
 
     e800j_init_mem(&e8, ram, rom, prom_mem, prom_jio, eprom_tv);
     e800j_init_io(&e8, &serial);
-    z80_init(&z80, 10000, io, mem_rd, mem_wr, gui_debug_in, gui_debug_out, kill_me, &e8);
+
+    z80_init(&z80, &e8, 10000, io, mem_rd, mem_wr);
+    z80_debugger_init(&z80, &debugger, gui_debug_in, gui_debug_out, kill_me);
+
     key_init(KB_MODE_PC);
     i8251_reset(&serial);
-    reset(&z80);
-    z80.run=1;
+
+    reset();
+    
+    z80_set_run(NULL,1);
+
     gui_setup(&z80);
     gui_timer(rfsh, 20, &z80);
     gui_timer(blink_attr, 500, &z80);

@@ -1,0 +1,16 @@
+28.01.2006
+- obs³uga wiêkszo¶ci plików ze snapshotami dzieki bibliotece libspectrum 
+- otwarcie wczytywania pliku teraz zatrzymuje CPU
+- poprawa instrukcji IN A,(n), oraz OUT (nn),A - wczesniej ignorowana by³a warto¶æ akumulatora
+  przez co nie by³a ustawiana górna po³ówka adresu
+- modyfikacja skanowania klawiszy, wcze¶niej skanowanie by³o wg 10 adresów, dla kazdej z linii KA,
+  obecnie wynikiem matrycy jest iloczyn logiczny wszystkich linii, gdzie bit KA == 0
+- obs³uga instrukcji HALT (by³ b³±d)
+- obs³uga trybu IM0 (by³ b³±d)
+- poprawa instrukcji ADD/SUB/ADC/SBC INC/DEC (b³êdnie ustawia³y znaczniki V i H )
+- zmiany w kodzie na po³±czeniu emulator CPU / debugger
+- naprawa resetu - ju¿ nie powoduje seg fault-u
+- wprowadzenie domy¶lnego wska¼nika dla operacji na CPU (jesli w wywo³aniu funkcji jest NULL, 
+  wówczas jest on u¿yty) - ma to na celu uproszczenie sposobu wywo³ywania tych funkcji (nie trzeba ju¿
+  tworzyæ globalnych zmiennych przechowuj±cych ten wska¼nik)
+

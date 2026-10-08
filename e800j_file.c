@@ -22,44 +22,92 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define LIBSPECTRUM_USE
+
+#ifdef LIBSPECTRUM_USE
+#include <libspectrum.h>
+#endif
+
 #include "z80.h"
 #include "e800j_prom.h"
 #include "e800j_file.h"
 
-int decompress_data(FILE *f,int clength,int dlength, char *memo, int addr)
-{
-    int clen, dlen,rep=0;
-    byte data;
-    byte state;
+byte expand_z80(byte data, byte *dst, int *ii){
+    static byte a0,a1,x;
+    byte i;
 
-    clen = dlen = state = 0;
-    while(!feof(f)){
-	if((clen >= clength) && (clength)) break;
-	if((state==3)&&(rep==0)) break;
-	data = fgetc(f);
-	clen++;
-	switch(state){
-	    case 1: 
-	    case 0: if(data == 0xed){
-			state++;
-			break;
-		    }
-		    dlen++;
-		    *(memo + addr++) = data;
-		    state = 0;
-		    break;
-	    case 2: rep = data;
-		    state = 3;
-		    break;
-	    case 3: for(;rep > 0; rep--, dlen++) *(memo + addr++) = data;
-		    state = 0;
-	}
+    if( !dst ){
+	a0 = a1 = 0;
+	return 1;
     }
 
-    return 0;    
+    if(a0){
+	switch(a0){
+	    case 1: if(data == 0xed)
+			a0++;
+		    else {
+			a0 = 0; 
+			dst[*ii] = 0xed; 
+			if(*ii < 49152) (*ii)++;
+			if(data == 0)
+			    a1=1;
+			else{
+			    dst[*ii] = data;
+			    if(*ii < 49152) (*ii)++;
+			    }
+		    } break;
+	    case 2: x = data; 
+		    a0++; 
+		    break;
+	    case 3: for(i = 0; i < x; i++){ 
+			dst[*ii] = data;
+			if(*ii < 49152) (*ii)++;
+		    }
+		    a0 = 0; 
+		    break;
+	}
+	return 1;
+    } 
+
+    if(a1){
+	a1 = 0;
+	dst[*ii] = 0;
+	if(*ii < 49152) (*ii)++; 
+	if(data == 0xED)
+	    a0 = 1;
+	else{
+	    dst[*ii] = data;
+	    if(*ii < 49152) (*ii)++;
+	    }
+	return 1;
+    }
+
+    switch(data){
+        case 0x00: a1 = 1; break;
+        case 0xED: a0 = 1; break;
+        default  : dst[*ii] = data; if(*ii < 49152) (*ii)++; 
+    }    
+    return 1;
 }
 
-int load_z80(Z80 *z, FILE *f)
+
+
+int decompress_data(FILE *f,int clength,int dlength, char *memo, int addr)
+{
+    byte *tmp = memo;
+    byte tt[65535];
+    int i=0;
+
+    expand_z80(0,NULL,&i);
+    while(!feof(f)) expand_z80(fgetc(f),tt,&i);
+
+    memcpy(tmp+addr,tt,49152);
+    return 0;
+}
+
+#ifndef LIBSPECTRUM_USE
+
+int load_z80(Z80 *z, FILE *f, const char *fname)
 {
     e800j *e8 = (e800j *)z->cust;
 
@@ -67,22 +115,25 @@ int load_z80(Z80 *z, FILE *f)
 
     if(fread(&hdr_1,1,sizeof(hdr_1),f) != sizeof(hdr_1) ) return 1;
 
-        
     if(hdr_1.Next_Version){
 /* v1 */
 	if(hdr_1.Compressed){
 	    if(decompress_data(f,0,48*1024,e8->ram,16384)) return 1;
+if(*e8->rom_bas0 == 0xf7) printf("Zmod ROM \n");
 	}else{
 	    if(fread(e8->ram + 16384, 48*1024,1,f) != 48*1024) return 1;
 	}
     }else{
+printf("|-> nie obs³ugiwana wersja  formatu (2 lub 3)\n");
+	return 0;
 /* v2 lub v3 */
     }
 
 /* wstawic zapis do rejestrów*/    
+    z80_reset(z); /* ustawiam procesor w stan pocz±tkowy*/
 
     z->PCp  = (hdr_1.PC[1] << 8) + hdr_1.PC[0];
-printf("|->%x\n",z->PCp);
+
     z->AFr  = (hdr_1.AF[0] << 8) + hdr_1.AF[1];
     z->AFr_ = (hdr_1.AFa[0] << 8) + hdr_1.AFa[1]; 
     
@@ -100,14 +151,18 @@ printf("|->%x\n",z->PCp);
     z->IFF1p= hdr_1.IFF1;
     z->IFF2p= hdr_1.IFF2;
     z->IMr  = hdr_1.IM;
+
+//    z->run = 1;
+//printf("|->%x\n",z->PCp);
 /*
     border(z80,zx, h.border); 
 */
 
     return 0;    
 }
+#endif
 
-byte load_file_block(char *fname,void *buffer, int buf_size)
+byte load_file_block(const char *fname,void *buffer, int buf_size)
 {
     FILE *f;
     
@@ -133,4 +188,84 @@ byte load_rom(e800j *e8, char *fname_bas0, char *fname_bas1, char *fname_boot)
     }
     return 0;
 }
+
+
+#ifdef LIBSPECTRUM_USE
+char copy_snapshot(Z80 *z, libspectrum_snap *snap)
+{
+    int i;
+    libspectrum_machine machine;
+    
+    machine = libspectrum_snap_machine(snap);
+
+    if(machine != LIBSPECTRUM_MACHINE_48)
+	if(machine != LIBSPECTRUM_MACHINE_16){
+	    printf("Nie obs³ugiwany typ komputera: %s\n",libspectrum_machine_name(machine));
+	    return 0;
+	}	
+
+/* ustawienie rejestrów */
+    z->Ar  = libspectrum_snap_a(snap);		z->Fr  = libspectrum_snap_f(snap);
+    z->Ar_ = libspectrum_snap_a_(snap);		z->Fr_ = libspectrum_snap_f_(snap);
+
+    z->BCr  = libspectrum_snap_bc(snap);	z->BCr_  = libspectrum_snap_bc_(snap);
+    z->DEr  = libspectrum_snap_de(snap);	z->DEr_  = libspectrum_snap_de_(snap);
+    z->HLr  = libspectrum_snap_hl(snap);	z->HLr_  = libspectrum_snap_hl_(snap);
+
+    z->IXp  = libspectrum_snap_ix(snap);	z->IYp  = libspectrum_snap_iy(snap);
+    z->Ip   = libspectrum_snap_i(snap);		z->Rp   = libspectrum_snap_r(snap);
+    z->SPp  = libspectrum_snap_sp(snap);	z->PCp  = libspectrum_snap_pc(snap);
+
+    z->IFF1p = libspectrum_snap_iff1(snap);	z->IFF2p = libspectrum_snap_iff2(snap);
+    z->IMr   = libspectrum_snap_im(snap);
+    z->Halt_state = libspectrum_snap_halted(snap);
+
+    z->run = 1;
+/* kopiowanie pamiêci */
+    for(i=0; i < 16; i++)
+    if(libspectrum_snap_pages(snap,i)){
+	switch(i){
+	    case 0: memcpy(((e800j*)(z->cust))->ram + 0xc000,libspectrum_snap_pages(snap,i),0x4000); break;
+	    case 2: memcpy(((e800j*)(z->cust))->ram + 0x8000,libspectrum_snap_pages(snap,i),0x4000); break;
+	    case 5: memcpy(((e800j*)(z->cust))->ram + 0x4000,libspectrum_snap_pages(snap,i),0x4000); break;
+	}		
+    	
+    }
+    return 0;
+}
+
+int load_z80(Z80 *z, FILE *f, const char *fname)
+{
+    libspectrum_snap *snap;
+    int error;
+    char *buffer;
+    long length;
+            
+    if((error=libspectrum_snap_alloc(&snap))) return error;
+    fseek(f,0L,SEEK_END);
+    length = ftell(f);
+    fseek(f,0L,SEEK_SET);
+    error=1;
+    if((buffer = (char *) malloc(length))){
+        if(!(error = load_file_block(fname,buffer,length))){
+	    if(!(error = libspectrum_snap_read(snap,buffer,length,LIBSPECTRUM_ID_UNKNOWN, fname))){
+	       error = copy_snapshot(z,snap);	    
+	    }
+	}
+	free(buffer);
+    }
+    libspectrum_snap_free(snap);    
+    return error;
+}
+#endif
+
+
+
+
+
+
+
+
+
+
 

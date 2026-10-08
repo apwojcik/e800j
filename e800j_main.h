@@ -26,8 +26,8 @@
 
 //#define ZX
 //#define JR_1
-//#define JR_2
-#define JR_3
+#define JR_2
+//#define JR_3
 
 #ifdef ZX
 #define ROM_NAME "./rom/zx_spec.bin",NULL,NULL
@@ -47,13 +47,12 @@ void scr_rfsh();
 int vid_addr( int pix_nb);
 int rfsh(Z80 *z);
 int blink_attr(Z80 *z);
-int cpu(Z80 *z);
 void reg_mem_74157(byte data, e800j *z);
 unsigned char io(word addr,byte data, byte type, Z80 *z);
 void mem_wr(Z80 *z, word addr, byte data);
 byte mem_rd(Z80 *z, word addr);
-void reset(Z80 *z);
-void run_cpu(Z80 *z);
+void reset(void);
+void run_cpu();
 void kill_me();
 void scr_rfsh(Z80 *z);
 void e800j_str_init(e800j *e8, byte *ram, byte *rom, byte *prom_mem,byte *prom_io,byte *prom_tv);

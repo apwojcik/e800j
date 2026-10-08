@@ -28,6 +28,7 @@
 #include "e800j_file.h"
 #include "e800j_gui.h"
 #include "e800j_main.h"
+#include "z80_debug.h"
 
 config cfg; 
 GtkTextBuffer *txt;
@@ -39,13 +40,16 @@ void load_snapshot(GtkObject *wg)
 {
 
     FILE *f;
+    const char *fname;
+    
+    fname  = gtk_file_selection_get_filename(GTK_FILE_SELECTION(wg));
 
-    if(!(f=fopen(gtk_file_selection_get_filename(GTK_FILE_SELECTION(wg)),"r"))){
+    if(!(f=fopen(fname,"r"))){
 	perror("Nie mozna zaladowac pliku\n");
 	return;
     }
     
-    if(load_z80(cfg.ptr,f)){
+    if(load_z80(cfg.ptr,f,fname)){
 	g_print("B³±d odczytu pliku!\n");
     }
 
@@ -115,16 +119,23 @@ void gui_screen_rfsh()
     gtk_widget_draw(cfg.draw_area, &tmp);
 }
 
+void cancel_load_file(GtkWidget *wg)
+{
+    z80_set_run(NULL,1); /* wznów emulacjê CPU */
+    gtk_widget_destroy(wg);
+}
+
 void load_file(GtkWidget *wg)
 {
     GtkWidget *fs;
 
+    z80_set_run(NULL,0); /* zatrzymaj emulacjê CPU */
     fs=gtk_file_selection_new("Wczytaj z80");
     gtk_file_selection_hide_fileop_buttons(GTK_FILE_SELECTION(fs));
     gtk_widget_show(fs);
     
     gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(fs)->cancel_button),
-    "clicked",(GtkSignalFunc)gtk_widget_destroy,GTK_OBJECT(fs));
+    "clicked",(GtkSignalFunc)cancel_load_file,GTK_OBJECT(fs));
 
     gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(fs)->ok_button),
     "clicked",(GtkSignalFunc)load_snapshot,GTK_OBJECT(fs));
@@ -206,7 +217,7 @@ void gui_debug_out(char *a)
     mark=gtk_text_buffer_get_insert(txt);    
     gtk_text_view_scroll_to_mark(txtv,mark,0.0,TRUE,1.0,1.0);
     gtk_text_buffer_insert_with_tags_by_name(txt,&iter,a,-1,"tt",NULL);
-    if(((Z80 *)cfg.ptr)->deb_stdout) puts(a);
+    if(DEB(z80_get_struct())->deb_stdout) puts(a);
 }
 
 void gui_debug_in(char *a)
@@ -221,14 +232,22 @@ void ed_ed(GtkWidget *wg)
     gtk_entry_set_text(GTK_ENTRY(wg),"");
 }
 
+void debugger_destroy(GtkWidget *wg)
+{
+    gtk_widget_destroy(wg);
+    DEBUGGER_RESET(z80_get_struct());
+}
+
 void debugger()
 {
     GtkWidget *wg,*vb, *vv,*ed,*sw;
 
     memset(cmd_buffer,0,sizeof(cmd_buffer));
+    DEBUGGER_RESET(z80_get_struct());
     
     wg=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_signal_connect(GTK_OBJECT(wg),"destroy",GTK_SIGNAL_FUNC(gtk_widget_destroy),NULL);
+    gtk_signal_connect(GTK_OBJECT(wg),"destroy",GTK_SIGNAL_FUNC(debugger_destroy),NULL);
+
     gtk_window_set_title(GTK_WINDOW(wg),"Z80 debugger");
     gtk_widget_set_usize(wg,256,256);
     vb=gtk_vbox_new(FALSE,0);
@@ -255,13 +274,8 @@ void debugger()
     gtk_text_buffer_create_tag(txt,"tt","family","monospace","foreground","blue",NULL);
     
     gtk_widget_show_all(wg);
-    z80_set_run(cfg.ptr,1);
+    z80_set_run(NULL,1);
     z80_set_debug(cfg.ptr,1);
-}
-
-void gui_run_cpu()
-{
-    run_cpu(cfg.ptr);
 }
 
 void gui_setup(void *ptr)
@@ -297,7 +311,7 @@ void gui_setup(void *ptr)
     gtk_box_pack_start(GTK_BOX(tt),tk,FALSE,FALSE,0);
 
     gtk_toolbar_append_item(GTK_TOOLBAR(tk),"LD","Wczytaj",NULL,NULL,GTK_SIGNAL_FUNC(load_file),NULL);
-    gtk_toolbar_append_item(GTK_TOOLBAR(tk),"RUN","Start",NULL,NULL,GTK_SIGNAL_FUNC(gui_run_cpu),NULL);
+    gtk_toolbar_append_item(GTK_TOOLBAR(tk),"RUN","Start",NULL,NULL,GTK_SIGNAL_FUNC(run_cpu),NULL);
     gtk_toolbar_append_item(GTK_TOOLBAR(tk),"RST","Start",NULL,NULL,GTK_SIGNAL_FUNC(reset),NULL);
     gtk_toolbar_append_item(GTK_TOOLBAR(tk),"Debug","Start",NULL,NULL,GTK_SIGNAL_FUNC(debugger),NULL);
 

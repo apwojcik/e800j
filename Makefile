@@ -11,7 +11,7 @@ gtk_libs=`pkg-config --libs gtk+-2.0`
 ALL:elwro
 
 elwro:$(libs)
-	gcc -o elwro  $(libs) $(gtk_libs)
+	gcc -o elwro  $(libs) $(gtk_libs) -lspectrum
 
 e800j_main.o: e800j_main.c e800j_prom.h e800j_file.h e800j.h e800j_kbrd.h e800j_main.h
 	gcc -c $(opts) e800j_main.c

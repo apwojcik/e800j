@@ -113,7 +113,8 @@
 #define RES(a,b)		z80_brs(z,a,0,&(b),BIT_RES); DEB_CLASS(23);
 #define SET(a,b)		z80_brs(z,a,0,&(b),BIT_SET); DEB_CLASS(23);
 
-#define OUT(a,b)		z80_out(z,a,b);DEB_CLASS(24);
+#define OUT(a,b)		z80_out(z,a,b,0);DEB_CLASS(24);
+#define OUTBC(a,b)		z80_out(z,a,b,1);DEB_CLASS(24);
 #define IN(a,b)			a = z80_in(z,b,0);DEB_CLASS(24);
 #define INBC(a,b)		a = z80_in(z,b,1);DEB_CLASS(24);
 #define INBCF(a,b)		a = z80_in(z,b,2);DEB_CLASS(24);
@@ -140,6 +141,9 @@
 
 extern byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z);
 extern word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z);
+//extern byte z80_alu_add(byte a, byte b, byte sub, byte cy, Z80 *z);
+//extern word z80_alu_add16(word a, word b, byte sub, byte cy, Z80 *z);
+
 extern void z80_push(Z80 *z, word reg);
 extern void z80_pop(Z80 *z, word *reg);
 extern void z80_call(Z80 *z, word addr, byte condition);
@@ -154,7 +158,7 @@ extern void z80_jp(Z80 *z,byte condition,word addr);
 extern void z80_jr(Z80 *z,byte condition, byte dis);
 extern void z80_djnz(Z80 *z, byte dis);
 extern void z80_shift(Z80 *z, byte *reg, byte type);
-extern void z80_out(Z80 *z,word addr, byte data);
+extern void z80_out(Z80 *z,word addr, byte data, byte type);
 extern byte z80_in(Z80 *z,word addr, byte type);
 extern void z80_inc(Z80 *z,byte *reg, byte type);
 extern void z80_incm(Z80 *z, byte type);

@@ -23,29 +23,63 @@
 #include "z80.h"
 #include "z80_cpu.h"
 #include "z80_instr.h"
+#include "z80_debug.h"
 
-#ifdef DEBUGGER
+void z80_debug(Z80 *z, char *str, char *a, char *b, char class);
 
-typedef struct{
-    byte lines; /* ilosc linii instrukcji jaka ma zostac wyswietlona */
-    long  instr; /* ilosc instrukcji do wykonania */
-    word addr_brk; /* pulapka adresu */
-    byte fwcnt:1;
-    byte fcnt:1;
-    byte fbreak:1;
-    byte fwadr:1;
-    byte free:1;
-    byte fprint:1;
-    byte hdr:1;
-    byte pout;
-    byte stdout;
-    word daddr;
-    word deasm;
-} Z80_DEB;
+void z80_set_debug(Z80 *z,char fl){ z->deb_on = fl; }
 
-Z80_DEB zd;
+void z80_debug_reset(Z80 *z)
+{
+    void *in,*out,*ex;
 
-void z80_debug(char *str, char *a, char*b,Z80 *z)
+    ex = DEB(z)->exit;
+    out = DEB(z)->output;
+    in = DEB(z)->input;
+    memset(z->deb_struct, 0, sizeof(Z80_DEB));
+    z->deb_par_0 = z->deb_par_1 = z->deb_par_2 = NULL;
+    z->deb_par_3 = z->deb_class = z->NNp = z->Np = 0;
+    z->deb_dry   = z->debug_int = z->deb_halt = 0;
+    z->deb_on = 0;
+    DEB(z)->input = in;
+    DEB(z)->output = out;
+    DEB(z)->exit = ex;    
+    DEB(z)->init=1;
+    z->act_freq=z->lp_freq;
+}
+
+void z80_deb_call(void *zz, char call)
+{
+    Z80 *z=zz;
+
+    if(!z->deb_struct) return;
+
+    switch(call){
+	case 0: z80_debug_reset(z); break;
+	case 1: z80_debug(z,z->deb_par_0, z->deb_par_1, z->deb_par_2, z->deb_par_3); break;
+	case 2: z->deb_class=0xff;
+		z->old_pc = PC;
+		z80_debugger_call(z);
+		break;
+    }
+
+}
+
+void z80_debugger_init(Z80 *z, Z80_DEB *deb, void (*deb_in)(char *), void (*deb_out)(char *), void (*exit_f)(void))
+{
+    if(!z) z = z80_get_struct();
+    z->deb_struct = deb;
+    if(deb){    
+	deb->input  = deb_in;
+	deb->output = deb_out;	
+	deb->exit   = exit_f;
+	z80_debug_reset(z);
+    } else printf("Wrn: deb_struct == NULL !");
+    z->debugger = z80_deb_call;
+}
+
+
+void z80_debug(Z80 *z, char *str, char *a, char *b, char class)
 {
     char tmpstr0[256];
     char tmpstr1[80];
@@ -58,25 +92,25 @@ void z80_debug(char *str, char *a, char*b,Z80 *z)
     memset(tmpstr2,0,sizeof(tmpstr2));
 
     if(z->DD_FD) z->old_pc--;
-    if((z->cnt >= zd.instr)&&(zd.fcnt)){ z->deb_halt=1; z->debug_print=1;}
-    if((z->old_pc == zd.addr_brk)&&(zd.fbreak)){ z->deb_halt=1; z->debug_print=1;}
-    if(z->debug_print){
-	if(!zd.hdr) tmpstr3="\0";
-	zd.hdr=0;
+    if((DEB(z)->cnt >= DEB(z)->instr)&&(DEB(z)->fcnt)){ z->deb_halt=1; DEB(z)->debug_print=1;}
+    if((z->old_pc == DEB(z)->addr_brk)&&(DEB(z)->fbreak)){ z->deb_halt=1; DEB(z)->debug_print=1;}
+    if(DEB(z)->debug_print){
+	if(!DEB(z)->hdr) tmpstr3="\0";
+	DEB(z)->hdr=0;
 	sprintf(tmpstr0,str,a,b);
 	sprintf(tmpstr1,"%4x %s",z->old_pc,tmpstr0);
-	if(!z->dry_run){
+	if(!z->deb_dry){
 	    sprintf(tmpstr2,"\t%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%i%i%i%i%i%i|%2x|%2x",
 		z->AFr,z->BCr,z->DEr,z->HLr, z->AFr_,z->BCr_,z->DEr_,z->HLr_, IX,IY,SP,
 		GET_SF,GET_ZF,GET_HF,GET_PF,GET_NF,GET_CF,I,R);
-	    zd.deasm = z->old_pc;
+	    DEB(z)->deasm = z->old_pc;
 	    z->debug_int=1;
 	}
 	sprintf(tmpstr0,"%s%s%s\n",tmpstr3,tmpstr1,tmpstr2);
-	z->deb_out(tmpstr0);
+	DEB(z)->output(tmpstr0);
     }
-    z->debug_print=0;
-    if((zd.fprint) && (zd.fbreak)) z->debug_print=1;
+    DEB(z)->debug_print=0;
+    if((DEB(z)->fprint) && (DEB(z)->fbreak)) DEB(z)->debug_print=1;
 }
 
 char tmpstr0[8];
@@ -150,17 +184,17 @@ void z80_displ_mem(Z80 *z)
     char tmps1[128];
     char tmps2[256];
 
-    for(i=0; i < zd.lines; i++){
-	tmp = zd.daddr;
+    for(i=0; i < DEB(z)->lines; i++){
+	tmp = DEB(z)->daddr;
 	for(j=0;j < 16;j++){
-	    sprintf(tmps0+j*3,"%2x ",MR(zd.daddr+j+i*16) & 0xffff);
+	    sprintf(tmps0+j*3,"%2x ",MR(DEB(z)->daddr+j+i*16) & 0xffff);
 	}
 	for(j=0;j < 16;j++){
-	    zd.daddr++;
-	    sprintf(tmps1+j,"%c",f_z_8(MR(zd.daddr) & 0xffff));
+	    DEB(z)->daddr++;
+	    sprintf(tmps1+j,"%c",f_z_8(MR(DEB(z)->daddr) & 0xffff));
 	}
 	sprintf(tmps2,"%4x %s%s\n",tmp,tmps0,tmps1); 
-	z->deb_out(tmps2);
+	DEB(z)->output(tmps2);
     }    
 }
 
@@ -169,19 +203,28 @@ void dummy_wrmem(void *ptr,word addr, byte data){}
 void z80_deasm_mem(Z80 *z)
 {
     Z80 zz;
+    Z80_DEB db;
+    
     int i;
+
     memcpy(&zz,z,sizeof(Z80));
-    zz.PCp = zd.deasm;
-    for(i = 0; i < zd.lines; i++){
-        zz.dry_run=1;
-	zz.debug_print=1;
+    memcpy(&db,z->deb_struct,sizeof(Z80_DEB));
+    zz.deb_struct = &db;
+    z80_reset(&zz); 		 	/* mamy teraz kopiê CPU, korzystaj±cego z tych samych zasobów */
+    zz.deb_dry = 1; 		 	/* nie modyfikuje zasobów  */
+    ((Z80_DEB*)(zz.cust))->free=1;	/* nie wchodzi do konsoli  */
+    zz.run = 1; zz.deb_on = 1;  	/* uruchomia z debuggerem  */
+    zz.PCp = DEB(z)->deasm;		/* adres deasemblacji      */
+    zz.debug_int = 1;			/* ignoruj przerwania      */
+    zz.WR_MEM=dummy_wrmem;    		/* nie modyfikuj pamiêci   */
+
+    for(i = 0; i < DEB(z)->lines; i++){
+	((Z80_DEB *)(zz.deb_struct))->debug_print=1;
 	zz.deb_halt=0;
-	zd.free=1;
-	zz.WR_MEM=dummy_wrmem;
 	z80_exe(&zz);
     }
-    zd.free=0;
-    zd.deasm=zz.PCp;
+    DEB(z)->free=0;
+    DEB(z)->deasm=zz.PCp;
 }
 
 void split_cmd(char *src,char **a)
@@ -213,121 +256,122 @@ void z80_console(Z80 *z)
     char *arg[4];
     int arg1,arg2,arg3,i;
 
-    zd.fprint=0;
-    zd.instr=0;
-    zd.addr_brk=0;
-    zd.fwcnt=0;
-    zd.fcnt=0;
-    zd.fbreak=0;
-    zd.fwadr=0;
-    zd.free=0;
-    zd.hdr=0;
+    DEB(z)->fprint=0;
+    DEB(z)->instr=0;
+    DEB(z)->addr_brk=0;
+    DEB(z)->fwcnt=0;
+    DEB(z)->fcnt=0;
+    DEB(z)->fbreak=0;
+    DEB(z)->fwadr=0;
+    DEB(z)->free=0;
+    DEB(z)->hdr=0;
 
     z->deb_halt=1;
     z->act_freq=1;
 
-    z->deb_in(stin);    
+    DEB(z)->input(stin);
     if(!*stin) return;
-    if(z->deb_stdout) printf(">%s\n",stin);
+    if(DEB(z)->deb_stdout) printf(">%s\n",stin);
     sprintf(temp,">%s\n",stin);
-    z->deb_out(temp);     
+    DEB(z)->output(temp);     
     z->debug_int=1; /* blokada przerwan */
     split_cmd(stin,arg);
     sscanf(arg[0],"%s",cmdline);
     if((!strcmp(cmdline,"quit"))||(!strcmp(cmdline,"q"))){
 	z80_set_debug(z,0);
-        z->exit(); 
+	z80_debug_reset(z);
+        DEB(z)->exit(); 
     } else
     if((!strcmp(cmdline,"help"))||(!strcmp(cmdline,"h"))){
-	 z->deb_out("Help:\nc - czysc ekran\nq.quit - wyjscie\nh,help - pomoc\n");
-	 z->deb_out("t <xxxx> - krok wykonania instrukcji procesora (xxx - ilosc krokow)\n");
-	 z->deb_out("p <xxxx> - wykonanie instrukcji lub ich serii \n");	 
-	 z->deb_out("g xxxx - wykonanie do adresu xxxx\n");	 
-	 z->deb_out("d <xxxx> - wyswietlenie zawartosci pamieci spod adresu xxxx\n");	 
-	 z->deb_out("u <xxxx>  - deasemblacja zawartosci pamieci spod adresu xxxx\n");	 
-	 z->deb_out("a adres data - wpisanie danej pod wskazany adres\n");	 
-	 z->deb_out("ff adres nn dd - wypelnienie obszaru pamieci nn od adresu adres wartoscia dd\n");	 
-	 z->deb_out("l xxxx - ustawienie xxxx linii wyswietlania \n");	 
-	 z->deb_out("pout [0|1] - wyswietlanie instrukcji podczas wykonywania instrukcji \n");	 
-	 z->deb_out("stdout [0|1] - kopia wyswietlania na stdout\n");	 
-	 z->deb_out("find\n");	 
-	 z->deb_out("in_port adres - pobiera i wyswietla wartosc postu o adresie adres\n");	 
-	 z->deb_out("out_port adres dana - wysyla dana na port o adresie adres\n");	 
-	 z->deb_out("set reg wartosc - ustawienie wartosci rejestru [AF,BC,DE,HL,AF',BC',DE',HL',IX,IY,SP,I,R,PC]\n");	 
-	 z->deb_out("r - wyswietla stan rejestrow\n");	 
-	 z->deb_out("x <adr> - wyswietla wartosc bajtu spod adresu adr\n");
+	 DEB(z)->output("Help:\nc - czysc ekran\nq.quit - wyjscie\nh,help - pomoc\n");
+	 DEB(z)->output("t <xxxx> - krok wykonania instrukcji procesora (xxx - ilosc krokow)\n");
+	 DEB(z)->output("p <xxxx> - wykonanie instrukcji lub ich serii \n");	 
+	 DEB(z)->output("g xxxx - wykonanie do adresu xxxx\n");	 
+	 DEB(z)->output("d <xxxx> - wyswietlenie zawartosci pamieci spod adresu xxxx\n");	 
+	 DEB(z)->output("u <xxxx>  - deasemblacja zawartosci pamieci spod adresu xxxx\n");	 
+	 DEB(z)->output("a adres data - wpisanie danej pod wskazany adres\n");	 
+	 DEB(z)->output("ff adres nn dd - wypelnienie obszaru pamieci nn od adresu adres wartoscia dd\n");	 
+	 DEB(z)->output("l xxxx - ustawienie xxxx linii wyswietlania \n");	 
+	 DEB(z)->output("pout [0|1] - wyswietlanie instrukcji podczas wykonywania instrukcji \n");	 
+	 DEB(z)->output("stdout [0|1] - kopia wyswietlania na stdout\n");	 
+	 DEB(z)->output("find\n");	 
+	 DEB(z)->output("in_port adres - pobiera i wyswietla wartosc postu o adresie adres\n");	 
+	 DEB(z)->output("out_port adres dana - wysyla dana na port o adresie adres\n");	 
+	 DEB(z)->output("set reg wartosc - ustawienie wartosci rejestru [AF,BC,DE,HL,AF',BC',DE',HL',IX,IY,SP,I,R,PC]\n");	 
+	 DEB(z)->output("r - wyswietla stan rejestrow\n");	 
+	 DEB(z)->output("x <adr> - wyswietla wartosc bajtu spod adresu adr\n");
     } else
-    if(!strcmp(cmdline,"c")) { z->deb_out("\033[2J\033[1;1H"); } else
+    if(!strcmp(cmdline,"c")) { DEB(z)->output("\033[2J\033[1;1H"); } else
     if(!strcmp(cmdline,"t")) { 
 	if(!arg[1]){
-	    z->deb_halt=0; zd.fprint=zd.pout; zd.instr = z->cnt + 1;
-	    zd.fcnt=1;
-	    zd.hdr=1;
-	    z->proc=0;
+	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + 1;
+	    DEB(z)->fcnt=1;
+	    DEB(z)->hdr=1;
+	    DEB(z)->proc=0;
 	} else {
 	    sscanf(arg[1],"%x",&arg1);
-	    z->deb_halt=0; zd.fprint=zd.pout; zd.instr = z->cnt + arg1;
-	    zd.fcnt=1;
-	    zd.hdr=1;
-	    z->proc=0;
+	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + arg1;
+	    DEB(z)->fcnt=1;
+	    DEB(z)->hdr=1;
+	    DEB(z)->proc=0;
 	    z->act_freq=z->lp_freq;
 	}
     }else
     if(!strcmp(cmdline,"p")) { 
 	if(!arg[1]){
-	    z->deb_halt=0; zd.fprint=zd.pout; zd.instr = z->cnt + 1;
-	    zd.fcnt=1;
-	    zd.hdr=1;
-	    z->proc=1;
+	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + 1;
+	    DEB(z)->fcnt=1;
+	    DEB(z)->hdr=1;
+	    DEB(z)->proc=1;
 	} else {
 	    sscanf(arg[1],"%x",&arg1);
-	    z->deb_halt=0; zd.fprint=zd.pout; zd.instr = z->cnt + arg1;
-	    zd.fcnt=1;
-	    zd.hdr=1;
-	    z->proc=1;
+	    z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->instr = DEB(z)->cnt + arg1;
+	    DEB(z)->fcnt=1;
+	    DEB(z)->hdr=1;
+	    DEB(z)->proc=1;
 	    z->act_freq=z->lp_freq;
 	}
     }else
     if(!strcmp(cmdline,"g")) { 
 	if(!arg[1]) return;
 	sscanf(arg[1],"%x",&arg1);
-	z->deb_halt=0; zd.fprint=zd.pout; zd.addr_brk = arg1;
-	zd.fbreak=1;
-	zd.hdr=1;
-	z->proc=0;
+	z->deb_halt=0; DEB(z)->fprint=DEB(z)->pout; DEB(z)->addr_brk = arg1;
+	DEB(z)->fbreak=1;
+	DEB(z)->hdr=1;
+	DEB(z)->proc=0;
 	z->act_freq=z->lp_freq;
 	z->debug_int=0;
     }else
     if(!strcmp(cmdline,"pout")) { 
 	if(!arg[1]) return;
 	sscanf(arg[1],"%x",&arg1);
-	zd.pout=arg1;
+	DEB(z)->pout=arg1;
     }else
     if(!strcmp(cmdline,"stdout")) { 
 	if(!arg[1]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	}
 	sscanf(arg[1],"%x",&arg1);
-	z->deb_stdout=arg1;
+	DEB(z)->deb_stdout=arg1;
     }else
     if(!strcmp(cmdline,"d")) { 
 	if(arg[1]){
 	    sscanf(arg[1],"%x",&arg1);
-	    zd.daddr=arg1;
+	    DEB(z)->daddr=arg1;
 	}
 	z80_displ_mem(z);
     }else
     if(!strcmp(cmdline,"u")) { 
 	if(arg[1]){
 	    sscanf(arg[1],"%x",&arg1);
-	    zd.deasm=arg1;
+	    DEB(z)->deasm=arg1;
 	}
 	z80_deasm_mem(z);
     }else
     if(!strcmp(cmdline,"a")) { 
 	if( !arg[1] || !arg[2]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%x",&arg1);
@@ -337,7 +381,7 @@ void z80_console(Z80 *z)
     }else
     if(!strcmp(cmdline,"ff")) { 
 	if( !arg[1] || !arg[2] || !arg[3]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%x",&arg1);
@@ -354,7 +398,7 @@ void z80_console(Z80 *z)
 //    }else
     if(!strcmp(cmdline,"set")) { 
 	if( !arg[1] || !arg[2]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%s",cmdline);	
@@ -375,22 +419,22 @@ void z80_console(Z80 *z)
 	if(!strcmp(cmdline,"R"))   {z->Rp=arg1;} 
 	else{
 	    sprintf(temp,"Nieznany rejestr %s\n",cmdline);
-	    z->deb_out(temp);
+	    DEB(z)->output(temp);
 	    return;
 	}
     }else
     if(!strcmp(cmdline,"in_port")) { 
 	if( !arg[1]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%x",&arg1);
 	sprintf(temp,"zawartoscia portu IN[%x] jest: %x\n",arg1, z->io(arg1,0,1,z));
-	z->deb_out(temp);
+	DEB(z)->output(temp);
     }else
     if(!strcmp(cmdline,"out_port")) { 
 	if( !arg[1] || !arg[2]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%x",&arg1);
@@ -399,18 +443,18 @@ void z80_console(Z80 *z)
     }else
     if(!strcmp(cmdline,"l")) { 
 	if( !arg[1]){
-	    z->deb_out("Za malo danych wejsciowych\n");
+	    DEB(z)->output("Za malo danych wejsciowych\n");
 	    return;
 	 }
 	sscanf(arg[1],"%x",&arg1);
-	zd.lines=arg1;	
+	DEB(z)->lines=arg1;	
     }else
     if(!strcmp(cmdline,"x")) { 
 	if(!arg[1]) return;
 	sscanf(arg[1],"%x",&arg1);
 	arg1 &= 0xffff;
 	sprintf(temp,"MEM[%x]=%x\n",arg1,MR(arg1));
-	z->deb_out(temp);
+	DEB(z)->output(temp);
     }else
 
     if(!strcmp(cmdline,"r")) { 
@@ -418,30 +462,28 @@ void z80_console(Z80 *z)
  R|IFF1|IFF2|IM\n%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%4x|%i%i%i%i%i%i|%2x|%2x|%4x|%4x|%2x\n",
 	    z->AFr,z->BCr,z->DEr,z->HLr, z->AFr_,z->BCr_,z->DEr_,z->HLr_, IX,IY,SP,PC,
 	    GET_SF,GET_ZF,GET_HF,GET_PF,GET_NF,GET_CF,I,R,z->IFF1p,z->IFF2p,z->IMr);
-	    z->deb_out(temp);
+	    DEB(z)->output(temp);
     }else
-     z->deb_out("Nieznane polecenie\n");
+     DEB(z)->output("Nieznane polecenie\n");
 }
 
 void z80_debugger_call(Z80 *z)
 {
-    static char fr=1;
 
-    if(fr){
-	memset(&zd,0,sizeof(zd));
-	zd.free=0;
-    }
-    if(zd.free) return;
-    z->debug_print=0;
-    if(fr){
-	z->deb_out("Tryb debuggera, h - pomoc, q - wyjscie\n");
-	fr=0;
+    if(DEB(z)->free) return;
+
+    z->deb_on = 1;
+    
+//    DEB(z)->debug_print=0;
+    if(DEB(z)->init){
+	DEB(z)->output("Tryb debuggera, h - pomoc, q - wyjscie\n");
+	DEB(z)->init=0;
 	z->deb_halt=1;
-	zd.lines=16;
+	DEB(z)->lines=16;
     }
     if(z->deb_halt) z80_console(z);
-    if(zd.fprint) z->debug_print=1;    
-    z->cnt++;
+    if(DEB(z)->fprint) DEB(z)->debug_print=1;    
+    DEB(z)->cnt++;
 }
 
-#endif
+

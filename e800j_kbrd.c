@@ -35,21 +35,18 @@ void key_init(unsigned char mode)
 
 unsigned char key_matrix(unsigned short int addr)
 {
-    /* zamiana adresu na indeks w matrycy klawiatury */
-    switch(addr | keyboard.row_mask){
-	case 0x7ffe: addr = 0; break;	/* dla linii KA15 */
-	case 0xbffe: addr = 1; break;	/* dla linii KA14 */
-	case 0xdffe: addr = 2; break;	/* dla linii KA13 */
-	case 0xeffe: addr = 3; break;	/* dla linii KA12 */
-	case 0xf7fe: addr = 4; break;	/* dla linii KA11 */
-	case 0xfbfe: addr = 5; break;	/* dla linii KA10 */
-	case 0xfdfe: addr = 6; break;	/* dla linii KA9  */
-	case 0xfefe: addr = 7; break;	/* dla linii KA8  */	
-	case 0x007f: addr = 8; break;	/* dla linii KA7  */	
-	case 0x00fb: addr = 9; break;	/* dla linii KA2  */	
-	default    : return 0xff;
-    }
-    return keyboard.matrix[addr] | keyboard.col_mask;    
+    unsigned char kbrd;
+    int i,j;
+
+    /* skanowanie klawiatury dla linii KA0..KA8 */
+    i= 0x8000; kbrd=0xff;
+    for(j = 0; j < 9; i >>= 1, j++) 
+	if( !(addr & i) ) kbrd &= keyboard.matrix[j];
+
+    /* test linii E800J dla KA2 */
+    if( (addr & 0xff)== 0xfb) kbrd &= keyboard.matrix[9];
+
+    return kbrd;    
 }
 
 /* 

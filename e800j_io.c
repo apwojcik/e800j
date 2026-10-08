@@ -70,7 +70,9 @@ void out_fdc_74157(byte data, e800j *e8)
 /* Czytanie z portów wej¶cia */
 byte in_kbrd(word addr, e800j *e8)
 {
-    return key_matrix(addr) & (e8->tape_in ? 0xff:0xbf);
+    byte t = key_matrix(addr) & (e8->tape_in ? 0xff:0xbf);
+//printf("IN %x=%x\n",addr,t);
+    return t;
 }
 
 byte in_8255(word addr, e800j *e8)

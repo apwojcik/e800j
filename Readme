@@ -77,7 +77,12 @@ CPU: Athlon 64 3000+
 MEM: 512
 SYS: Linux Ubuntu Breezy Badger, kernel 2.6.14 x86_64
 
+28.01.2006
 
+Program wymaga biblioteki libspectrum dostêpnej pod adresem: 
+    http://fuse-emulator.sourceforge.net/libspectrum.php
 
+Umo¿liwia ona wczytywanie plików ze snapshotam-i w wiêkszo¶ci dostêpnych formatów.
 
-  
+Kolejne zmiany bêd± wpisywane w plik Changelog
+
