@@ -1,3 +1,5 @@
+ISO8859-2
+
 27.01.2006
 - obs³uga wiêkszo¶ci plików ze snapshotami dzieki bibliotece libspectrum 
 - otwarcie wczytywania pliku teraz zatrzymuje CPU
@@ -27,3 +29,24 @@
 - poprawa kodu reakcji debuggera na flagê DD lub FD - nie by³y czyszczone w pracy krokowej, 
   po zakoñczeniu kroku.
 - dopisywanie instrukcji w debugerze, jaka bêdzie wykonana w nastêpnym kroku
+- poprawa wyswietlania adresów debuggera, poprawa rozwiniecia zmiennych indeksowych
+
+04.03.2006
+- dodanie obs³ugi grafiki po SDL (wymaga jeszcze optymalizacji funkcja odswie¿ania, oraz skalowania )
+- przebudowa GUI
+- przebudowa regu³ kompilacji, dodanie konfiguracji kompilacji (miêdzy innymi mo¿liwo¶æ wy³±czenia 
+    korzystania z SDL i libspectrum )
+- dodanie ramki ekranu  
+- zapis / odczyt konfiguracji do pliku (zapocz±tkowane, na razie nie dzia³a ustawienie )
+- obs³uga polskich liter na klawiaturze (prawy ALT + plitera)
+- dorobienie nak³adki GUI na konsolê debuggera
+/* CPU */
+- znalezienie i naprawa b³êdu w instrukcji DAA CPU (niepotrzebne zerowanie znaczników H i CY) 
+    ( b³±d wykryty przez Jarka Adamskiego )
+- znalezienie bledu w operacjach indeksowanych (by³o wykonywane IX/IY + (unsigned)dd )
+- poprawa dzia³ania flagi V przy odejmowaniu
+- poprawa dzia³ania flagi N po operacji INC (juz nie ustawia)
+- dodanie nieoficjalnych instrukcji operujacych na po³ówkach IX i IY 
+- dodanie flag nieudokumentowanych 5 i 3
+- add/adc/sbc 16 bit wykonywane teraz przez ALU w postaci 2 dodawan 8 bitowych
+

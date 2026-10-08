@@ -23,35 +23,53 @@
 
 #ifdef __GTK_H__
 
-typedef struct 
+typedef struct
 {
-    int zoom_x;
-    int zoom_y;
-    int vid_offs;
-    int xx,yy;
-    char flash;
-    unsigned char *mem;
-    GdkPixmap *pix;
-    GdkGC  *gc[16];
-    GtkWidget *draw_area;
-    void *ptr;
-} config;
+    void	*e8;	
+/* rozmiary okna */
+    int 	width;
+    int		height;
+    int         scr_offs;
+    int		bpp;
+    void        *argc;
+    void        *argv;
+    char	use_sdl:1;
+    char	use_gtk:1;
+    char	use_palette_border:6;
+/* pola gtk */    
+    GdkColor	*gtk_8bpp_palette;
+    GtkWidget	*wmain;
+    GtkWidget	*drawing_area;
+    GdkPixmap 	*gdk_da_buffer;
+    GdkGC	*gdk_color[17];
+    GtkWidget   *gtk_parent;
+    long	winid;
+/* pola SDL */
+#ifndef NO_SDL
+    SDL_Surface	*sdl_surface;
+    SDL_Color   *sdl_8bpp_palette;
+    SDL_Event   *sdl_event;
+#endif    
+/* ekran */
+    e8_screen	*scr;
+/* wska¼nik do funkcji stawiaj±cej i skaluj±cej piksel */
+    void	(*put_pixel)(void *, int, int, int); 
+    void	(*scrn_rfsh)(void *); 
+} e8_gui;
 
-void load_snapshot(GtkObject *wg);
-int configure_dr(GtkWidget *wg, GdkEventExpose *ev, config *cf);
-int expose_dr(GtkWidget *wg, GdkEventExpose *ev,config *cf);
-void load_file(GtkWidget *wg);
+//void load_snapshot(GtkObject *wg);
+//void load_file(GtkWidget *wg);
 void ed_ed(GtkWidget *wg);
 void debugger();
 void gui_key_pressed(GtkWidget *wg,GdkEventKey *ev,char *state);
 #endif
 
-void gui_put_pixel(int color,int x,int y);
-void gui_screen_rfsh();
+void gui_put_pixel(e800j *e8,int color,int x,int y);
+void gui_screen_rfsh(e800j *e8);
 void gui_debug_out(char *a);
 void gui_debug_in(char *a);
 void gui_setup(void *ptr, void *argc, void *argv);
 void gui_timer(void *func,long time,void *ptr);
 void gui_start();
-
+void gui_gtk_msgbox(char *,const char *);
 #endif

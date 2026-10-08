@@ -45,7 +45,8 @@ void out_mem_74157(byte data, e800j *e8)
 void out_fe_74373(byte data, e800j *e8)
 { 
 //    HW_PRINT("OUT FE SN743LS73: %x\n",data);
-
+    e8->wr373 = 1;
+    e8->reg373 = data;
 }
 
 void out_par_8255(byte data, e800j *e8)

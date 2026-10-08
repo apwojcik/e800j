@@ -161,9 +161,7 @@ typedef struct
     byte page_nr;
 } memo_block;
 
-
-extern int	decompress_data(FILE *f,int clength,int dlength, char *memo, int addr);
-extern int	load_z80(Z80 *z, FILE *f,const char *fname);
+extern int	load_z80(e800j *e8, FILE *f,const char *fname, char **msg);
 extern byte	load_rom(e800j *e8,char *fname_bas0,char *fname_bas1, char *fname_boot);
-
+extern void	file_load_config(e800j *e8, const char *fname);
 #endif

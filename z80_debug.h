@@ -54,7 +54,6 @@ typedef struct{
     void (*input)(char *);
     void (*output)(char *);
     void (*exit)(void);
-
 } Z80_DEB;
 
 #define DEB(a)	((Z80_DEB*)(a)->deb_struct)

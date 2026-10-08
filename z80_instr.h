@@ -68,9 +68,9 @@
 #define CP(a)			ADD_(A,a,1+8,0);DEB_CLASS(10);
 
 #define ADDW_(a,b,sub,cy) 	z80_alu_add16(a,b,sub,cy,z);
-#define ADDW(a,b)		a = ADDW_(a,b,0,0); DEB_CLASS(8);
-#define ADCW(a,b)		a = ADDW_(a,b,0,GET_CF);DEB_CLASS(8);
-#define SBCW(a,b)		a = ADDW_(a,b,1,GET_CF);DEB_CLASS(9);
+#define ADDW(a,b)		a = ADDW_(a,b,2,0); 	 DEB_CLASS(8);
+#define ADCW(a,b)		a = ADDW_(a,b,0,GET_CF); DEB_CLASS(8);
+#define SBCW(a,b)		a = ADDW_(a,b,1,GET_CF); DEB_CLASS(9);
 
 #define AND(a)			z80_bit_alu(z,a,ALU_AND);DEB_CLASS(11);
 #define OR(a)			z80_bit_alu(z,a,ALU_OR);DEB_CLASS(11);
@@ -141,13 +141,22 @@
 #define OTIR			z80_rep(z,z80_outi,0,1);DEB_CLASS(25);
 #define OTDR			z80_rep(z,z80_outi,1,1);DEB_CLASS(25);
 
-#ifdef ALU_BIT_ADDER
-extern byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z);
-extern word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z);
-#else
+#define EDILLEGAL		ILLEGAL	/*R+=2, T=8 */
+
+/* dla bigendian na odwrot */
+#define BYTE_LO			0
+#define BYTE_HI			1
+
+#define SBYTE(zm,bit)		*((byte *)&zm + bit)
+
+
+//#ifdef ALU_BIT_ADDER
+//extern byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z);
+//extern word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z);
+//#else
 extern byte z80_alu_add(byte a, byte b, byte sub, byte cy, Z80 *z);
 extern word z80_alu_add16(word a, word b, byte sub, byte cy, Z80 *z);
-#endif
+//#endif
 
 extern void z80_push(Z80 *z, word reg);
 extern void z80_pop(Z80 *z, word *reg);

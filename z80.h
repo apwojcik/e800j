@@ -22,7 +22,6 @@
 #define __Z80H__
 
 #define BIGENDIAN
-#define DEBUGGER	/* Czy ma byæ wkompilowany debugger */
 
 #ifndef _word_
 typedef unsigned short int word;
@@ -45,12 +44,15 @@ typedef struct
     byte *Ap,*Fp;
     byte *Bp,*Cp;
     byte *Dp,*Ep;
-    byte *Hp,*Lp;
+    byte *Hp,*Lp;	/* wskazuja zawsze na HL */
+    byte *XYHp,*XYLp;   /* wskazuja na HL, IX lub IY */
 
     word *AFp;
     word *BCp;
     word *DEp;
     word *HLp;
+
+    word *HLs;	/* tutaj przechowywany jest wska¼nik do rejestru HL, sprzed IX,IY */
 
     union{
 	struct{    
@@ -96,10 +98,10 @@ typedef struct
 	    word IYp;
 	};
 	struct{
-	    byte IXHp;
-	    byte IXLp;
-	    byte IYHp;
-	    byte IYLp;
+	    byte IXHr;
+	    byte IXLr;
+	    byte IYHr;
+	    byte IYLr;
 	};
     };
 
@@ -108,6 +110,7 @@ typedef struct
     
     word PCp;
     word SPp;
+    long Tr;		/* takty zegarowe */
     
     byte IMr;
     byte IFF1p:1;

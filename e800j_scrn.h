@@ -36,9 +36,55 @@
 		    0x82,0x8a,0x92,0x9a,0xa2,0xaa,0xb2,0xba,0x83,0x8b,0x93,0x9b,0xa3,0xab,0xb3,0xbb,\
 		    0x84,0x8c,0x94,0x9c,0xa4,0xac,0xb4,0xbc,0x85,0x8d,0x95,0x9d,0xa5,0xad,0xb5,0xbd,\
 		    0x86,0x8e,0x96,0x9e,0xa6,0xae,0xb6,0xbe,0x87,0x8f,0x97,0x9f,0xa7,0xaf,0xb7,0xbf}
+/* Kolory */
+#define ZX_BLACK	0
+#define ZX_BLUE		1
+#define ZX_RED		2
+#define ZX_MAGENTA	3
+#define ZX_GREEN	4
+#define ZX_YELLOW	5
+#define ZX_CYAN		6
+#define ZX_WHITE	7
+#define ZX_BORDER	16
 
+#define OUT_FE_BORDERMASK	0x07
+
+typedef struct
+{
+/* parametry okna wyswietlania, wiele pozosta³ych parametrów jest nt podstawie liczona */
+    unsigned int  area_w;		/* szeroko¶æ obszaru rysunkowego */
+    unsigned int  area_h;		/* wysoko¶æ obszaru rysunkowego  */
+    unsigned char bpp;		 	/* ilo¶c bitów/piksel            */
+    unsigned int  zx_w;			/* szeroko¶æ  rysunkowego zx     */
+    unsigned int  zx_h;			/* wysoko¶æ   rysunkowego zx     */
+    
+/* parametry ramki */
+    unsigned int  fr_color;		/* kolor ramki 			 */
+    unsigned int  fr_spcu;		/* wysoko¶æ górnej ramki         */
+    unsigned int  fr_spcd;		/* wysoko¶æ dolnej ramki         */
+    unsigned int  fr_spcr;		/* szeroko¶æ prawej strony ramki */
+    unsigned int  fr_spcl;		/* szeroko¶æ lewej  strony ramki */
+    unsigned int  fr_rofs;		/* ofset bufora dla prawego pasa */
+    unsigned int  fr_dofs;		/* ofset bufora dla dolu         */
+
+    unsigned int  fr_duos;		/* rozmiar w bajtach górnego pasa */
+    unsigned int  fr_ddos;		/* rozmiar w bajtach dolnego pasa */
+/* parametry ekranu */
+    unsigned int  scr_scale_w;		/* skala szeroko¶ci		 */
+    unsigned int  scr_scale_h;		/* skala wysoko¶ci		 */
+    unsigned int  scr_offs;		/* offset rysowania ekranu       */
+    unsigned int  scr_ws;		/* szeroko¶æ ekranu (bez ramki ) */
+    unsigned int  scr_hs;		/* wysoko¶æ ekranu (bez ramki)   */
+    unsigned int  scr_buffer_size;	/* rozmiar bufora w bajtach      */
+    unsigned int  scr_bline;		/* rozmiar poj linii             */
+    unsigned char *scr_buffer;		/* dane bufora ekranu E800J do przekopiowania (bez ramki) */
+    unsigned int  scr_hf;		/* przesuniêcie poziome ekranu   */
+    unsigned int  scr_nline;		/* ofset linii                   */
+    unsigned char frame_color;		/* kolor ramki 			 */
+    unsigned char *new_frame_color;
+} e8_screen;
 
 extern int blink_attr(Z80 *z);
-extern void scr_rfsh(Z80 *z);
-
+extern void scr_rfsh(e800j *e8);
+extern void zxscr_calc(e8_screen *scr);
 #endif

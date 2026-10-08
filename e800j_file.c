@@ -22,16 +22,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define RUN_AT_START
-#define LIBSPECTRUM_USE
-
-#ifdef LIBSPECTRUM_USE
+#ifdef USE_LIBSPECTRUM
 #include <libspectrum.h>
 #endif
 
+#include "e800j.h"
 #include "z80.h"
 #include "e800j_prom.h"
 #include "e800j_file.h"
+
+void file_save_config(e800j *e8, const char *fname)
+{
+    FILE *f;
+
+    if(!(f = fopen(fname,"w"))) {
+	file_save_config(e8,fname); /* zapisanie domy¶lnej konfiguracji */
+	return;
+    }
+    if(fwrite(e8->config,1,sizeof(e8_config),f) != sizeof(e8_config)){
+	printf("Nie powiod³o siê utworzenie pliku konfiguracji %s\n", fname);
+	fclose(f);	
+	exit(-1);
+    }
+        
+    fclose(f);
+}
+
+void file_load_config(e800j *e8, const char *fname)
+{
+    FILE *f;
+    
+    if(!(f = fopen(fname,"r"))) {
+	file_save_config(e8,fname); /* zapisanie domy¶lnej konfiguracji */
+	return;
+    }
+    
+    if(fread(e8->config,1,sizeof(e8_config),f) != sizeof(e8_config)){
+	printf("B³±d w pliku konfiguracji %s\n Powinienne¶ ten plik skasowaæ aby uzyskaæ domy¶ln± konfiguracjê\n",fname);
+	fclose(f);	
+	exit(-1);
+    }
+        
+    fclose(f);
+}
+
 
 byte expand_z80(byte data, byte *dst, int *ii){
     static byte a0,a1,x;
@@ -106,14 +140,14 @@ int decompress_data(FILE *f,int clength,int dlength, char *memo, int addr)
     return 0;
 }
 
-#ifndef LIBSPECTRUM_USE
-
-int load_z80(Z80 *z, FILE *f, const char *fname)
+#ifndef USE_LIBSPECTRUM
+int load_z80(e800j *e8, FILE *f, const char *fname, char **msg)
 {
-    e800j *e8 = (e800j *)z->cust;
+
 
     z80_fst_hdr hdr_1;            
 
+*msg = "File load Error";            
     if(fread(&hdr_1,1,sizeof(hdr_1),f) != sizeof(hdr_1) ) return 1;
 
     if(hdr_1.Next_Version){
@@ -126,40 +160,36 @@ if(*e8->rom_bas0 == 0xf7) printf("Zmod ROM \n");
 	}
     }else{
 printf("|-> nie obs³ugiwana wersja  formatu (2 lub 3)\n");
-	return 0;
+//	return 0;
 /* v2 lub v3 */
     }
 
 /* wstawic zapis do rejestrów*/    
-    z80_reset(z); /* ustawiam procesor w stan pocz±tkowy*/
+    z80_reset(e8->cpu); /* ustawiam procesor w stan pocz±tkowy*/
 
-    z->PCp  = (hdr_1.PC[1] << 8) + hdr_1.PC[0];
+    ((Z80 *)e8->cpu)->PCp  = (hdr_1.PC[1] << 8) + hdr_1.PC[0];
+    ((Z80 *)e8->cpu)->AFr  = (hdr_1.AF[0] << 8) + hdr_1.AF[1];
+    ((Z80 *)e8->cpu)->AFr_ = (hdr_1.AFa[0] << 8) + hdr_1.AFa[1]; 
+    ((Z80 *)e8->cpu)->BCr  = (hdr_1.BC[1] << 8)  + hdr_1.BC[0];
+    ((Z80 *)e8->cpu)->DEr  = (hdr_1.DE[1] << 8)  + hdr_1.DE[0]; 
+    ((Z80 *)e8->cpu)->HLr  = (hdr_1.HL[1] << 8)  + hdr_1.HL[0]; 
+    ((Z80 *)e8->cpu)->BCr_ = (hdr_1.BCa[1] << 8) + hdr_1.BCa[0]; 
+    ((Z80 *)e8->cpu)->DEr_ = (hdr_1.DEa[1] << 8) + hdr_1.DEa[0]; 
+    ((Z80 *)e8->cpu)->HLr_ = (hdr_1.HLa[1] << 8) + hdr_1.HLa[0]; 
+    ((Z80 *)e8->cpu)->SPp  = (hdr_1.SP[1] << 8)  + hdr_1.SP[0]; 
+    ((Z80 *)e8->cpu)->Ip   = hdr_1.I;
+    ((Z80 *)e8->cpu)->Rp   = hdr_1.R;
+    ((Z80 *)e8->cpu)->IXp  = (hdr_1.IX[1] << 8)  + hdr_1.IX[0]; 
+    ((Z80 *)e8->cpu)->IYp  = (hdr_1.IY[1] << 8)  + hdr_1.IY[0]; 
+    ((Z80 *)e8->cpu)->IFF1p= hdr_1.IFF1;
+    ((Z80 *)e8->cpu)->IFF2p= hdr_1.IFF2;
+    ((Z80 *)e8->cpu)->IMr  = hdr_1.IM;
 
-    z->AFr  = (hdr_1.AF[0] << 8) + hdr_1.AF[1];
-    z->AFr_ = (hdr_1.AFa[0] << 8) + hdr_1.AFa[1]; 
-    
-    z->BCr  = (hdr_1.BC[1] << 8)  + hdr_1.BC[0];
-    z->DEr  = (hdr_1.DE[1] << 8)  + hdr_1.DE[0]; 
-    z->HLr  = (hdr_1.HL[1] << 8)  + hdr_1.HL[0]; 
+    e8->reg373  = hdr_1.Border;
 
-    z->BCr_ = (hdr_1.BCa[1] << 8) + hdr_1.BCa[0]; 
-    z->DEr_ = (hdr_1.DEa[1] << 8) + hdr_1.DEa[0]; 
-    z->HLr_ = (hdr_1.HLa[1] << 8) + hdr_1.HLa[0]; 
-
-    z->SPp  = (hdr_1.SP[1] << 8)  + hdr_1.SP[0]; 
-    z->Ip   = hdr_1.I;
-    z->Rp   = hdr_1.R;
-    z->IXp  = (hdr_1.IX[1] << 8)  + hdr_1.IX[0]; 
-    z->IYp  = (hdr_1.IY[1] << 8)  + hdr_1.IY[0]; 
-    z->IFF1p= hdr_1.IFF1;
-    z->IFF2p= hdr_1.IFF2;
-    z->IMr  = hdr_1.IM;
-
-//    z->run = 1;
-//printf("|->%x\n",z->PCp);
-/*
-    border(z80,zx, h.border); 
-*/
+#ifdef RUN_AT_START
+    ((Z80 *)e8->cpu)->run = 1;
+#endif
 
     return 0;    
 }
@@ -193,10 +223,13 @@ byte load_rom(e800j *e8, char *fname_bas0, char *fname_bas1, char *fname_boot)
 }
 
 
-#ifdef LIBSPECTRUM_USE
-char copy_snapshot(Z80 *z, libspectrum_snap *snap)
+#ifdef USE_LIBSPECTRUM
+char copy_snapshot(e800j *e8, libspectrum_snap *snap)
 {
     int i;
+
+    Z80 *z = (Z80*)e8->cpu;
+    
     libspectrum_machine machine;
     
     machine = libspectrum_snap_machine(snap);
@@ -204,7 +237,7 @@ char copy_snapshot(Z80 *z, libspectrum_snap *snap)
     if(machine != LIBSPECTRUM_MACHINE_48)
 	if(machine != LIBSPECTRUM_MACHINE_16){
 	    printf("Nie obs³ugiwany typ komputera: %s\n",libspectrum_machine_name(machine));
-	    return 0;
+//	    return 0;
 	}	
     z80_reset(z);
 /* ustawienie rejestrów */
@@ -222,7 +255,9 @@ char copy_snapshot(Z80 *z, libspectrum_snap *snap)
     z->IFF1p = libspectrum_snap_iff1(snap);	z->IFF2p = libspectrum_snap_iff2(snap);
     z->IMr   = libspectrum_snap_im(snap);
     z->Halt_state = libspectrum_snap_halted(snap);
-
+/* kolor ramki */
+    e8->reg373 = libspectrum_snap_out_ula(snap);
+    
 #ifdef RUN_AT_START
     z->run = 1;
 #endif
@@ -239,13 +274,14 @@ char copy_snapshot(Z80 *z, libspectrum_snap *snap)
     return 0;
 }
 
-int load_z80(Z80 *z, FILE *f, const char *fname)
+int load_z80(e800j *e8, FILE *f, const char *fname, char **msg)
 {
     libspectrum_snap *snap;
     int error;
     char *buffer;
     long length;
-            
+
+*msg = "File load Error";            
     if((error=libspectrum_snap_alloc(&snap))) return error;
     fseek(f,0L,SEEK_END);
     length = ftell(f);
@@ -254,7 +290,7 @@ int load_z80(Z80 *z, FILE *f, const char *fname)
     if((buffer = (char *) malloc(length))){
         if(!(error = load_file_block(fname,buffer,length))){
 	    if(!(error = libspectrum_snap_read(snap,buffer,length,LIBSPECTRUM_ID_UNKNOWN, fname))){
-	       error = copy_snapshot(z,snap);	    
+	       error = copy_snapshot(e8, snap);	    
 	    }
 	}
 	free(buffer);

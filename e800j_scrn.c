@@ -36,7 +36,7 @@ int blink_attr(Z80 *z)
     return 1;
 }
 
-void draw_zx_byte(byte x, byte y, byte data, byte attr)
+void draw_zx_byte(e800j *e8,byte x, byte y, byte data, byte attr)
 {
     int i;
     byte fg_color;
@@ -46,13 +46,13 @@ void draw_zx_byte(byte x, byte y, byte data, byte attr)
     bg_color = (attr & 0x78) >> 3;
     x <<= 3;    
     for(i=0;i < 8;i++, data <<=1 )
-	gui_put_pixel((data & 0x80) ? fg_color: bg_color,x++,y);
+	gui_put_pixel(e8, (data & 0x80) ? fg_color: bg_color,x++,y);
 }
 
 byte scr_bcp_pix[6144];
 byte scr_bcp_attr[6144];
 
-void scr_rfsh(Z80 *z)
+void scr_rfsh(e800j *e8)
 {
     int x = 0, k;
     char pix,attr;
@@ -62,8 +62,8 @@ void scr_rfsh(Z80 *z)
     word pix_offs=0;
     word atr_offs=0;
 
-    byte *screen = ((e800j*)z->cust)->scr.screen[ (MEM157_RELOK(((e800j*)z->cust)->reg175)) ? 1:0];
-    byte blink   = ((e800j*)z->cust)->scr.blink ? 0xff:0;
+    byte *screen = e8->scr.screen[ (MEM157_RELOK(e8->reg175)) ? 1:0];
+    byte blink   = e8->scr.blink ? 0xff:0;
 
     if(n){
 	for(k=0; k < 6144; k++) scr_bcp_pix[k] = 0;
@@ -94,11 +94,51 @@ void scr_rfsh(Z80 *z)
 	    *(scr_bcp_pix + pix_offs)  = pix;
 	    *(scr_bcp_attr + pix_offs) = attr;
 	    
-	    draw_zx_byte(x, y_pix, pix, attr);
+	    draw_zx_byte(e8, x, y_pix, pix, attr);
 	}
 
     }
 
     n=0;
-    gui_screen_rfsh();
+    gui_screen_rfsh(e8);
+}
+
+void zxscr_calc(e8_screen *scr)
+{
+/* obliczenie wysoko¶ci/szeroko¶ci ramki */
+    if(!scr->scr_buffer) 
+	free(scr->scr_buffer);
+    scr->fr_spcr = scr->area_w % scr->zx_w;
+    scr->fr_spcl = (scr->fr_spcr >> 1) + (scr->fr_spcr & 1);
+    scr->fr_spcr = (scr->fr_spcr >> 1);
+    if(!scr->fr_spcr) scr->fr_spcr = 2;
+    if(!scr->fr_spcl) scr->fr_spcl = 2;
+    scr->fr_spcu = scr->area_h % scr->zx_h;
+    scr->fr_spcd = (scr->fr_spcu >> 1) + (scr->fr_spcu & 1);
+    scr->fr_spcu = (scr->fr_spcu >> 1);
+    if(!scr->fr_spcu) scr->fr_spcu = 2;
+    if(!scr->fr_spcd) scr->fr_spcd = 2;
+/* obliczanie szeroko¶ci/ wysokosci ekranu */
+    scr->scr_ws = scr->area_w - scr->fr_spcr - scr->fr_spcl;
+    scr->scr_hs = scr->area_h - scr->fr_spcu - scr->fr_spcd;
+/* obliczanie ofsetów bufora dla ramki */
+    scr->fr_rofs = (scr->area_w - scr->fr_spcr) * (scr->bpp/8);
+    scr->fr_duos = scr->fr_spcu * scr->area_w * (scr->bpp/8);
+    scr->fr_ddos = scr->fr_spcd * scr->area_w * (scr->bpp/8);
+    scr->fr_dofs = (scr->fr_spcu + scr->scr_hs) * scr->area_w * (scr->bpp/8);
+/* obliczanie parametrów ekranu */
+    scr->scr_offs = scr->fr_spcu * scr->area_w * (scr->bpp/8);
+    scr->fr_rofs += scr->scr_offs; 
+    scr->scr_scale_w = ((float)scr->scr_ws / scr->zx_w) * 16;
+    scr->scr_scale_w = ((float)scr->scr_ws / scr->zx_h) * 16;
+    scr->scr_buffer_size = scr->area_w * scr->area_h * (scr->bpp/8);
+    scr->scr_bline = scr->scr_ws * (scr->bpp/8);
+    scr->scr_hf = scr->fr_spcl * (scr->bpp/8);
+    
+    if(!(scr->scr_buffer = (byte *)malloc(scr->scr_buffer_size))){
+        printf("Video memory allocation Error\n");
+        exit(-1);
+    }
+    memset(scr->scr_buffer, ZX_BLUE, scr->scr_buffer_size);
+/* dopisaæ zwolnienie pamiêci  */
 }

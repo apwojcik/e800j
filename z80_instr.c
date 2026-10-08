@@ -22,17 +22,25 @@
 #include "z80_cpu.h"
 #include "z80_instr.h"
 
+/* tablica zawierajaca generator przeniesien dla arg 4 bitowych + cy */
+//byte alu_8bit_flags[512] = CARRY_FLAGS;
+
 void z80_daa(Z80 *z)
 {
     byte tmp;
-    
+
     tmp = A > 0x99;
     if( GET_CF || tmp ) A += GET_NF ? -0x60 : 0x60;
-    SET_CF( !GET_CF && tmp );
+    SET_CF( GET_CF || tmp );
 
     tmp = (A & 0x0f) > 0x09;
     if( GET_HF || tmp ) A += GET_NF ? -0x06 : 0x06;
-    SET_HF( !GET_HF && tmp );
+    SET_HF( GET_HF || tmp );
+
+    SET_TEST_ZF(A);
+    SET_TEST_SF(A);
+    SET_TEST_PF(A);
+    SET_53F(A);
 }
 
 void z80_bit_alu(Z80 *z, byte reg, byte type)
@@ -40,21 +48,23 @@ void z80_bit_alu(Z80 *z, byte reg, byte type)
     SET_M1(0);
     DRY_RUN_RET;    
     switch(type){
-	case ALU_AND: A &= reg; BIN_ALU_FL(1); break;
-	case ALU_OR : A |= reg; BIN_ALU_FL(0); break;
-	case ALU_XOR: A ^= reg; BIN_ALU_FL(0); break;
-	case ALU_CPL: A = ~A; SET_HF(1); SET_NF(1); break;
-	case ALU_NEG: A = z80_alu_add(0,A,1,0,z); break;
-	case ALU_SCF: SET_CF(1); SET_NF(0); SET_HF(0); break;
-	case ALU_CCF: SET_CF(!GET_CF); SET_NF(0); break;
+	case ALU_AND: A &= reg; BIN_ALU_FL(1); SET_53F(A); break;
+	case ALU_OR : A |= reg; BIN_ALU_FL(0); SET_53F(A); break;
+	case ALU_XOR: A ^= reg; BIN_ALU_FL(0); SET_53F(A); break;
+	case ALU_CPL: A = ~A; SET_HF(1); SET_NF(1); SET_53F(A); break;
+	case ALU_NEG: A = z80_alu_add(0,A,1,0,z);SET_53F(A); break;
+	case ALU_SCF: SET_CF(1); SET_NF(0); SET_HF(0); SET_53F(A); break;
+	case ALU_CCF: SET_CF(!GET_CF); SET_NF(0); SET_53F(A); break;
     }
 }
 
-#ifdef ALU_BIT_ADDER
-byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z)
+byte z80_alu_add(byte op_a, byte op_b, byte sub, byte cy, Z80 *z)
 {
-    byte  si, c4, c7, c8;
-    word tmp;
+    byte  si, c4, c7, c8, pv;
+    word tmp, a,b;
+    
+    a = op_a;
+    b = op_b;
 
     SET_M1(0);
 
@@ -65,14 +75,18 @@ byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z)
     tmp = a + b;
     si  = tmp & 0xff;
 
-    c8  = (tmp & 0x100) != 0;
-    c7  = (((a & 0x7f) + (b & 0x7f)) & 0x80) != 0;
-    c4  = (((a & 0x0f) + (b & 0x0f)) & 0x10) != 0;
+    c8  = (tmp & 0x100) ? 1 : 0;
+    c7  = (((a & 0x7f) + (b & 0x7f)) & 0x80) ? 1:0;
+    c4  = (((a & 0x0f) + (b & 0x0f)) & 0x10) ? 1:0;
 
-    if(sub & 0x1) c8 = !c8, c7=!c7, c4=!c4;
+    pv = (c7 ^ c8);
+
+    if(sub & 0x1) c8 = !c8, c7 = !c7, c4 = !c4, pv = !pv;
     
-    SET_PF( c7 ^ c8); SET_HF(c4); SET_TEST_SF(si); SET_TEST_ZF(si); SET_NF(sub); 
+    SET_PF( pv ); SET_HF(c4); SET_TEST_SF(si); SET_TEST_ZF(si); SET_NF(sub & 1); 
 
+    SET_53F(si);
+    if( sub & 0x08) SET_53F(op_b);
     if(sub & 0x04) return si;
 
     if(sub & 1){ SET_CF(!c8);return si; }
@@ -82,111 +96,20 @@ byte z80_alu_add(word a, word b, byte sub, byte cy, Z80 *z)
     return si;
 }
 
-word z80_alu_add16(dword a, dword b, byte sub, byte cy, Z80 *z)
-{
-    word  si;
-    byte  c12,c15,c16;
-    dword tmp;
-
-    SET_M1(0);
-
-    b += cy & 1;
-
-    if(sub) b = -b;
-
-    tmp = a + b;
-    si  = tmp & 0x0ffff;
-
-    c16  = (tmp & 0x10000) != 0;
-    c15  = (((a & 0x7fff) + (b & 0x7fff)) & 0x8000) != 0;
-    c12  = (((a & 0x0fff) + (b & 0x0fff)) & 0x1000) != 0;
-
-    if(sub & 0x1) c16 = !c16, c15=!c15, c12=!c12;
-    
-    SET_HF(c12); SET_NF(sub); 
-    
-    if(sub){ SET_CF(!c16);} else {SET_CF(c16)};
-
-
-    if(sub & 0x02 ) return si;
-
-    SET_PF( c15 ^ c16); SET_ZF(!si); SET_SF(si & 0x8000);
-
-    return si;
-}
-
-
-#else
-byte z80_alu_add(byte a,byte b, byte sub, byte cy, Z80 *z)
-{
-    byte ai, xi, si;
-    word ci;
-    byte i;
-    
-    SET_M1(0);
-    if(sub & 1){
-	 cy = ~cy;
-	 b  = ~b;
-    }
-
-    ci = cy & 0x1;
-    
-    ai = a & b; xi = a ^ b;
-    si = 0;
-    for(i = 1; i; i = i << 1){
-	si |= (xi & i) ^ (ci & i);
-	ci |= (((xi & i) & (ci & i)) | (ai & i)) << 1;
-    }
-    if(sub & 1) ci = ~ci;   
-    
-    SET_TEST_SF(si);
-    SET_TEST_ZF(si);
-    SET_PF((ci & (1 << 8)) ^ (ci & (1 << 7)));
-    SET_HF(ci & (1 << 4));
-    SET_NF(sub);
-    if(sub & 0x04 ) return si;
-    SET_CF(ci & (1 << 8));    
-
-    return si;
-}
-
 word z80_alu_add16(word a,word b, byte sub, byte cy, Z80 *z)
 {
-    word ai, xi, si;
-    int ci;
-    word i;
+    word result = 0;
+    byte f = F & 0xc4;
+/* zlozenie operacji dodawania 16 bitowego jako dwoch operacji dodawania 8 bitowego */
+    SBYTE(result, BYTE_LO) = z80_alu_add(SBYTE(a, BYTE_LO), SBYTE(b, BYTE_LO), sub & 1, cy, z);
+    SBYTE(result, BYTE_HI) = z80_alu_add(SBYTE(a, BYTE_HI), SBYTE(b, BYTE_HI), sub & 1, GET_CF, z);
+    SET_ZF(!result);
 
-    SET_M1(0);
-    if(sub & 1){
-	 cy = ~cy;
-	 b  = ~b;
-    }
+    if(sub & 2) 	/* dla instrukcji ADD pominiecie ustawiania flag S,Z i P */
+	F &= ~0xc4 | f;
 
-    ci = cy & 0x1;
-    ai = a & b; xi = a ^ b;
-    si = 0;
-
-    for(i = 1; i & 0x1ffff; i = i << 1){
-	si |= (xi & i) ^ (ci & i);
-	ci |= (((xi & i) & (ci & i)) | (ai & i)) << 1;
-    }
-
-    if(sub & 1) ci = ~ci;   
-
-
-    SET_HF(ci & (1 << 4));
-    SET_NF(sub);
-    SET_CF(ci & (1 << 16));
-
-    if(sub & 0x02 ) return si;
-    
-    SET_SF( si & 0x8000);
-    SET_ZF(!si);
-    SET_PF((ci & (1 << 16)) ^ (ci & (1 << 15)));
-
-    return si;
+    return result;
 }
-#endif
 
 void z80_push(Z80 *z, word reg)
 {
@@ -253,6 +176,7 @@ void z80_cpi(Z80 *z,byte inc)
     SET_PF(BC);
     SET_CF(tmp);
     SET_NF(1);
+    SET_53F(A);
 }
 
 void z80_ldi(Z80 *z,byte inc)
@@ -266,6 +190,7 @@ void z80_ldi(Z80 *z,byte inc)
     SET_HF(0);
     SET_NF(0);
     SET_PF(0);
+    SET_53F(A);
 }
 
 void z80_ini(Z80 *z,byte inc)
@@ -277,6 +202,7 @@ void z80_ini(Z80 *z,byte inc)
     B--;
     SET_NF(1);
     SET_ZF(!B);
+    SET_53F(A);
 }
 
 void z80_outi(Z80 *z,byte inc)
@@ -288,8 +214,8 @@ void z80_outi(Z80 *z,byte inc)
     B--;
     SET_NF(1);
     SET_ZF(!B);
+    SET_53F(A);
 }
-
 
 void z80_rep(Z80 *z, void (op)(Z80*,byte), byte inc, byte type)
 {
@@ -327,6 +253,7 @@ void z80_out(Z80 *z,word addr, byte data, byte type)
     DRY_RUN_RET;    
     if(!type) addr += A << 8; /* dla rozkazu IN A,(n), na starsz± po³ówkê adresu rej A */
     IO(addr,data,0);
+    SET_53F(A);
 }
 
 /* type = 0 - IN A,adr ; 1- IN r,(BC); 2 - IN F,(BC) */
@@ -339,7 +266,7 @@ byte z80_in(Z80 *z,word addr,byte type)
     if(!type) addr += A << 8; /* dla rozkazu IN A,(n), na starsz± po³ówkê adresu rej A */
     if(z->deb_dry) return 0xff;    
     tmp = IO(addr,0,1);
-    
+    SET_53F(A);        
     if(!type) return tmp;
 
     SET_TEST_SF(tmp);
@@ -347,7 +274,7 @@ byte z80_in(Z80 *z,word addr,byte type)
     SET_HF(0);
     SET_TEST_PF(tmp);
     SET_NF(0);
-    
+
     return (type == 2) ? F : tmp; 
 }
 
@@ -356,6 +283,7 @@ void z80_inc(Z80 *z,byte *reg, byte dec)
     SET_M1(0);
     DRY_RUN_RET;    
     REG = dec ? z80_alu_add(REG,1,5,0,z) : z80_alu_add(REG,1,4,0,z);
+    SET_53F(A);        
 }
 
 void z80_incm(Z80 *z, byte dec)
@@ -368,6 +296,7 @@ void z80_incm(Z80 *z, byte dec)
     tmp = MR(HL + DD);    
     tmp = dec ? z80_alu_add(tmp,1,5,0,z) : z80_alu_add(tmp,1,4,0,z);
     MW(HL + DD, tmp);
+    SET_53F(A);        
 }
 
 void z80_ex(Z80 *z,word *reg1, word *reg2)
@@ -471,5 +400,7 @@ void z80_shift(Z80 *z, byte *reg, byte type)
 		       SET_TEST_SF(REG); SET_TEST_ZF(REG); SET_TEST_PF(REG); 
 		       break;
     }
+    SET_53F(*reg);
 }
+
 

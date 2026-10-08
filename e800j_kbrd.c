@@ -83,9 +83,7 @@ void key_update(int key_code, char state)
 {
     int key_idx=0xff;
 
-    
-
-    if(keyboard.mode == KB_MODE_PC)
+        if(keyboard.mode == KB_MODE_PC)
     {
 	if(key_code < KEY_CONTROL_CNT) key_idx = key_code;
 	switch(key_code){
@@ -105,17 +103,17 @@ void key_update(int key_code, char state)
 	    return;
 	}
 	if(keyboard.alt_r){
-	    switch(key_code){
-		case 'a' : key_code = 0xff; key_idx = KB_A_; break;
-		case 'c' : key_code = 0xff; key_idx = KB_C_; break;	    
-		case 'e' : key_code = 0xff; key_idx = KB_E_; break;
-		case 'l' : key_code = 0xff; key_idx = KB_L_; break;
-		case 'n' : key_code = 0xff; key_idx = KB_N_; break;
-		case 'o' : key_code = 0xff; key_idx = KB_O_; break;
-		case 's' : key_code = 0xff; key_idx = KB_S_; break;
-		case 'z' : key_code = 0xff; key_idx = KB_Z_; break;
-		case 'x' : key_code = 0xff; key_idx = KB_Z__; break;
-	    }
+		switch(key_code){
+		    case 'a' : key_code = 0xff; key_idx = KB_A_; break;
+		    case 'c' : key_code = 0xff; key_idx = KB_C_; break;	    
+		    case 'e' : key_code = 0xff; key_idx = KB_E_; break;
+		    case 'l' : key_code = 0xff; key_idx = KB_L_; break;
+		    case 'n' : key_code = 0xff; key_idx = KB_N_; break;
+		    case 'o' : key_code = 0xff; key_idx = KB_O_; break;
+		    case 's' : key_code = 0xff; key_idx = KB_S_; break;
+		    case 'z' : key_code = 0xff; key_idx = KB_Z_; break;
+		    case 'x' : key_code = 0xff; key_idx = KB_Z__; break;
+		}
 	}
     }
     if((key_code >= 'a') && (key_code <= 'z')) key_idx = key_code - 'a' + KB_LET_START;

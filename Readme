@@ -67,9 +67,11 @@ To co jest:
   (Uwaga: ze wzglêdu jak sadzê na nierównomiern± ilo¶æ wywo³añ INT przy starcie po uruchomieniu 
   emulatora trzeba chwilkê odczekaæ aby klawiatura zadzia³a³a)
 
-- Wczytywanie plików *.z80 - teoretycznie dzia³a dla wersji pierwszej, ale jeszcze ¿adnego programu 
-  mi siê nie uda³o uruchomiæ w ten sposób :|
-    
+- Wczytywanie plików *.z80 
+
+Kompilacja:
+    make        - kompilacja ¼róde³
+    make clean  - wyczyszczenie katalogu ¼róde³ z produktów kompilacji
   
 Program by³ kompilowany za pomoc± gcc v 3.4.5 i uruchamiany na systemie:
 

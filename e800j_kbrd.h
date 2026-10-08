@@ -131,7 +131,7 @@ extern unsigned char key_matrix(unsigned short int addr);
 #define KEY_L_		0x83	/* ³ */
 #define KEY_Z__		0x84	/* ¼ */
 #define KEY_N_		0x85	/* ñ */
-#define KEY_A_		0x86	/* ± */
+#define KEY_A_		0x87	/* ± */
 #define KEY_Z_		0x97	/* ¿ */
 #define KEY_CUR_D	0x91
 #define KEY_CUR_U	0x92

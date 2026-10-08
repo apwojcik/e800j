@@ -24,6 +24,41 @@
 #include "z80.h"
 #include "i8251.h"
 
+#define F_ROM_NAME_LENGTH 256
+
+typedef struct
+{
+    /* ekran */
+    int wwidth,wheight;	/* rozmiary ekranu w trybie okna */
+    int fwidth,fheight;	/* rozmiary ekranu w trybie full-screen  */
+    byte bpp;		/* ilo¶æ bitów/pixel */
+
+    byte use_sdl:1;	/* ustawione przy korzystaniu  z SDL     */
+    byte use_gtk:1;	/* ustawione przy korzystaniu  z GDK     */
+    byte bpalette:1;	/* zmiana palety dla obrze¿a w trybie 8bpp */    
+
+    byte disk_version:1;  /* wersja dyskowa / bezdyskowa   */
+    byte spec_128_memo:1; /* emulacja pamiêci SPECTRUM 128 */
+    byte timex_screen:1;  /* emulacja ekranu TIMEX         */
+    byte sound_ay:1;	  /* emulacja chipu AY-38910A      */
+    byte sound_zx_mute:1; /* wy³±czenie g³o¶niczka ZX SPEC */
+    
+    /* od¶wiezania  */
+    int scr_rfsh;	/* FPS               */
+    int blink_rfsh;	/* co ile ms zmieniæ FLASH ? */
+    int cpu_rfsh;	/* wywo³ania dla CPU */
+    int cpu_tick;	/* ilo¶æ taktów CPU na jedno od¶wierzenie*/
+    int int_rfsh;	/* wywo³ania dla INT - co ile taktów CPU ma wykonaæ INT */
+    int int_tick;	/* wywo³ania dla INT [ms]*/
+    int fdc_rfsh;	/* wywo³ania dla FDC */
+
+    char bas0_fname[F_ROM_NAME_LENGTH];	/* bas 0 */
+    char bas1_fname[F_ROM_NAME_LENGTH];	/* bas 1 */
+    char boot_fname[F_ROM_NAME_LENGTH]; /* boot  */
+
+} e8_config;
+
+
 typedef struct
 {
     byte *screen[2];
@@ -75,12 +110,24 @@ typedef struct
 
     /* karta FDC		*/
 //    str_fdc	fdc;		/* kontroler stacji dysków					*/
+    void	*gui;		/* struktura GUI */
+    void	*cpu;    
+
+    e8_config   *config;
 } e800j;
 
+
+
+#define CONFIG_FNAME "./elwro.cfg"
 
 #define COL_NRM  0xb000
 #define COL_BRT  0xf000
 #define COL_WHT	 0xe000
+
+#define SDL_COL_NRM  0xb0
+#define SDL_COL_BRT  0xf0
+#define SDL_COL_WHT  0xe0
+
 #define ZX_PALETTE	{   {0x0000,0x0000 ,0x0000 ,0x0000 },\
 			    {0x0000,0x0000 ,0x0000 ,COL_NRM},\
 			    {0x0000,COL_NRM,0x0000 ,0x0000 },\
@@ -97,8 +144,27 @@ typedef struct
 			    {0x0000,0x0000 ,COL_BRT,0x0000 },\
 			    {0x0000,0x0000 ,COL_BRT,COL_BRT},\
 			    {0x0000,COL_BRT,COL_BRT,0x0000 },\
-			    {0x0000,COL_BRT,COL_BRT,COL_BRT}}
-
+			    {0x0000,COL_BRT,COL_BRT,COL_BRT},\
+			    {0x0000,0x0000 ,0x0000 ,0x0000 }}
+			    
+#define SDL_ZX_PALETTE	{   {0x00 ,0x00 ,0x00 },\
+			    {0x00 ,0x00 ,SDL_COL_NRM},\
+			    {SDL_COL_NRM,0x00 ,0x00 },\
+			    {SDL_COL_NRM,0x00 ,SDL_COL_NRM},\
+			    {0x00 ,SDL_COL_NRM,0x00 },\
+			    {0x00 ,SDL_COL_NRM,SDL_COL_NRM},\
+			    {SDL_COL_NRM,SDL_COL_NRM,0x00 },\
+			    {SDL_COL_WHT,SDL_COL_WHT,SDL_COL_WHT},\
+							     \
+    			    {0x00 ,0x00 ,0x00 },\
+			    {0x00 ,0x00 ,SDL_COL_BRT},\
+			    {SDL_COL_BRT,0x00 ,0x00 },\
+			    {SDL_COL_BRT,0x00 ,SDL_COL_BRT},\
+			    {0x00 ,SDL_COL_BRT,0x00 },\
+			    {0x00 ,SDL_COL_BRT,SDL_COL_BRT},\
+			    {SDL_COL_BRT,SDL_COL_BRT,0x00 },\
+			    {SDL_COL_BRT,SDL_COL_BRT,SDL_COL_BRT},\
+			    {0,SDL_COL_BRT,0}}
 
 /* testy bitów rejestru konfiguracji pamiêci 74LS157 */
 #define MEM157_JUNET(r)	(r & 0x10)	/* czy ustawiony bit odczytu adresu w sieci   	*/
