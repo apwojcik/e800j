@@ -20,9 +20,9 @@
 
 /*
     z80_core.h
-
+    
     Definicje wartości parametrów tablicy dekodera rozkazów, oraz jej struktury.
-    Reazalizacja emulacji rozkazów.
+    Realizacja emulacji rozkazów.
 
     Autor: Krzysztof Komarnicki
     Ver: 0.1
@@ -35,7 +35,7 @@
 #include "z80_cpu.h"
 
 /* struktura tablicy dekodera rozkazów */
-typedef struct {
+struct z80dt {
     void (*code)(z80*); /* kod operacji              - OC */
     /* reg2 = reg0 OPERATOR reg2  */
     unsigned char reg0; /* rejest wyniku  - D  */
@@ -49,7 +49,7 @@ typedef struct {
     unsigned char f_mask_and; /* maska zerowanych znaczników     - AM */
     unsigned char f_mask_or;  /* maska ustawianych znaczników    - OM */
     unsigned char f_mask_chg; /* maska modyfikowanych znaczników - CM */
-} z80dt;
+};
 
 enum {
     RA = 0,

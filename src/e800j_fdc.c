@@ -18,12 +18,11 @@
  *
  */
 
-#include <stdio.h>
 #include "i8272_fdc.h"
 #include "e800j_fdc.h"
 #include "e800j_msg.h"
 
-void fdc_clk(e800j_fdc* fdc) {
+void fdc_clk(struct e800j_fdc* fdc) {
     /* symulacja uniwibratorów 74123 sterowania włączania silnika napędu FDD */
     if (fdc->drive_a)
         fdc->drive_a--;
@@ -33,7 +32,7 @@ void fdc_clk(e800j_fdc* fdc) {
     //    i8272_step(fdc->i8272);
 }
 
-void fdc_init(e800j_fdc* fdc) {
+void fdc_init(struct e800j_fdc* fdc) {
 #ifdef DEBUG_FDC
     //    printf("|--> fdc init\n");
 #endif
@@ -43,12 +42,12 @@ void fdc_init(e800j_fdc* fdc) {
     fdc_reset(fdc);
 }
 
-void fdc_reset(e800j_fdc* fdc) {
+void fdc_reset(struct e800j_fdc* fdc) {
     msg_printf(MSG_VERB_MSG, "FDC reset\n");
     fdc_wr_r175(fdc, 0x00);
 }
 
-void fdc_wr_r175(e800j_fdc* fdc, unsigned char data) {
+void fdc_wr_r175(struct e800j_fdc* fdc, unsigned char data) {
 #ifdef DEBUG_FDC
     //    printf("|--> fdc write 74LS175 out[0xf1] = 0x%x\n", data);
 #endif
@@ -67,14 +66,14 @@ void fdc_wr_r175(e800j_fdc* fdc, unsigned char data) {
     i8272_reset(fdc->i8272, !(data & FDC_R175_RESET));
 }
 
-void fdc_wr_i8272(e800j_fdc* fdc, unsigned char a0, unsigned char data) {
+void fdc_wr_i8272(struct e800j_fdc* fdc, unsigned char a0, unsigned char data) {
 #ifdef DEBUG_FDC
     //    printf("|--> fdc write i8272 out[FDC] <<< 0x%x\n", data);
 #endif
     i8272_out(fdc->i8272, a0, data);
 }
 
-unsigned char fdc_rd_i8272(e800j_fdc* fdc, unsigned char a0) {
+unsigned char fdc_rd_i8272(struct e800j_fdc* fdc, unsigned char a0) {
     unsigned char dout = 0xff;
 
     dout = i8272_in(fdc->i8272, a0);

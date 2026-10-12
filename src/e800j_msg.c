@@ -21,32 +21,33 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "e800j_msg.h"
+
 char msg_stream = 0;
 char msg_level = 0;
 
-void msg_putchar(char chr) {
+static void msg_putchar(const char chr) {
     if (msg_stream == 0)
         putchar(chr);
 }
 
-void msg_putstr(char* str) {
-    for (; *str; str++)
-        msg_putchar(*str);
+static void msg_putstr(const char* str) {
+    msg_putchar(*str);
 }
 
 static const char* msg[] = {"(E!)", "(EE)", "(WW)", "(II)", "(VI)", "(NI)", "(UI)"};
 
-void msg_printf(char lvl, const char* fmt, ...) {
+void msg_printf(char level, const char* fmt, ...) {
     va_list ap;
     char *p, *sval;
     int ival;
     char tabl[16] = "";
 
-    if (lvl > msg_level)
+    if (level > msg_level)
         return;
-    if (lvl > 6)
-        lvl = 6;
-    msg_putstr((char*)msg[(int)lvl]);
+    if (level > 6)
+        level = 6;
+    msg_putstr((char*)msg[(int)level]);
 
     va_start(ap, fmt);
 

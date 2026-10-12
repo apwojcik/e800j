@@ -41,7 +41,7 @@
 #define Z80_STRUCT	z80 *z
 #define Z80_STRUCTC	z80 *z,
 #define Z80_STRUCT_NAME z80
-#define Z80_CLASS_NAME  typedef struct
+#define Z80_CLASS_NAME  typedef struct z80
 #else
 #define Z80_CPU(z)
 #define Z80_PTR		this

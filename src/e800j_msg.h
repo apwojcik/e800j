@@ -28,22 +28,22 @@ extern char msg_stream;
 
 /*
  zmienna globalna definiująca poziom wysyłanych komunikatów
- domyslną wartością jest 0, czyli jedynie błędy krytyczne będą wysyłane
+ domyślną wartością jest 0, czyli jedynie błędy krytyczne będą wysyłane
 */
 extern char msg_level;
 
 /*
     wysłanie komunikatu
 */
-extern void msg_printf(const char level, const char* fmt, ...);
+void msg_printf(char level, const char *fmt, ...);
 
 /* poziomy komunikatów */
 enum {
-    MSG_CRITICAL_ERROR, /* Błędy krytyczne dla działania programu */
-    MSG_ERROR, /* Błędy, które pozwalają emulacji mimo to działać dalej */
-    MSG_WARN, /* Ostrzeżenia */
-    MSG_MSG, /* Komunikaty poziom 0 */
-    MSG_VERB_MSG, /* Komunikaty poziom 1 */
-    MSG_NVERB_MSG, /* Komunikaty poziom 2 */
-    MSG_UNVERB_MSG /* Komunikaty poziom 3 */
+    MSG_CRITICAL_ERROR,	// Błędy krytyczne dla działania programu
+    MSG_ERROR,		    // Błędy, które pozwalają emulacji mimo to działać dalej
+    MSG_WARN,		    // Ostrzeżenia
+    MSG_MSG,		    // Komunikaty poziom 0
+    MSG_VERB_MSG,	    // Komunikaty poziom 1
+    MSG_NVERB_MSG,	    // Komunikaty poziom 2
+    MSG_UNVERB_MSG	    // Komunikaty poziom 3
 };

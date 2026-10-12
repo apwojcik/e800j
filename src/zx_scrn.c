@@ -28,11 +28,12 @@
 #include "e800j.h"
 #include "z80_cpu.h"
 #include "e800j_kbrd.h"
+#include "e800j_fdc.h"
 #include "e800j_sound.h"
 #include "e800j_file.h"
 #include "e800j_msg.h"
 
-char sdl_init_ = 0;
+static char sdl_init_ = 0;
 
 void zx_border(struct screen* zx, unsigned int color) {
     if (color < 16)
@@ -50,15 +51,15 @@ void zx_make_palette(struct screen* zx, int nrm, int brt, int wht) {
     }
 }
 
-void zx_draw_zxscreen(struct screen* zx) {
-    glDrawPixels(256, 192, GL_RGB, GL_UNSIGNED_BYTE, zx->scr_buffer);
+static void zx_draw_zxscreen(struct screen* zx) {
+    glDrawPixels(256, 192,GL_RGB,GL_UNSIGNED_BYTE, zx->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
         *((int*)fb) = *((int*)(pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f)));\
         fb +=3;
 
-void zx_trans_scr(struct screen* zx) {
+static void zx_trans_scr(struct screen* zx) {
     char* fb = zx->scr_buffer;
     rgbi* pal = zx->palettei;
     char* attr = zx->zx_attr;
@@ -89,7 +90,7 @@ void zx_trans_scr(struct screen* zx) {
     }
 }
 
-void zx_draw_border(struct screen* zx, int color) {
+static void zx_draw_border(struct screen* zx, int color) {
     glColor3f(zx->palettef[color].rf, zx->palettef[color].gf, zx->palettef[color].bf);
     glBegin(GL_POLYGON);
     glVertex2f(0.0, 0.0);
@@ -107,7 +108,7 @@ void zx_scr_rfsh(struct screen* zx) {
     SDL_GL_SwapWindow(zx->window);
 }
 
-void zx_glinit(struct screen* zx) {
+static void zx_glinit(struct screen* zx) {
     memset(zx->scr_buffer, 0x80, sizeof(zx->scr_buffer));
     zx_make_palette(zx, 0xb0, 0xf0, 0xe0);
     glViewport(0, 0, zx->width, zx->height);
@@ -142,7 +143,7 @@ void zx_glinit(struct screen* zx) {
     SDL_GL_SwapWindow(zx->window);
 }
 
-Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
+static Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
     (void)id;
     SDL_Event event;
     SDL_zero(event);
@@ -154,35 +155,35 @@ Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
     return interval;
 }
 
-Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
+static Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
     (void)id;
     SDL_Event event;
     SDL_zero(event);
-    if (((elwro*)z)->tcpu == 1)
+    if (((struct elwro*)z)->tcpu == 1)
         return interval;
-    ((elwro*)z)->tcpu = 1;
+    ((struct elwro*)z)->tcpu = 1;
     event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
 }
 
-Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
+static Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
     (void)id;
     ((struct screen*)zx)->inverse = !((struct screen*)zx)->inverse;
     return interval;
 }
 
-void zx_free_rfsh(int n, void* zx) {
+static void zx_free_rfsh(int n, void* zx) {
     (void)n;
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t0);
 }
 
-void zx_free_cpu_rfsh(int n, void* zx) {
+static void zx_free_cpu_rfsh(int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((elwro*)zx)->t1);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct elwro*)zx)->t1);
 }
 
-void zx_free_flash(int n, void* zx) {
+static void zx_free_flash(int n, void* zx) {
     (void)n;
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t2);
 }
@@ -303,7 +304,7 @@ char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, c
 
 void zx_kbrd_(int key, int state, void* a) {
     //    if(key == 316) ((elwro*)a)->cpu->dbg_on = state;
-    key_set(((elwro*)a)->kb, key, state);
+    key_set(((struct elwro*)a)->kb, key, state);
 }
 
 void zx_quit() {
@@ -320,7 +321,7 @@ void time_int(z80* z, void* ptr) {
     z80_int(z,NULL);
 }
 
-void zx_main(elwro* ptr) {
+void zx_main(struct elwro* ptr) {
     SDL_Event event;
     static char ik = 1;
 

@@ -66,12 +66,12 @@ static unsigned char prom_mem[512] = {
 
 uchar mem_zx48_read(void* z, ushort addr) {
     if (addr < 16384)
-        return ((elwro*)((z80*)z)->ptr)->rom[addr];
-    return ((elwro*)((z80*)z)->ptr)->ram[addr];
+        return ((struct elwro*)((z80*)z)->ptr)->rom[addr];
+    return ((struct elwro*)((z80*)z)->ptr)->ram[addr];
 }
 
 void mem_zx48_write(void* z, ushort addr, uchar data) {
-    ((elwro*)((z80*)z)->ptr)->ram[addr] = data;
+    ((struct elwro*)((z80*)z)->ptr)->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -80,7 +80,7 @@ void mem_zx48_write(void* z, ushort addr, uchar data) {
 /*********************************************************************************************/
 
 uchar mem_e800j_read(void* z, ushort addr) {
-    elwro* el = (elwro*)((z80*)z)->ptr;
+    struct elwro* el = (struct elwro*)((z80*)z)->ptr;
     uchar bank = ~prom_mem[(el->mem_mask | (addr >> 10)) & 0x1ff];
     ushort romaddr = addr & 0x1fff;
 
@@ -100,7 +100,7 @@ uchar mem_e800j_read(void* z, ushort addr) {
 }
 
 void mem_e800j_write(void* z, ushort addr, uchar data) {
-    ((elwro*)((z80*)z)->ptr)->ram[addr] = data;
+    ((struct elwro*)((z80*)z)->ptr)->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -111,8 +111,8 @@ void mem_e800j_write(void* z, ushort addr, uchar data) {
 uchar mem_zx128_read(void* z, ushort addr) {
     (void)z;
     (void)addr;
-    //    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
-    //    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
+    //    if(addr < 16384) return ((struct elwro*)((z80 *)z)->ptr)->rom[ addr ];
+    //    return ((struct elwro*)((z80 *)z)->ptr)->ram[ addr ];
     return 0xff;
 }
 
@@ -120,5 +120,5 @@ void mem_zx128_write(void* z, ushort addr, uchar data) {
     (void)z;
     (void)addr;
     (void)data;
-    //    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+    //    ((struct elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
 }

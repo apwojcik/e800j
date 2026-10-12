@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 #include "z80_cpu.h"
 #include "z80_debug.h"
@@ -35,9 +34,9 @@
 #include "virt_fdd.h"
 #include "e800j_msg.h"
 
-struct screen zx;
+static struct screen zx;
 
-void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_disk* disk, char dn) {
+static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_disk* disk, char dn) {
     int tmp, tmp1;
 
     if ((tmp = file_lookup_option(argc, argv, dparm))) {
@@ -52,19 +51,19 @@ void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_disk* dis
                 if (vfdd_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, "mat.dsk") < 0) {
                     msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
                 }
-                msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
+       	        msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
             }
         }
     }
 }
 
 int main(int argc, char** argv) {
-    e800j_fdc fdc;
+    struct e800j_fdc fdc;
     z80 cpu;
     dbg pt;
-    elwro e800;
-    sound snd;
-    kbrd keyboard;
+    struct elwro e800;
+    struct sound snd;
+    struct e800j_kbrd keyboard;
     vfdd_disk disk_a, disk_b;
     int tmp;
 

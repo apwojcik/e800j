@@ -87,7 +87,7 @@
         b = z->mem_rd(z,z->dd2);
 
 /* tablice stałych */
-static const z80dt __z80_decoder__[] = Z80_DECODE_TABLE;
+static const struct z80dt __z80_decoder__[] = Z80_DECODE_TABLE;
 static const uchar __z80_parity__[] = Z80_PARITY_TABLE;
 static const uchar __z80_cond_mask[] = Z80_COND_MASK;
 static const uchar __z80_cond_plrt[] = Z80_COND_PLRT;
@@ -1579,7 +1579,7 @@ void z80_loop(z80* z, int cnt, int call, void (*callback)(z80*, void*), void* pa
 {
     uchar d;
     int i;
-    z80dt xf;
+    struct z80dt xf;
     if (Z80_CPU(z)cpu_off)
         return;
     for (i = 0; i < cnt; i++) {
@@ -1680,7 +1680,7 @@ void z80_step(z80* z)
 #endif
 {
     uchar d;
-    z80dt xf;
+    struct z80dt xf;
     if (Z80_CPU(z)cpu_off)
         return;
 

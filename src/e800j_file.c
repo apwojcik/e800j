@@ -26,6 +26,8 @@
 #include "e800j.h"
 #include "z80_cpu.h"
 #include "e800j_msg.h"
+#include "zx_scrn.h"
+#include "e800j_sound.h"
 
 int file_lookup_option(int argc, char** argv, const char* name) {
     int i;
@@ -482,7 +484,7 @@ void file_free_buffers(int n, void* el) {
 }
 
 /*******************************************/
-char file_memo_set(char* cfg, elwro* el, char* profile) {
+char file_memo_set(char* cfg, struct elwro* el, char* profile) {
     char tmp0[512], *tmp1;
     int i;
 
@@ -531,7 +533,7 @@ char file_memo_set(char* cfg, elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_set_cpu(char* cfg, elwro* el, char* profile) {
+char file_set_cpu(char* cfg, struct elwro* el, char* profile) {
     char tmp0[512], *tmp1;
     if (!file_find_cfg_option(profile, "cpu", tmp0,NULL, 0, 0))
         return 1;
@@ -567,7 +569,7 @@ char file_set_cpu(char* cfg, elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_set_screen(char* cfg, elwro* el, char* profile) {
+char file_set_screen(char* cfg, struct elwro* el, char* profile) {
     char tmp0[1024], *tmp1;
     if (!file_find_cfg_option(profile, "screen", tmp0,NULL, 0, 0))
         return 1;
@@ -632,7 +634,7 @@ char file_set_screen(char* cfg, elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_set_video(char* cfg, elwro* el, char* profile) {
+char file_set_video(char* cfg, struct elwro* el, char* profile) {
     char tmp0[512], *tmp1;
     if (!file_find_cfg_option(profile, "video", tmp0,NULL, 0, 0))
         return 1;
@@ -676,7 +678,7 @@ char file_set_video(char* cfg, elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_set_sound(char* cfg, elwro* el, char* profile) {
+char file_set_sound(char* cfg, struct elwro* el, char* profile) {
     char tmp0[512], *tmp1;
     if (!file_find_cfg_option(profile, "sound", tmp0,NULL, 0, 0))
         return 1;
@@ -749,7 +751,7 @@ char file_set_sound(char* cfg, elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_init(elwro* el, char* cpath, int argc, char** argv) {
+char file_init(struct elwro* el, char* cpath, int argc, char** argv) {
     FILE* f;
     char *cfg, *profile;
     long cfglen;
