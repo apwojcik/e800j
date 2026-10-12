@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -39,15 +39,15 @@ char file_snap_cpy(libspectrum_snap *snap, z80 *z, char *ram, char *reg373, char
     int i;
 
     if( !snap || !z || !ram || !reg373 ) return 1;
-    
+
     libspectrum_machine machine;
-    
+
     machine = libspectrum_snap_machine(snap);
 
     if((machine != LIBSPECTRUM_MACHINE_48) && (machine != LIBSPECTRUM_MACHINE_16)){
 	    msg_printf(MSG_WARN, "Nie obsługiwany typ komputera: %s\n",libspectrum_machine_name(machine));
 	    if(rest) return 0;
-    }	
+    }
 
 /* ustawienie rejestrów */
     z80_reset(z);
@@ -69,7 +69,7 @@ char file_snap_cpy(libspectrum_snap *snap, z80 *z, char *ram, char *reg373, char
 
 /* kolor ramki */
     *reg373 = libspectrum_snap_out_ula(snap);
-    
+
 /* kopiowanie pamięci */
     for(i=0; i < 16; i++)
     if(libspectrum_snap_pages(snap,i)){
@@ -77,7 +77,7 @@ char file_snap_cpy(libspectrum_snap *snap, z80 *z, char *ram, char *reg373, char
 	    case 0: memcpy(ram + 0xc000, libspectrum_snap_pages(snap,i),0x4000); break;
 	    case 2: memcpy(ram + 0x8000, libspectrum_snap_pages(snap,i),0x4000); break;
 	    case 5: memcpy(ram + 0x4000, libspectrum_snap_pages(snap,i),0x4000); break;
-	}		    	
+	}
     }
     return 0;
 }
@@ -101,7 +101,7 @@ int file_snap_load(const char *fname, z80 *cp, char *ram, char *r373, char rest)
 #else
 	msg_printf(MSG_WARN, "Error opening snapshot file  %s\n", fname);
 	return -1;
-#endif    
+#endif
     }
 
     if((snap=libspectrum_snap_alloc()) == NULL){
@@ -110,7 +110,7 @@ int file_snap_load(const char *fname, z80 *cp, char *ram, char *r373, char rest)
 #else
 	msg_printf(MSG_WARN, "Error loading snapshot %s\n", fname);
 	return error;
-#endif    
+#endif
     }
 #ifdef __cplusplus
     try {
@@ -122,7 +122,7 @@ int file_snap_load(const char *fname, z80 *cp, char *ram, char *r373, char rest)
     if((buffer = (unsigned char *) malloc(length))){
         if(!(error = file_load_blk(f,buffer,length))){
 	    if(!(error = libspectrum_snap_read(snap,buffer,length,LIBSPECTRUM_ID_UNKNOWN, fname)))
-	       error = file_snap_cpy(snap, cp, ram, r373, rest);	    
+	       error = file_snap_cpy(snap, cp, ram, r373, rest);
 	}
 	free(buffer);
     }
@@ -131,12 +131,12 @@ int file_snap_load(const char *fname, z80 *cp, char *ram, char *r373, char rest)
 #ifdef __cplusplus
     } catch(string a) { fclose(f); throw a; }
 #endif
-    
+
     if(error)
 #ifdef __cplusplus
      throw (string)"Error loading snapshot " + fname;
 #else
-     msg_printf(MSG_WARN, "Error loading snapshot %s\n", fname);    
+     msg_printf(MSG_WARN, "Error loading snapshot %s\n", fname);
 #endif
     return error;
 }
@@ -153,7 +153,7 @@ void file_get_cline(int argc, char **argv, z80 *cp, char *ram, char *r373, char 
 
 char file_is_letter(char a)
 {
-    return (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z') || 
+    return (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z') ||
 	(a >= 'a' && a <= 'z') || (a == '_') || (a == '-') || (a == '.');
 }
 
@@ -169,19 +169,19 @@ char *file_find_cfg_name(const char *cfg, const char *name, int lvl, int *line)
 	    if( a == '\n') cmd=0, (*line)++;
 	    if( a == '\\') chr=1;
 	} else chr=0;
-	if( cmd ) continue; /* jeśli komentarz to pomiń następne sprawdzanie */	
+	if( cmd ) continue; /* jeśli komentarz to pomiń następne sprawdzanie */
 	if(found && file_is_letter(a)) found=0;
 	if(found) return (char *)cfg + i;
 	if( a == '{') nest++;
 	if( a == '}') nest--;
 	if( nest == lvl){ /* szukamy na właściwym poziomie zagnieżdzenia */
-	    if(file_is_letter(a) && !file_is_letter(prevch)){ 
+	    if(file_is_letter(a) && !file_is_letter(prevch)){
 		for(k=0; k < u && i < z && file_is_letter(cfg[i]) && cfg[i] == name[k]; k++, i++);
 		i--;
 		if(k == u) found=1;
 	    }
 	    prevch = a;
-	}	
+	}
     }
     return NULL;
 }
@@ -209,9 +209,9 @@ char *file_find_cfg_option(const char *cfg, const char *name, const char *str, c
 	    return NULL;
 	}
 	if(eq_){
-	    if(((a > ' ') && (a <= 'z')) || ((a == ' ') && (bs || qt))){ 
-		if(len == 0) ptr = tmp + i; 
-		len++; 	    
+	    if(((a > ' ') && (a <= 'z')) || ((a == ' ') && (bs || qt))){
+		if(len == 0) ptr = tmp + i;
+		len++;
 	    }
 	    if(a == ';'){
 		if(str){
@@ -235,22 +235,22 @@ char *file_find_cfg_section(const char *cfg, const char *name, const char *str, 
     tmp = file_find_cfg_name(cfg,"section",lvl, &line);
     if(!tmp){
 	msg_printf(MSG_ERROR, "Config file error: There are no sections in the config file.\n");
-	return NULL;    
+	return NULL;
     }
     tmp = file_find_cfg_name(tmp,name,lvl, &line);
     if(!tmp){
 	msg_printf(MSG_ERROR, "Config file error: missing section %s\n", name);
-	return NULL;    
+	return NULL;
     }
     z = strlen(tmp);
-    
+
     for(i=0; i < z && *tmp != '{'; i++, tmp++) if(*tmp > ' ') { i=z; break; }
     if(i == z){
 	if(*tmp > ' ')
 	    msg_printf(MSG_ERROR, "Config file error: syntax error at section %s near line %i\n", name, line);
 	else
 	    msg_printf(MSG_ERROR, "Config file error: missing '{' to open section %s near line %i\n", name, line);
-	return NULL;    
+	return NULL;
     } else tmp++;
 
     for(i=0; i < z && (!(tmp[i] == '}' && !nest)); i++){
@@ -260,7 +260,7 @@ char *file_find_cfg_section(const char *cfg, const char *name, const char *str, 
 
     if(i == z){
 	msg_printf(MSG_ERROR, "Config file error: missing '}' to close section %s\n", name);
-	return NULL;    
+	return NULL;
     }
     if(str){
         strncpy((char*)str, tmp, i);
@@ -308,7 +308,7 @@ char file_read_rom(char *fn, int addr, char *rom, int romsize)
 	return 1;
     }
 
-    fseek(f,0L,SEEK_END);    
+    fseek(f,0L,SEEK_END);
     len = ftell(f);
     fseek(f,0L,SEEK_SET);
     if(addr + len > romsize){
@@ -321,7 +321,7 @@ char file_read_rom(char *fn, int addr, char *rom, int romsize)
 	msg_printf(MSG_ERROR,"\nError loading file %s (filesystem error ?)\n",fn);
 	return 1;
     }
-        
+
     fclose(f);
     return 0;
 }
@@ -341,7 +341,7 @@ int file_bios_load(const char *cfg, char *rom, char *profile, int romsize)
 	return 1;
     }
     if(!file_find_cfg_option(profile,"rombios",tmp,NULL,0,0)) { free(tmp); return 1; }
-    msg_printf(MSG_MSG, "ROMBIOS section: %s\n",tmp);    
+    msg_printf(MSG_MSG, "ROMBIOS section: %s\n",tmp);
     if(!file_find_cfg_section(cfg,tmp,tmp1,NULL,0))  { free(tmp);free(tmp1); return 1; }
     if(!file_find_cfg_option(tmp1,"set_bios",tmp,NULL,0,0)) { free(tmp); return 1; }
     strcpy(ttt,tmp);
@@ -356,13 +356,13 @@ int file_bios_load(const char *cfg, char *rom, char *profile, int romsize)
     file_unquote(path);
     msg_printf(MSG_MSG, "Path to ROM files: %s\n",path);
     if(!file_find_cfg_section(tmp1,ttt,tmp,NULL,0))  { free(tmp);free(tmp1);free(path); return 1; }
-    for(x=tmp; x; ){    
+    for(x=tmp; x; ){
 	if(!file_find_cfg_option(x,"address",ttt,NULL,0,1)) break;
 	if(!(x = file_find_cfg_option(x,"file",tmp1,NULL,0,0))) {
 	    msg_printf(MSG_ERROR, "Error: brak nazwy pliku.\n");
-	    free(tmp1);free(tmp);	
+	    free(tmp1);free(tmp);
 	}
-	file_unquote(tmp1); file_unquote(ttt); 
+	file_unquote(tmp1); file_unquote(ttt);
 	if(!(fn = (char*)malloc(strlen(tmp1) + strlen(ttt) + 1))){
 	    msg_printf(MSG_ERROR, "Error allocate memory for configuration.\n");
 	    free(tmp1);free(tmp);free(path);
@@ -372,10 +372,10 @@ int file_bios_load(const char *cfg, char *rom, char *profile, int romsize)
 
 	addr = strtol(ttt,NULL,16);
 	msg_printf(MSG_MSG, "Loading file %s to ROM banks at address 0x0%x .... ", fn, addr );
-	if(file_read_rom(fn, addr, rom, romsize)) 
+	if(file_read_rom(fn, addr, rom, romsize))
 	{
 	    free(fn);free(tmp1);free(tmp);free(path);
-	    return 1;	    
+	    return 1;
 	}
 	msg_printf(MSG_MSG, "done.\n");
 	free(fn);
@@ -412,9 +412,9 @@ char file_memo_set(char *cfg, elwro *el, char *profile)
     if(el->rom_size < 8192) msg_printf(MSG_WARN, "Very small ROM buffer size. Is it a correct size ?\n");
     if(!(el->rom = (char*)malloc(el->rom_size))){
 	msg_printf(MSG_ERROR, "Error allocate memory for ROM buffer.\n");
-	free(tmp1);    
+	free(tmp1);
 	return 1;
-    }    
+    }
     for(i=0; i < el->rom_size; i++) el->rom[i] = rand();
     if(!file_find_cfg_option(tmp1,"ram_bank_size",tmp0,NULL,0,0)) return 1;
     msg_printf(MSG_MSG, "RAM buffer set to %s byte size.\n",tmp0);
@@ -423,12 +423,12 @@ char file_memo_set(char *cfg, elwro *el, char *profile)
     if(!(el->ram = (char*)malloc(el->ram_size))){
 	msg_printf(MSG_ERROR, "Error allocate memory for RAM buffer.\n");
 	free(el->rom);
-	free(tmp1);    
+	free(tmp1);
 	return 1;
-    }    
+    }
     for(i=0; i < el->ram_size; i++) el->ram[i] = rand();
     on_exit(file_free_buffers, el);
-    free(tmp1);    
+    free(tmp1);
     return 0;
 }
 
@@ -539,7 +539,7 @@ char file_set_sound(char *cfg, elwro *el, char *profile)
 	 free(tmp1);
 	 return 0;
     }
-    
+
     if(!file_find_cfg_option(tmp1,"channels",tmp0,NULL,0,0)) { free(tmp1);return 1;}
     el->snd->chn = strtol(tmp0,NULL,0);
     msg_printf(MSG_MSG, "Channels : %i\n",el->snd->chn);
@@ -572,7 +572,7 @@ char file_init(elwro *el, char *cpath, int argc, char **argv)
     FILE *f;
     char *cfg, *profile;
     long cfglen;
-    int i;    
+    int i;
 
     if(file_lookup_option(argc, argv, "-debug")) el->debug = 1;
 
@@ -581,7 +581,7 @@ char file_init(elwro *el, char *cpath, int argc, char **argv)
 	    msg_printf(MSG_ERROR, "Missing argument for -cfg option.\n");
 	    return 1;
 	}
-	cpath = argv[i+1];	
+	cpath = argv[i+1];
     }
 
     if(!(f = fopen(cpath,"r"))){
@@ -596,12 +596,12 @@ char file_init(elwro *el, char *cpath, int argc, char **argv)
 
     if(!(cfg = (char*)malloc(cfglen + 1))){
 	msg_printf(MSG_ERROR, "Error memory allocation for config file\n");
-	return 1;	
+	return 1;
     }
 
     if(fread(cfg, cfglen, 1, f) != 1){
 	msg_printf(MSG_ERROR, "Error reading config file, possibly filesystem or disk problem.\n");
-	return 1;	
+	return 1;
     }
     fclose(f);
 
@@ -666,7 +666,7 @@ void file_help()
 //    " -trap_out_d <value>   trap on OUT value disable\n"
 //    " -trap_reg_e <r> <val> trap on reg value enable\n"
 //    " -trap_reg_d <r> <val> trap on reg value disable\n"
-//    " -lines <val>          line debuuger count\n"    
+//    " -lines <val>          line debuuger count\n"
 //    " -nojump		    instructions doesn't modify PC\n"
     "\n"
     );

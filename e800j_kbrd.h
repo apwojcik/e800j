@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -38,8 +38,8 @@ typedef struct
     char	  mode;			/* tryb klawiatury       */
     char	  alt_r;		/* wciśnięty prawy ALT	 */
     unsigned char matrix[KB_ROWS];	/* matryca klawiszy      */
-    char	  *matrix_map1;		/* pierwszy stopień mapowania klawiszy */    
-    unsigned short int row_mask;	/* maska adresu (odcina część linii adresowych ) */ 
+    char	  *matrix_map1;		/* pierwszy stopień mapowania klawiszy */
+    unsigned short int row_mask;	/* maska adresu (odcina część linii adresowych ) */
     unsigned char col_mask;		/* maska danych (odcina część linii kolumn     ) */
 
 /* Joystick */
@@ -63,7 +63,7 @@ typedef struct
     int		joy_map_uk;	/* mapowanie klawisza klawiatury na joystick góra   */
     int		joy_map_dk;	/* mapowanie klawisza klawiatury na joystick dół    */
     int		joy_map_fk;	/* mapowanie klawisza klawiatury na joystick strzał */
-    
+
 } kbrd ;
 
 enum{
@@ -97,7 +97,7 @@ extern unsigned char key_matrix( kbrd *, unsigned short int addr);
 extern void key_update( kbrd *, int key, char state);
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
-	state - =1 wciśnięto, =0 puszczono 
+	state - =1 wciśnięto, =0 puszczono
 */
 
 extern unsigned char key_kempston( kbrd *);
@@ -146,7 +146,7 @@ extern unsigned char key_kempston( kbrd *);
 #define KEY_5		0x44
 #define KEY_SLASH	0x45
 #define KEY_BACKSLASH	0x47
-#define KEY_Q		0x50	
+#define KEY_Q		0x50
 #define KEY_W		0x51
 #define KEY_E		0x52
 #define KEY_R		0x53

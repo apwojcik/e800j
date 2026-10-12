@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -53,13 +53,13 @@ void zx_make_palette(zx_scrn *zx, int nrm, int brt, int wht)
 }
 
 void zx_draw_zxscreen(zx_scrn *zx)
-{  
-    glDrawPixels(256,192,GL_RGB,GL_UNSIGNED_BYTE,zx->scr_buffer); 
+{
+    glDrawPixels(256,192,GL_RGB,GL_UNSIGNED_BYTE,zx->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
 	    *((int*)fb) = *((int*)(pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f)));\
-	    fb +=3;	    
+	    fb +=3;
 
 void zx_trans_scr(zx_scrn *zx)
 {
@@ -73,7 +73,7 @@ void zx_trans_scr(zx_scrn *zx)
     for(i=0; i < 6144; i++){
 	yy = i >> 5;
 	xx = (i & 0x1f);
-	aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38)) 
+	aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38))
 				    ^ ( (~(yy << 1) & 0x80) | 0x3f)) << 5;
 	pt = *(x + aa + xx) << 2;
 	aa = (23 - (yy >> 3)) << 5;
@@ -111,9 +111,9 @@ void zx_scr_rfsh(zx_scrn *zx)
 
 void zx_glinit(zx_scrn *zx)
 {
-    memset(zx->scr_buffer,0x80,sizeof(zx->scr_buffer));    
+    memset(zx->scr_buffer,0x80,sizeof(zx->scr_buffer));
     zx_make_palette(zx,0xb0,0xf0,0xe0);
-    glViewport(0,0,zx->width,zx->height);    
+    glViewport(0,0,zx->width,zx->height);
     glClearColor(0.0,0.3,0.8,0.0);
 
     glMatrixMode(GL_PROJECTION);
@@ -133,13 +133,13 @@ void zx_glinit(zx_scrn *zx)
 
 //    glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
 
-//    glEnable(GL_POINT_SMOOTH);    
-//    glEnable(GL_BLEND);    
+//    glEnable(GL_POINT_SMOOTH);
+//    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
-//    glDisable(GL_POINT_SMOOTH);    
-//    glDisable(GL_BLEND);    
-    
+//    glDisable(GL_POINT_SMOOTH);
+//    glDisable(GL_BLEND);
+
     zx_draw_zxscreen(zx);
     zx_draw_border(zx,1);
     SDL_GL_SwapBuffers();
@@ -203,7 +203,7 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
     zx->bpp = bpp;
 
     /* zainicjowanie ekranu SDL */
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0){ 
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0){
         msg_printf(MSG_CRITICAL_ERROR,"Couldn't initialise SDL: %s\n",SDL_GetError());
 	return 1;
     }
@@ -225,10 +225,10 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
     if(file_lookup_option(argc, argv, "-fs")) video_flags |= SDL_FULLSCREEN;
     if(file_lookup_option(argc, argv, "-nf")) video_flags |= SDL_NOFRAME;
 
-    /* rozmiar bitowy składowych koloru */	
+    /* rozmiar bitowy składowych koloru */
     switch(zx->bpp){
 	case 8: zx->rgb_size[0] = 3; zx->rgb_size[0] = 3; zx->rgb_size[0] = 2; break;
-	case 15: 
+	case 15:
 	case 16: zx->rgb_size[0] = 5; zx->rgb_size[0] = 5; zx->rgb_size[0] = 5; break;
 	default: zx->rgb_size[0] = 8; zx->rgb_size[0] = 8; zx->rgb_size[0] = 8; break;
     }
@@ -236,7 +236,7 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
     SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE,zx->rgb_size[0]);
     SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE,zx->rgb_size[0]);
     SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,16);
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1);    
+    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1);
 
     /* inicjowanie trybu graficznego */
     if(!SDL_SetVideoMode(zx->width, zx->height, zx->bpp, video_flags)){
@@ -244,7 +244,7 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
 	SDL_Quit();
 	return 1;
     }
-    
+
     /* informacja o ekranie */
     msg_printf(MSG_MSG, "Screen BPP : %d\n", SDL_GetVideoSurface()->format->BitsPerPixel);
     msg_printf(MSG_MSG, "Vendor     : %s\n", glGetString( GL_VENDOR ) );
@@ -256,12 +256,12 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
     SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE,&zx->rgb_size[1]);
     SDL_GL_GetAttribute( SDL_GL_BLUE_SIZE,&zx->rgb_size[2]);
     SDL_GL_GetAttribute( SDL_GL_DEPTH_SIZE,&zx->bpp);
-    SDL_GL_GetAttribute( SDL_GL_DOUBLEBUFFER,&zx->dbf);    
-    msg_printf(MSG_MSG,"SDL GL RED SIZE    : %d\n",zx->rgb_size[0]);    
-    msg_printf(MSG_MSG,"SDL GL GREEN SIZE  : %d\n",zx->rgb_size[1]);    
-    msg_printf(MSG_MSG,"SDL GL BLUE SIZE   : %d\n",zx->rgb_size[2]);    
-    msg_printf(MSG_MSG,"SDL GL DEPTH SIZE  : %d\n",zx->bpp);    
-    msg_printf(MSG_MSG,"SDL GL DOUBLEBUFFER: %s\n",zx->dbf ? "Yes":"No");    
+    SDL_GL_GetAttribute( SDL_GL_DOUBLEBUFFER,&zx->dbf);
+    msg_printf(MSG_MSG,"SDL GL RED SIZE    : %d\n",zx->rgb_size[0]);
+    msg_printf(MSG_MSG,"SDL GL GREEN SIZE  : %d\n",zx->rgb_size[1]);
+    msg_printf(MSG_MSG,"SDL GL BLUE SIZE   : %d\n",zx->rgb_size[2]);
+    msg_printf(MSG_MSG,"SDL GL DEPTH SIZE  : %d\n",zx->bpp);
+    msg_printf(MSG_MSG,"SDL GL DOUBLEBUFFER: %s\n",zx->dbf ? "Yes":"No");
 /*
     SDL_VERSION(&(info.version));
     if( SDL_GetWMInfo(&info) == -1){
@@ -339,11 +339,11 @@ void zx_main(elwro *ptr)
 	    case SDL_KEYDOWN     : zx_kbrd(event.key.keysym.sym,1,ptr); break;
 	    case SDL_KEYUP       : zx_kbrd(event.key.keysym.sym,0,ptr); break;
 	    case SDL_QUIT        : msg_printf(MSG_MSG, "bye...\n"); return;
-	    case SDL_USEREVENT   : if(ptr->zx->rfsh ) { ptr->zx->rfsh = 0; zx_scr_rfsh(ptr->zx); } 
-				   if(ptr->tcpu ){ 
-					ptr->tcpu = 0; 
+	    case SDL_USEREVENT   : if(ptr->zx->rfsh ) { ptr->zx->rfsh = 0; zx_scr_rfsh(ptr->zx); }
+				   if(ptr->tcpu ){
+					ptr->tcpu = 0;
 					z80_loop(ptr->cpu, ptr->tr,ptr->ifreq, time_int, NULL);
-				    } 
+				    }
 				    fdc_clk(ptr->fdc);
 				   break;
 	}

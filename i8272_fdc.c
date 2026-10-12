@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -47,7 +47,7 @@ void i8272_fdd_connect
 }
 
 void i8272_init(i8272 *fdc)
-{ 
+{
     int i;
 
     fdc->msr = 0x80;
@@ -55,7 +55,7 @@ void i8272_init(i8272 *fdc)
     fdc->st1 = 0x00;
     fdc->st2 = 0x00;
     fdc->st3 = 0x00;
-    
+
     fdc->srt = 0x00;
     fdc->hut = 0x00;
     fdc->hlt = 0x00;
@@ -81,9 +81,9 @@ void i8272_init(i8272 *fdc)
 
 /* reakcja na stan linii RESET */
 void i8272_reset(i8272 *fdc, uchar reset)
-{ 
+{
     int i;
-    
+
     if(!reset) return;
 
     fdc->msr = (fdc->msr & FDC_NDM) | 0x80;
@@ -92,7 +92,7 @@ void i8272_reset(i8272 *fdc, uchar reset)
     fdc->st2 = 0x00;
     fdc->st3 = 0x00;
     fdc->err = 0;
-        
+
     fdc->hds = 0x00;
     fdc->pcn = 0x00;
     fdc->ds  = 0x00;
@@ -134,7 +134,7 @@ void i8272_call(i8272 *fdc, char plc)
 
 /* odczyt rejestru */
 uchar i8272_in(i8272 *fdc, uchar a0)
-{ 
+{
     char tmp = 0xff;
 
     fdc->int_line=0;
@@ -147,12 +147,12 @@ uchar i8272_in(i8272 *fdc, uchar a0)
 
     if(fdc->rw)  i8272_result(fdc, FDC_IN_DATA_1);
     tmp = fdc->data;
-    if(!fdc->rw) 
+    if(!fdc->rw)
     {
 	fdc->msr &= ~FDC_RQM;
 	i8272_result(fdc, FDC_IN_DATA_1);
     }
-    msg_printf(MSG_UNVERB_MSG,"FDC IN DATA %x\n", (unsigned char)tmp);    
+    msg_printf(MSG_UNVERB_MSG,"FDC IN DATA %x\n", (unsigned char)tmp);
     return tmp;
 }
 
@@ -168,9 +168,9 @@ void i8272_out(i8272 *fdc, unsigned char address_bit, unsigned char data)
     if(!fdc->rw) i8272_command(fdc, FDC_OUT_DATA_0);
     fdc->data = data;
     fdc->msr &= ~FDC_RQM;
-    if(!fdc->rw) 
+    if(!fdc->rw)
 	i8272_command(fdc, FDC_OUT_DATA_1);
-    else 
+    else
 	i8272_call(fdc, FDC_OUT_DATA_1);
     msg_printf(MSG_UNVERB_MSG,"FDC OUT PORT %x\n", data);
 }
@@ -179,7 +179,7 @@ void i8272_out(i8272 *fdc, unsigned char address_bit, unsigned char data)
 void i8272_int(i8272 *fdc, uchar icode)
 {
     fdc->int_line = 1;
-    fdc->msr |= FDC_RQM;    
+    fdc->msr |= FDC_RQM;
     fdc->st0 &= ~FDC_IC;
     fdc->st0 |= (icode & 0x03) << 6;
 }
@@ -207,7 +207,7 @@ void i8272_command(i8272 *fdc,  char plc)
 	    fdc->msr |= FDC_CB; /* ? */
 	    fdc->idx_1 = fdc->opcode->cmd_len;
 	}
-	
+
 	fdc->buffer[fdc->idx_0++] = fdc->data;
 	if(fdc->idx_0 == fdc->idx_1){
 	    fdc->phase = FDC_EXEC;
@@ -246,7 +246,7 @@ void i8272_result(i8272 *fdc, char plc)
 void i8272_rdata(i8272 *fdc, char mode)
 {
     int tmp=0;
-    
+
     fdc->st0 = 0;
     fdc->st1 = 0;
     fdc->st2 = 0;
@@ -267,13 +267,13 @@ void i8272_rdata(i8272 *fdc, char mode)
     fdc->msr |= FDC_RQM;
     fdc->msr |= FDC_DIO;
 /* kolejny bajt do odczytu w sektorze */
-    fdc->sbyte++; 
+    fdc->sbyte++;
 /* jeśli odczyt kolejnego sektora zeruj licznik bajtów i zwiększ nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
 	fdc->sbyte = 0;
 	fdc->rec++;
     }
-/* 
+/*
   Przypuszczam, że po EOT zerowany jest licznik sektorów, ale słowa brak o tym w dokumentacji i8272.
 */
     if(fdc->rec > fdc->eot) fdc->rec = 1;
@@ -297,7 +297,7 @@ void i8272_read_data(i8272 *fdc, char mode)
 	fdc->buffer[4] = fdc->ha;
 	fdc->buffer[5] = fdc->rec;
 	fdc->buffer[6] = fdc->nb;
-	fdc->phase = FDC_RESULT;   
+	fdc->phase = FDC_RESULT;
 	fdc->rw = 0;
 	i8272_result(fdc, FDC_CMD);
 	i8272_int(fdc, FDC_IC_IC);
@@ -305,7 +305,7 @@ void i8272_read_data(i8272 *fdc, char mode)
     }
 
     if(fdc->phase != FDC_EXEC) return;
-    fdc->ds = fdc->buffer[1] & 0x03;  
+    fdc->ds = fdc->buffer[1] & 0x03;
     fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
     fdc->cn  = fdc->buffer[2];
     fdc->ha  = fdc->buffer[3];
@@ -323,7 +323,7 @@ void i8272_read_data(i8272 *fdc, char mode)
 /* obliczenie długości ścieżki */
     fdc->trlen = fdc->eot * fdc->slen;
 /* ustawienie flag odbioru danej, dana będzie wstawiona dopiero po wywołaniu in(),
-   ale inaczej by do niej nie weszła 
+   ale inaczej by do niej nie weszła
  */
     fdc->msr |= FDC_RQM | FDC_DIO;
     fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
@@ -348,9 +348,9 @@ void i8272_sis_cmd(i8272* fdc)
     fdc->idx_1 = fdc->opcode->res_len;
     fdc->opcode = (void *)0;
     fdc->buffer[0] = fdc->st0;
-    fdc->buffer[1] = fdc->pcn;    
-    fdc->phase = FDC_RESULT;   
-    fdc->st0 &= ~FDC_SE;     
+    fdc->buffer[1] = fdc->pcn;
+    fdc->phase = FDC_RESULT;
+    fdc->st0 &= ~FDC_SE;
     i8272_result(fdc, FDC_CMD);
     i8272_int(fdc, FDC_IC_IC);
 }
@@ -402,9 +402,9 @@ void i8272_sds_cmd(i8272* fdc)
     fdc->idx_1 = fdc->opcode->res_len;
     fdc->opcode = (void *)0;
     fdc->buffer[0] = fdc->st3;
-    fdc->phase = FDC_RESULT;   
+    fdc->phase = FDC_RESULT;
     i8272_result(fdc, FDC_CMD);
-    i8272_int(fdc, FDC_IC_NT);    
+    i8272_int(fdc, FDC_IC_NT);
 }
 
 void i8272_invalid_cmd(i8272* fdc)
@@ -414,9 +414,9 @@ void i8272_invalid_cmd(i8272* fdc)
     fdc->idx_1 = fdc->opcode->res_len;
     fdc->opcode = (void *)0;
     fdc->buffer[0] = fdc->st0;
-    fdc->phase = FDC_RESULT;   
+    fdc->phase = FDC_RESULT;
     i8272_result(fdc, FDC_CMD);
-    fdc->msr |= FDC_RQM | FDC_DIO;    
+    fdc->msr |= FDC_RQM | FDC_DIO;
     fdc->st0 = 0x80;
 }
 
@@ -448,7 +448,7 @@ void i8272_wdata(i8272 *fdc, char mode)
     fdc->msr |= FDC_RQM;
     fdc->msr &= ~FDC_DIO;
 /* kolejny bajt do odczytu w sektorze */
-    fdc->sbyte++; 
+    fdc->sbyte++;
 /* jeśli odczyt kolejnego sektora zeruj licznik bajtów i zwiększ nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
 	fdc->sbyte = 0;
@@ -476,7 +476,7 @@ void i8272_write_data(i8272 *fdc, char mode)
 	fdc->buffer[4] = fdc->ha;
 	fdc->buffer[5] = fdc->rec;
 	fdc->buffer[6] = fdc->nb;
-	fdc->phase = FDC_RESULT;   
+	fdc->phase = FDC_RESULT;
 	fdc->rw = 0;
 	i8272_result(fdc, FDC_CMD);
 	i8272_int(fdc, FDC_IC_IC);
@@ -484,7 +484,7 @@ void i8272_write_data(i8272 *fdc, char mode)
     }
 
     if(fdc->phase != FDC_EXEC) return;
-    fdc->ds = fdc->buffer[1] & 0x03;  
+    fdc->ds = fdc->buffer[1] & 0x03;
     fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
     fdc->cn  = fdc->buffer[2];
     fdc->ha  = fdc->buffer[3];

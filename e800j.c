@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -40,14 +40,14 @@ zx_scrn zx;
 void disk_vlookup(int argc, char **argv,char *dparm, char *mode, vfdd_disk *disk, char dn)
 {
     int tmp, tmp1;
-    
+
     if((tmp = file_lookup_option(argc, argv, dparm))){
 	if(tmp < argc) {
 	    if((tmp1 = file_lookup_option(argc, argv, mode))){
 		if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp+1]) < 0){
 		    msg_printf(MSG_ERROR,"Opening file %s failed.\n", argv[tmp + 1]);
 		}
-		msg_printf(MSG_MSG,"Open file %s for RW as drive %c.\n", argv[tmp+1], dn);	    
+		msg_printf(MSG_MSG,"Open file %s for RW as drive %c.\n", argv[tmp+1], dn);
 	    } else {
 		if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, "mat.dsk") < 0){
 		    msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
@@ -55,7 +55,7 @@ void disk_vlookup(int argc, char **argv,char *dparm, char *mode, vfdd_disk *disk
 		msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
 	    }
 	}
-    }    
+    }
 }
 
 int main(int argc, char **argv)
@@ -89,12 +89,12 @@ int main(int argc, char **argv)
     disk_vlookup(argc, argv, "-adisk", "-arw", &disk_a,'A');
     disk_vlookup(argc, argv, "-bdisk", "-brw", &disk_b,'B');
 
-    /* odczyt konfiguracji i na tej podstawie ustawienie e800 */    
+    /* odczyt konfiguracji i na tej podstawie ustawienie e800 */
 
-    if(file_init(&e800, "./e800j.cfg", argc, argv)) return -1; 
+    if(file_init(&e800, "./e800j.cfg", argc, argv)) return -1;
 
     zx.zx_patt = e800.ram + 16384;
-    zx.zx_attr = e800.ram + 16384 + 6*1024;    
+    zx.zx_attr = e800.ram + 16384 + 6*1024;
     zx_border(&zx, 1);
 
     key_init(&keyboard);
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     file_get_cline(argc, argv, &cpu, e800.ram, &e800.zx->border_color, 0);
 
     zx_main(&e800);
-    
+
     snd_free_buffers(&snd);
     vfdd_floppy(&disk_a, VFDD_UNLOAD, 0, 0, 0, 0);
     vfdd_floppy(&disk_b, VFDD_UNLOAD, 0, 0, 0, 0);

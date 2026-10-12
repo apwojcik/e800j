@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -44,7 +44,7 @@ typedef struct
     void    *t1;
     int     cpu_rfsh;
     int     ifreq;	/* co ile taktów CPU ma zostać wywołane przerwanie */
-    int     tr;         /* ilość taktów/wywołanie   */    
+    int     tr;         /* ilość taktów/wywołanie   */
 /* porty I/O */
     uchar   port_f7;    /* port sterowania pamięcią */
     uchar   port_fe;    /* port głośniczka, koloru ramki, wyj magnetofonu */

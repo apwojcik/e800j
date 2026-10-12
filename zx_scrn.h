@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -46,11 +46,11 @@ typedef struct
     int height;
     int bpp;
     int rgb_size[3];
-    int dbf;    
+    int dbf;
     char *zx_patt; /* wzory bitowe - 6kB */
     char *zx_attr; /* kolory kranu - 1kB */
     char border_color;
-    char old_border_color;    
+    char old_border_color;
     char rfsh;
     void *t0;
     void *t2;
@@ -64,7 +64,7 @@ typedef struct
     long parent; /* ID okna GTK */
     float bsize;
     float scrh;
-    int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/    
+    int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
 } zx_scrn;
 
 extern char sdl_init; /* jeśli =1 tzn, że już była inicjowana SDL */

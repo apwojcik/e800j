@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -34,7 +34,7 @@ typedef struct
     char *name;
 } i8272opc;
 
-typedef struct 
+typedef struct
 {
 /* rejestry układu i8272A */
     uchar msr;		/* main status register */
@@ -50,12 +50,12 @@ typedef struct
     uchar hds;		/* "HeaD Select"         */
     uchar pcn;    	/* "Present Cylinder Number" */
     uchar ds;		/* "Drive Select"        */
-    
+
 /* zmienne interpretacji rozkazu */
     uchar call;		/* miejsce wywołania opcode               */
     uchar icntr;	/* licznik odczytów rejestru msr          */
     uchar phase;	/* faza wykonywania rozkazu               */
-    uchar data;		/* dana do zapisu / odczytu portu         */    
+    uchar data;		/* dana do zapisu / odczytu portu         */
     uchar buffer[16];	/* bufor operacji                         */
     uchar idx_0, idx_1; /* zmienne licznikowe operacji na buforze */
     i8272opc *opcode;	/* wskaźnik na instrukcję                 */
@@ -71,7 +71,7 @@ typedef struct
 
 /* sprzęg z CPU */
     uchar int_line;
-    
+
 /* parametry dla operacji read/write */
     uchar rw;		/* flaga wskazująca na fazę exec komendy read lub write */
     uchar cn;		/* numer cylindra      */
@@ -89,7 +89,7 @@ typedef struct
 } i8272;
 
 /* Bity rejestru MSR */
-enum 
+enum
 {
     FDC_D0B = 0x01,
     FDC_D1B = 0x02,
@@ -109,8 +109,8 @@ enum
     FDC_RESULT
 };
 
-/* 
-  Sprzęg z emulatorem 
+/*
+  Sprzęg z emulatorem
 */
 /* zainicjowanie struktury */
 extern void i8272_init(i8272 *fdc);
@@ -136,21 +136,21 @@ extern void i8272_fdd_connect(
 
 
 /* funkcje odpowiadające komendom i8272 */
-#define i8272_CMD_R_DATA	(void (*)(void*))i8272_rd_cmd 
-#define i8272_CMD_R_DEL_DATA	(void (*)(void*))i8272_rdd_cmd 
-#define i8272_CMD_W_DATA	(void (*)(void*))i8272_wd_cmd 
-#define i8272_CMD_W_DEL_DATA	(void (*)(void*))i8272_wdd_cmd 
-#define i8272_CMD_R_TRACK	(void (*)(void*))i8272_rt_cmd 
-#define i8272_CMD_R_ID		(void (*)(void*))i8272_rid_cmd 
-#define i8272_CMD_F_TRACK	(void (*)(void*))i8272_ft_cmd 
-#define i8272_CMD_SCAN_EQ	(void (*)(void*))i8272_seq_cmd 
-#define i8272_CMD_SCAN_L_EQ	(void (*)(void*))i8272_sleq_cmd 
-#define i8272_CMD_SCAN_H_EQ	(void (*)(void*))i8272_sheq_cmd 
-#define i8272_CMD_RECALIBRATE	(void (*)(void*))i8272_rec_cmd 
-#define i8272_CMD_SENSE_IR_STAT (void (*)(void*))i8272_sis_cmd 
+#define i8272_CMD_R_DATA	(void (*)(void*))i8272_rd_cmd
+#define i8272_CMD_R_DEL_DATA	(void (*)(void*))i8272_rdd_cmd
+#define i8272_CMD_W_DATA	(void (*)(void*))i8272_wd_cmd
+#define i8272_CMD_W_DEL_DATA	(void (*)(void*))i8272_wdd_cmd
+#define i8272_CMD_R_TRACK	(void (*)(void*))i8272_rt_cmd
+#define i8272_CMD_R_ID		(void (*)(void*))i8272_rid_cmd
+#define i8272_CMD_F_TRACK	(void (*)(void*))i8272_ft_cmd
+#define i8272_CMD_SCAN_EQ	(void (*)(void*))i8272_seq_cmd
+#define i8272_CMD_SCAN_L_EQ	(void (*)(void*))i8272_sleq_cmd
+#define i8272_CMD_SCAN_H_EQ	(void (*)(void*))i8272_sheq_cmd
+#define i8272_CMD_RECALIBRATE	(void (*)(void*))i8272_rec_cmd
+#define i8272_CMD_SENSE_IR_STAT (void (*)(void*))i8272_sis_cmd
 #define i8272_CMD_SPECIFY	(void (*)(void*))i8272_specify_cmd
 #define i8272_CMD_SENSE_DRV	(void (*)(void*))i8272_sds_cmd
-#define i8272_CMD_SEEK		(void (*)(void*))i8272_seek_cmd 
+#define i8272_CMD_SEEK		(void (*)(void*))i8272_seek_cmd
 #define i8272_CMD_INVALID	(void (*)(void*))i8272_invalid_cmd
 
 
@@ -187,7 +187,7 @@ extern void i8272_fdd_connect(
         { i8272_CMD_SCAN_H_EQ	 /* XXX 11101 */, 9, 1, 7, "SCAN HIGH OR EQUAL" },\
         { i8272_CMD_INVALID	 /* XXX 11110 */, 1, 0, 1, "INVALID" },\
         { i8272_CMD_INVALID	 /* XXX 11111 */, 1, 0, 1, "INVALID" } \
-    } 
+    }
 
 /* flagi dla st0 */
 enum{

@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,7 +23,7 @@
 
     Tablice stałych do dekodowania instrukcji, obliczania znaczników i detektora warunku
 
-    
+
     Z80_DECODE_TABLE - tablica dekodująca instrukcje CPU Z80, składa się z 9 bloków po 256 struktur,
     każdy blok dekoduje instrukcje wg kombinacji wszystkich prefiksów:
         CB ED DD FD
@@ -39,7 +39,7 @@
 
     Na każdą strukturę przypada 10 danych w kolejności:
     0 - wskaźnik do funkcji obsługi instrukcji
-    1,2,3 - parametry instrukcji (rejestry, ofsety itp) 
+    1,2,3 - parametry instrukcji (rejestry, ofsety itp)
     4 - ilość bajtów / instrukcję
     5 - cykle
     6 - takty
@@ -54,16 +54,16 @@
     Z80_COND_MASK - detektor warunku, maska bitowa
     Z80_COND_PLRT - detektor warunku, polaryzacja
 
- 
+
     Wystąpienie warunku jest liczone w następujący sposób:
-    
+
     war = (cond_mask[cond] & (Fr | F5)) ^ cond_plrt[cond]
     gdzie:
     war - warunek, typu boolean
     cond - numer warunku
     Fr - rejestr F
     F5 - bit 5, ustawiany jest przy teście dla warunku 0, aby zawsze był spełniony
-    
+
 */
 
 #ifndef __Z80DECTABL_H__
@@ -1248,7 +1248,7 @@
 	    _ANDA_N, _RST20, _RETPE, _JPHL, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
 	    _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
 	    _LDSP_HL, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
- 	    
+
 /* PO DD ->IX */
 #define PRE_DD  \
 	    _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
@@ -1409,19 +1409,19 @@
 #define PRE_CB \
 	    TMPL_1(_RLC), TMPL_1(_RRC), TMPL_1(_RL), TMPL_1(_RR), TMPL_1(_SLA), TMPL_1(_SRA),\
 	    TMPL_1(_SLI), TMPL_1(_SRL), TMPL_4(_BIT), TMPL_4(_RES), TMPL_4(_SET)
-	    
+
 #define PRE_CB_DD \
 	    TMPL_2(_RLC), TMPL_2(_RRC), TMPL_2(_RL), TMPL_2(_RR), TMPL_2(_SLA), TMPL_2(_SRA),\
 	    TMPL_2(_SLI), TMPL_2(_SRL), TMPL_5(_BIT), TMPL_5(_RES), TMPL_5(_SET)
-	    
+
 #define PRE_CB_FD \
 	    TMPL_3(_RLC), TMPL_3(_RRC), TMPL_3(_RL), TMPL_3(_RR), TMPL_3(_SLA), TMPL_3(_SRA),\
 	    TMPL_3(_SLI), TMPL_3(_SRL), TMPL_6(_BIT), TMPL_6(_RES), TMPL_6(_SET)
-	    
+
 
 /************************************************************************************************/
 
-/* główna tabela dekodowania instrukcji */	    
+/* główna tabela dekodowania instrukcji */
 #define Z80_DECODE_TABLE { \
 			    PRE_00, PRE_DD,    PRE_FD,   \
 			    PRE_CB, PRE_CB_DD, PRE_CB_FD,\
@@ -1451,11 +1451,11 @@
 /*
     Tablica generacji przeniesień i przepełnień.
     indeks tablicy stanowi 6 bitów, będących kopiami bitów trecich i siódmych argumentów i wyniku:
-    
+
     5..0 -> r7,a7,b7,r3,a3,b3
-    
+
     Wartością zwracaną jest maska OR bitowa na znacznikach
-    
+
     tablica dla dodawania i odejmowania jest różna
 */
 #define Z80_ADD_CARRY_TBL { \
@@ -1468,7 +1468,7 @@
 			0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
 			0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11 \
 		      }
-		      
+
 #define Z80_SUB_CARRY_TBL { \
 			0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
 			0x04,0x04,0x14,0x04,0x14,0x04,0x14,0x14,\
@@ -1487,9 +1487,9 @@
 
 #endif
 
-/* 
+/*
         /\
-       /  \ 
+       /  \
       /\ II\
      /  \  /|
     /____\/ |

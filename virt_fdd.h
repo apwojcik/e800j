@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -56,7 +56,7 @@ typedef struct
     uchar hd_nb;
     uchar sc_nb;
     uchar bps;
-    uchar err_1;	
+    uchar err_1;
     uchar err_2;    	/* 0x40 - deleted, */
     short int sec_len;  /* little endian */
 } vfdd_sec_hdr;
@@ -68,7 +68,7 @@ typedef struct
     vfdd_hdr     hdr;  /* nagłówek obrazu dysku */
     vfdd_trk_hdr th;
     vfdd_sec_hdr sh;
-    int   sbyte; 
+    int   sbyte;
     int   lbytes;
     long  seek;
     int   stat;
@@ -105,7 +105,7 @@ enum{
 /* póki nie ma innych emulacji napędu niż pliki *.dsk */
 #define vfdd_floppy vfdd_dsk_floppy
 
-/* 
+/*
     Emulacja Dyskietki
     1 - dla akcji VFDD_WR_SEC
     2 - dla akcji VFDD_LOAD
