@@ -19,8 +19,9 @@
  */
 
 /* Symulacja karty kontrolera dysków elastycznych Elwro 800 Junior */
-#ifndef _e800j_fdc_h_
-#define _e800j_fdc_h_
+
+#pragma once
+
 #include "i8272_fdc.h"
 
 #define DEBUG_FDC
@@ -51,4 +52,3 @@ extern unsigned char fdc_rd_i8272(e800j_fdc* fdc, unsigned char a0);
 extern void fdc_reset(e800j_fdc* fdc);
 
 extern void fdc_clk(e800j_fdc* fdc);
-#endif

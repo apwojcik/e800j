@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef __Z80_DEBUG__
-#define __Z80_DEBUG__
+#pragma once
 
 #define MAX_BYTES 32
 #define LINE_LEN  256
@@ -96,4 +95,3 @@ extern void dbg_don(dbg* d, char flag);
     włączenie/wyłączenie konsoli
 */
 extern void dbg_con(dbg* d, char flag);
-#endif

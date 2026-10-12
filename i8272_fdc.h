@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef _i8272_fdc_h_
-#define _i8272_fdc_h_
+#pragma once
 
 #ifndef uchar
 #define uchar unsigned char
@@ -291,5 +290,3 @@ enum {
     FDC_IC_IC = 2, /* Błędny rozkaz. */
     FDC_IC_AT1 = 3 /* Błąd wykonania rozkazu ponieważ, w czasie jego wykonania zmianie uległa linia ready */
 };
-
-#endif

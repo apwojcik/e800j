@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __E800_SOUND_H__
-#define __E800_SOUND_H__
+#pragma once
+
 #include "z80_cpu.h"
 
 typedef struct {
@@ -49,5 +49,3 @@ extern void snd_beeper_play();
 extern void snd_init(void* elw);
 
 extern void snd_free_buffers(sound*);
-
-#endif

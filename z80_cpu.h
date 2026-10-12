@@ -27,8 +27,8 @@
     Data: 19.08.2006
     Licencja: GPL v2
 */
-#ifndef __Z80_CPU_H__
-#define __Z80_CPU_H__
+
+#pragma once
 
 #ifndef BIG_ENDIAN
 #define LITTLE_ENDIAN
@@ -258,6 +258,4 @@ extern void z80_loop(z80*, int cnt, int icall, void (*callback)(z80*, void*), vo
 extern void z80_nmi(z80*);
 
 extern void z80_int(z80*, uchar* bus);
-#endif
-
 #endif

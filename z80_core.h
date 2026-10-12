@@ -30,8 +30,8 @@
     Licencja: GPL v2
 */
 
-#ifndef __Z80_CORE_H__
-#define __Z80_CORE_H__
+#pragma once
+
 #include "z80_cpu.h"
 
 /* struktura tablicy dekodera rozkazów */
@@ -452,5 +452,3 @@ extern void z80_jphl(z80*);
 #define YHr	(*(z->YH_r))
 #define Ir	(*(z->I_r))
 #define Rr	(*(z->R_r))
-
-#endif

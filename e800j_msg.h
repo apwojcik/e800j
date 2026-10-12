@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef _e800j_msg_h_
-#define _e800j_msg_h_
+#pragma once
 
 /*
  zmienna globalna definiująca gdzie komunikaty mają zostać wysyłane
@@ -48,5 +47,3 @@ enum {
     MSG_NVERB_MSG, /* Komunikaty poziom 2 */
     MSG_UNVERB_MSG /* Komunikaty poziom 3 */
 };
-
-#endif
