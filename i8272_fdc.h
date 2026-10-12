@@ -63,11 +63,11 @@ typedef struct
 /* sprzęgnięcie z emulacją napędu */
     void  *parameter[4];/* parametr wywołania funkcji napędu  */
     int (*drive)( /* funkcja obsługi napędu */
-		void *i8272, 	/* struktura FDC   */
-		void *fdd, 	/* parametr napędu (struktura opisu dyskietki )*/
-		uchar action, 	/* kod operacji   */
-		uchar wdata	/* dane do zapisu */
-	    ); /* zwracana wartość to dana odczytu lub kod błędu */
+            void *i8272, 	/* struktura FDC   */
+            void *fdd, 	/* parametr napędu (struktura opisu dyskietki )*/
+            uchar action, 	/* kod operacji   */
+            uchar wdata	/* dane do zapisu */
+        ); /* zwracana wartość to dana odczytu lub kod błędu */
 
 /* sprzęg z CPU */
     uchar int_line;
@@ -156,7 +156,7 @@ extern void i8272_fdd_connect(
 
 #define i8272_CMD_TABLE		{\
         { i8272_CMD_INVALID	 /* XXX 00000 */, 1, 0, 1, "INVALID" },\
-	{ i8272_CMD_INVALID	 /* XXX 00001 */, 1, 0, 1, "INVALID" },\
+        { i8272_CMD_INVALID	 /* XXX 00001 */, 1, 0, 1, "INVALID" },\
         { i8272_CMD_R_TRACK	 /* 0XX 00010 */, 9, 1, 7, "READ A TRACK" },\
         { i8272_CMD_SPECIFY	 /* 000 00011 */, 3, 0, 0, "SPECIFY" },\
         { i8272_CMD_SENSE_DRV	 /* 000 00100 */, 2, 0, 1, "SENSE A DRIVE" },\

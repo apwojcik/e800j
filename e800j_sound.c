@@ -36,13 +36,13 @@ void snd_init_rbuffer(sound *w, int lbsize)
 {
     w->head = w->tail = 0;
     if(!(w->lbuffer = (unsigned char*)malloc(lbsize))){
-	printf("(EE) Error memory allocation i sound buffer init\n");
-	exit(0);
+        printf("(EE) Error memory allocation i sound buffer init\n");
+        exit(0);
     }
     if(!(w->rbuffer = (unsigned char*)malloc(w->size))){
-	printf("(EE) Error memory allocation i sound buffer init\n");
-	free(w->lbuffer);
-	exit(0);
+        printf("(EE) Error memory allocation i sound buffer init\n");
+        free(w->lbuffer);
+        exit(0);
     }
     w->ovr=0;
     w->old_ticks=0;
@@ -63,13 +63,13 @@ void snd_rbuffer_push(sound *w, char data)
 {
     /* detekcja przepełnienia bufora */
     if( ((w->head == w->size) && (w->tail == 0)) || ( w->head + 1 == w->tail )){
-	if(!w->ovr) printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
-	w->ovr=1;
-	return;
+        if(!w->ovr) printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
+        w->ovr=1;
+        return;
     }
     w->rbuffer[w->head] = data;      /* wkładam daną do bufora    */
     if(w->head < w->size) w->head++; /* jeśli nie doszło do końca bufora, to przesuń wskaźnik head */
-	else w->head = 0;            /* inaczej zawiń na początek */
+    else w->head = 0;            /* inaczej zawiń na początek */
 }
 
 void snd_beeper_callback(void *ud, Uint8 *stream, int len)
@@ -98,8 +98,8 @@ void snd_init(void *elw)
     spec.userdata = ww; /* bufor danych */
 
     if(SDL_OpenAudio(&spec, &spc) < 0){
-	printf("(WW)Couldn't open audio: %s\n",SDL_GetError());
-	return;
+        printf("(WW)Couldn't open audio: %s\n",SDL_GetError());
+        return;
     }
 
     printf("(II)Using audio driver: %s\n", SDL_AudioDriverName(name,32));
@@ -123,13 +123,13 @@ void snd_beeper(char r373, z80 *z)
 
     r373 &= 0x10;
     if(ww->alias){
-	data = r373 ? 127: -128;
-	period = 3.14/smpls;
-	for(i=0; i < smpls; i++)
-	    snd_rbuffer_push(ww, 128 + data * sin(i*period));
-    } else{
-	data = r373 ? 0:0xff;
-	for(i=0; i < smpls; i++) snd_rbuffer_push(ww, data );
+        data = r373 ? 127: -128;
+        period = 3.14/smpls;
+        for(i=0; i < smpls; i++)
+            snd_rbuffer_push(ww, 128 + data * sin(i*period));
+        } else{
+        data = r373 ? 0:0xff;
+        for(i=0; i < smpls; i++) snd_rbuffer_push(ww, data );
     }
 }
 

@@ -81,23 +81,23 @@ extern void key_init( kbrd *);
 /*********************************************/
 extern void key_set( kbrd *, unsigned int key, unsigned char state);
 /*
-	..:: podobniem jak key_update, ale dodatkowo mapuje klawisze ::..
-	key - kod SDL klawisza
-	state - 1 wciśnięty, 0- wyciśnięty
+    ..:: podobniem jak key_update, ale dodatkowo mapuje klawisze ::..
+    key - kod SDL klawisza
+    state - 1 wciśnięty, 0- wyciśnięty
 
 */
 /*******************************************************************/
 extern unsigned char key_matrix( kbrd *, unsigned short int addr);
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15
-	wartość zwracana - linie KL0..KL6
+    wartość zwracana - linie KL0..KL6
 */
 
 /*******************************************************************/
 extern void key_update( kbrd *, int key, char state);
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
-	state - =1 wciśnięto, =0 puszczono
+    state - =1 wciśnięto, =0 puszczono
 */
 
 extern unsigned char key_kempston( kbrd *);
@@ -188,22 +188,22 @@ extern unsigned char key_kempston( kbrd *);
 #define KEY_DIGITS_CNT	10
 /* litery: a..z */
 #define KEY_LETTERS	KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F,\
-			KEY_G,KEY_H,KEY_I,KEY_J,KEY_K,KEY_L,\
-			KEY_M,KEY_N,KEY_O,KEY_P,KEY_Q,KEY_R,\
-			KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,\
-			KEY_Y,KEY_Z
+            KEY_G,KEY_H,KEY_I,KEY_J,KEY_K,KEY_L,\
+            KEY_M,KEY_N,KEY_O,KEY_P,KEY_Q,KEY_R,\
+            KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,\
+            KEY_Y,KEY_Z
 #define KEY_LETTERS_CNT	26
 /* pliterki: ą,ć,ę,ł,ń,ó,ś,ź,ż */
 #define KEY_PLETTERS	KEY_A_,KEY_C_,KEY_E_,KEY_L_,KEY_N_,\
-			KEY_O_,KEY_S_,KEY_Z__,KEY_Z_
+            KEY_O_,KEY_S_,KEY_Z__,KEY_Z_
 #define KEY_PLETTERS_CNT 9
 /* klawisze sterujące */
 #define KEY_CONTROL	KEY_CR,KEY_SHIFT,KEY_CAPS,KEY_SPC,KEY_ALT,KEY_ALT,KEY_CTRL,KEY_DEL,KEY_BS,KEY_ESC,\
-			KEY_TAB,KEY_DIR,KEY_CUR_L,KEY_CUR_R,KEY_CUR_U,KEY_CUR_D
+            KEY_TAB,KEY_DIR,KEY_CUR_L,KEY_CUR_R,KEY_CUR_U,KEY_CUR_D
 #define KEY_CONTROL_CNT 16
 /* znaki: ^[]/\.;.-+ */
 #define KEY_SIGNS	KEY_ROOF,KEY_BRACKET_L,KEY_BRACKET_R,KEY_SLASH,KEY_BACKSLASH,\
-			KEY_DOT,KEY_SEMICOLON,KEY_COMMA,KEY_MINUS,KEY_PLUS
+            KEY_DOT,KEY_SEMICOLON,KEY_COMMA,KEY_MINUS,KEY_PLUS
 #define KEY_SIGNS_CNT	10
 
 /* zawartość tablicy mapowania */

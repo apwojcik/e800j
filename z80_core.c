@@ -41,50 +41,50 @@
 #define VSET_MEM8(a)		z->mem_wr(z,z->dd2,a)
 
 #define SET_FLAGSP(reg,flags) \
-	    ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
-	    ftmp |= (reg) & 0xa8;\
-	    ftmp |= flags & 0x11; \
-    	    ftmp |= z->o;\
-	    ftmp |= (__z80_parity__[reg] << 2) & 0x04;\
-	    ftmp &= ~z->a;\
-	    Fr &= ~z->x;\
-	    Fr |= z->x & ftmp;
+        ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
+        ftmp |= (reg) & 0xa8;\
+        ftmp |= flags & 0x11; \
+            ftmp |= z->o;\
+        ftmp |= (__z80_parity__[reg] << 2) & 0x04;\
+        ftmp &= ~z->a;\
+        Fr &= ~z->x;\
+        Fr |= z->x & ftmp;
 
 #define SET_FLAGSV(reg,flags)\
-	    ftmp = (((~reg) & ((reg) - 1)) >> 1) & 0x40;\
-	    ftmp |= (reg) & 0xa8;\
-	    ftmp |= flags & 0x15;\
-	    ftmp |= z->o;\
-	    ftmp &= ~z->a;\
-	    Fr &= ~z->x;\
-	    Fr |= z->x & ftmp;
+        ftmp = (((~reg) & ((reg) - 1)) >> 1) & 0x40;\
+        ftmp |= (reg) & 0xa8;\
+        ftmp |= flags & 0x15;\
+        ftmp |= z->o;\
+        ftmp &= ~z->a;\
+        Fr &= ~z->x;\
+        Fr |= z->x & ftmp;
 
 #define SET_FLAGSVX(reg,flags)\
-	    ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
-	    ftmp |= ((reg) & 0xa800) >> 8;\
-	    ftmp |= flags & 0x15;\
-    	    ftmp |= z->o;\
-	    ftmp &= ~z->a;\
-	    Fr   &= ~z->x;\
-	    Fr   |= z->x & ftmp;
+        ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
+        ftmp |= ((reg) & 0xa800) >> 8;\
+        ftmp |= flags & 0x15;\
+            ftmp |= z->o;\
+        ftmp &= ~z->a;\
+        Fr   &= ~z->x;\
+        Fr   |= z->x & ftmp;
 
 #define GET_MEM(v) \
-	    z->dd2 = *z->regs16[z->regx0 = z->p0];\
-	    if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z->dd3);\
-	    v = z->mem_rd(z,z->dd2);
+        z->dd2 = *z->regs16[z->regx0 = z->p0];\
+        if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z->dd3);\
+        v = z->mem_rd(z,z->dd2);
 
 #define ALU_INDEX_8(r,a,b,c)  \
-	    c = (((b) >> 3) & 0x11) | (((a) >> 2) & 0x22) | (((r) >> 1) & 0x44); \
-	    c = ((c) & 0x07) | (((c) >> 1) & 0x38);
+        c = (((b) >> 3) & 0x11) | (((a) >> 2) & 0x22) | (((r) >> 1) & 0x44); \
+        c = ((c) & 0x07) | (((c) >> 1) & 0x38);
 
 #define ALU_INDEX_X(r,a,b,c)  \
-	    c = (((b) >> 11) & 0x11) | (((a) >> 10) & 0x22) | (((r) >> 9) & 0x44); \
-	    c = ((c) & 0x07) | (((c) >> 1) & 0x38);
+        c = (((b) >> 11) & 0x11) | (((a) >> 10) & 0x22) | (((r) >> 9) & 0x44); \
+        c = ((c) & 0x07) | (((c) >> 1) & 0x38);
 
 #define VGET_MEM8(b) \
-	    z->dd2 = *z->regs16[z->regx0=z->p1]; \
-	    if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z80_fetch_byte(z));\
-	    b = z->mem_rd(z,z->dd2);
+        z->dd2 = *z->regs16[z->regx0=z->p1]; \
+        if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z80_fetch_byte(z));\
+        b = z->mem_rd(z,z->dd2);
 
 /* tablice stałych */
 static const z80dt __z80_decoder__[]  = Z80_DECODE_TABLE;
@@ -99,7 +99,7 @@ static const uchar __z80_sub_cy_tbl[] = Z80_SUB_CARRY_TBL;
 uchar  z80_fetch_byte(z80 *z)
 {
     if(z->irupt){
-	if(z->ibus >= 8) return 0xff;
+        if(z->ibus >= 8) return 0xff;
         return z->bus[z->ibus++];
     }
 
@@ -129,17 +129,17 @@ void  z80_mem_wword(z80 *z, ushort addr, ushort data)
 void  z80_bank_rg(z80 *z, char i)
 {
     if(i){
-	z->BC_r = &z->BCs1;		z->B_r = &z->Bs1;
-	z->DE_r = &z->DEs1;		z->C_r = &z->Cs1;
-	z->HL_r = &z->HLs1;		z->D_r = &z->Ds1;
-	z->E_r  = &z->Es1;		z->H_r = &z->Hs1;
+        z->BC_r = &z->BCs1;		z->B_r = &z->Bs1;
+        z->DE_r = &z->DEs1;		z->C_r = &z->Cs1;
+        z->HL_r = &z->HLs1;		z->D_r = &z->Ds1;
+        z->E_r  = &z->Es1;		z->H_r = &z->Hs1;
         z->L_r  = &z->Ls1;
     } else {
-	z->BC_r = &z->BCs0;		z->B_r = &z->Bs0;
-	z->DE_r = &z->DEs0;		z->C_r = &z->Cs0;
-	z->HL_r = &z->HLs0;		z->D_r = &z->Ds0;
+        z->BC_r = &z->BCs0;		z->B_r = &z->Bs0;
+        z->DE_r = &z->DEs0;		z->C_r = &z->Cs0;
+        z->HL_r = &z->HLs0;		z->D_r = &z->Ds0;
         z->E_r  = &z->Es0;		z->H_r = &z->Hs0;
-	z->L_r  = &z->Ls0;
+        z->L_r  = &z->Ls0;
     }
     z->alt_rg = i;
 }
@@ -147,13 +147,13 @@ void  z80_bank_rg(z80 *z, char i)
 void  z80_bank_af(z80 *z, char i)
 {
     if(i){
-	z->AF_r = &z->AFs1;
-	z->A_r = &z->As1;
-	z->F_r = &z->Fs1;
+        z->AF_r = &z->AFs1;
+        z->A_r = &z->As1;
+        z->F_r = &z->Fs1;
     } else {
-	z->AF_r = &z->AFs0;
-	z->A_r = &z->As0;
-	z->F_r = &z->Fs0;
+        z->AF_r = &z->AFs0;
+        z->A_r = &z->As0;
+        z->F_r = &z->Fs0;
 
     }
     z->alt_af = i;
@@ -260,8 +260,8 @@ void  z80_jr(z80 *z)
     z->reg80 = z->p1;
     z->nn = PCr + (char)z->dd1;
     if(!Z80_COND(z->p1,Fr)){
-	INST_END;
-	return;
+        INST_END;
+        return;
     }
     z->ticks +=5; z->_tic += 5; z->cycles++;
     if(!z->jmp_off) PCr = z->nn;
@@ -276,8 +276,8 @@ void  z80_jp(z80 *z)
     z->reg80 = z->p1;
     z->nn = z->dd2;
     if(!Z80_COND(z->p1,Fr)){
-	INST_END;
-	return;
+        INST_END;
+        return;
     }
     if(!z->jmp_off) PCr = z->nn;
     INST_END;
@@ -300,9 +300,9 @@ void  z80_djnz(z80 *z)
     z->dd1 = z80_fetch_byte(z);
     z->nn = PCr + (char)z->dd1;
     if(!--Br){
-	z->djnz=0;
-	INST_END;
-	return;
+        z->djnz=0;
+        INST_END;
+        return;
     }
     z->djnz=1;
     z->ticks+=5; z->_tic+=5; z->cycles++;
@@ -319,8 +319,8 @@ void  z80_call(z80 *z)
     z->reg80 = z->p1;
     z->nn = z->dd2;
     if(!Z80_COND(z->p1,Fr)){
-	INST_END;
-	return;
+        INST_END;
+        return;
     }
     z->nested++;
     z->ticks+=7; z->_tic+=7; z->cycles+=2;
@@ -350,8 +350,8 @@ void  z80_ret(z80 *z)
     z->cycles+=1; z->ticks+=5; z->_tic=5;
     z->reg80 = z->p1;
     if(!Z80_COND(z->p1,Fr)){
-	INST_END;
-	return;
+        INST_END;
+        return;
     }
     z->nested--;
     z->ticks+=6; z->_tic+=6; z->cycles+=2;
@@ -427,30 +427,30 @@ void  z80_ex(z80 *z)
     z->regx0 = z->p0;
     z->regx1 = z->p1;
     if(z->p0 == R0AF){
-	z->cmd_type=D_EX;
-	TICS_UPDATE;
-	z->dd2 = z->AFs0;
-	z->AFs0 = z->AFs1;
-	z->AFs1 = z->dd2;
-	z->alt_af = !z->alt_af;
+        z->cmd_type=D_EX;
+        TICS_UPDATE;
+        z->dd2 = z->AFs0;
+        z->AFs0 = z->AFs1;
+        z->AFs1 = z->dd2;
+        z->alt_af = !z->alt_af;
     } else
     if(z->p0 == RDE){
-	z->cmd_type=D_EX;
-	TICS_UPDATE;
-	z->dd2 = DEr;
-	DEr = HLr;
-	HLr = z->dd2;
+        z->cmd_type=D_EX;
+        TICS_UPDATE;
+        z->dd2 = DEr;
+        DEr = HLr;
+        HLr = z->dd2;
     }else
-    if(z->p0 == MSP){
-	z->cmd_type=D_EXSP;
-	TICS_UPDATE;
-	a = z->mem_rd(z,SPr);
-	b = z->mem_rd(z,SPr + 1);
-	z->dd2 = *(z->regs16[z->regx0=z->p1]);
-	z->mem_wr(z,SPr+1, z->dd2 >> 8);
-	z->mem_wr(z,SPr, z->dd2 & 0xff);
-	*(z->regs16[z->p1]) = (b << 8) | a;
-    }
+        if(z->p0 == MSP){
+            z->cmd_type=D_EXSP;
+            TICS_UPDATE;
+            a = z->mem_rd(z,SPr);
+            b = z->mem_rd(z,SPr + 1);
+            z->dd2 = *(z->regs16[z->regx0=z->p1]);
+            z->mem_wr(z,SPr+1, z->dd2 >> 8);
+            z->mem_wr(z,SPr, z->dd2 & 0xff);
+            *(z->regs16[z->p1]) = (b << 8) | a;
+        }
     INST_END;
 };
 
@@ -601,14 +601,14 @@ void  z80_daa(z80 *z)
     z->dd1 = Ar > 0x99;
     z->dd3 = 0;
     if((Fr & FC) || z->dd1){
-	 Ar += (Fr & FN) ? -0x60: 0x60;
-	 z->dd3 = FC;
+         Ar += (Fr & FN) ? -0x60: 0x60;
+         z->dd3 = FC;
     }
 
     z->dd1 = (Ar & 0x0f) > 0x09;
     if((Fr & FH) || z->dd1){
-	 Ar += (Fr & FN) ? -0x06: 0x06;
-	 z->dd3 |= FH;
+         Ar += (Fr & FN) ? -0x06: 0x06;
+         z->dd3 |= FH;
     }
 
     SET_FLAGSP(Ar,z->dd3)
@@ -1470,16 +1470,16 @@ void  z80_ldbl(z80 *z)
     z->dd=z->p0;
     Fr &= ~(FH | FP | FN | F5 | F3);
     if(!z->jmp_off) do{
-	z->mem_wr(z,DEr,z->dd3=z->mem_rd(z,HLr));
-	if(z->p0 == PI || z->p0 == PIR) HLr++, DEr++;
-	    else HLr--, DEr--;
+        z->mem_wr(z,DEr,z->dd3=z->mem_rd(z,HLr));
+        if(z->p0 == PI || z->p0 == PIR) HLr++, DEr++;
+            else HLr--, DEr--;
 
-	if(--BCr){
-	    Fr |= FP;
-	    z->ticks += 5;
-	    z->cycles += 1;
-	    z->_tic += 5;
-	}
+        if(--BCr){
+            Fr |= FP;
+            z->ticks += 5;
+            z->cycles += 1;
+            z->_tic += 5;
+        }
     }while((z->p0 == PIR || z->p0 == PDR) && BCr);
     z->dd3 += Ar;
     z->dd3 = (z->dd3 & 0x08) | ((z->dd3 << 5) & 0x20);
@@ -1496,22 +1496,22 @@ void  z80_cpbl(z80 *z)
     z->dd=z->p0;
     e = Fr;
     if(!z->jmp_off) do{
-	a = Ar;
-	b = z->mem_rd(z,HLr);
-	d = a - b;
-	ALU_INDEX_8(d, b, a, c);
-	SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
-	if(z->p0 == PI || z->p0 == PIR) HLr++;
-	    else HLr--;
-	Fr &= ~FP;
-	if(--BCr){
-	    Fr |= FP;
-	    z->ticks += 5;
-	    z->cycles += 1;
-	    z->_tic += 5;
-	}
+        a = Ar;
+        b = z->mem_rd(z,HLr);
+        d = a - b;
+        ALU_INDEX_8(d, b, a, c);
+        SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
+        if(z->p0 == PI || z->p0 == PIR) HLr++;
+            else HLr--;
+        Fr &= ~FP;
+        if(--BCr){
+            Fr |= FP;
+            z->ticks += 5;
+            z->cycles += 1;
+            z->_tic += 5;
+        }
 
-	if( Fr & FZ) break;
+        if( Fr & FZ) break;
     }while((z->p0 == PIR || z->p0 == PDR) && BCr);
 
     Fr = (Fr & 0xfe) | (e & 0xfe);
@@ -1525,16 +1525,16 @@ void  z80_inbl(z80 *z)
     z->dd=z->p0;
     Fr |= FN | FZ;
     if(!z->jmp_off) do{
-	z->mem_wr(z,HLr,z->last_in_data=z->dd3=z->input(z,z->last_in_addr=Cr));
-	if(z->p0 == PI || z->p0 == PIR) HLr++;
-	    else HLr--;
+        z->mem_wr(z,HLr,z->last_in_data=z->dd3=z->input(z,z->last_in_addr=Cr));
+        if(z->p0 == PI || z->p0 == PIR) HLr++;
+            else HLr--;
 
-	if(--Br){
-	    Fr &= ~FZ;
-	    z->ticks += 5;
-	    z->cycles += 1;
-	    z->_tic += 5;
-	}
+        if(--Br){
+            Fr &= ~FZ;
+            z->ticks += 5;
+            z->cycles += 1;
+            z->_tic += 5;
+        }
     }while((z->p0 == PIR || z->p0 == PDR) && Br);
     INST_END;
 };
@@ -1546,16 +1546,16 @@ void  z80_outbl(z80 *z)
     z->dd=z->p0;
     Fr |= FN | FZ;
     if(!z->jmp_off) do{
-	z->output(z,z->last_out_addr=Cr,z->last_out_data = z->mem_rd(z,HLr));
-	if(z->p0 == PI || z->p0 == PIR) HLr++;
-	    else HLr--;
+        z->output(z,z->last_out_addr=Cr,z->last_out_data = z->mem_rd(z,HLr));
+        if(z->p0 == PI || z->p0 == PIR) HLr++;
+            else HLr--;
 
-	if(--Br){
-	    Fr &= ~FZ;
-	    z->ticks += 5;
-	    z->cycles += 1;
-	    z->_tic += 5;
-	}
+        if(--Br){
+            Fr &= ~FZ;
+            z->ticks += 5;
+            z->cycles += 1;
+            z->_tic += 5;
+        }
     }while((z->p0 == PIR || z->p0 == PDR) && Br);
     INST_END;
 };
@@ -1587,9 +1587,9 @@ void Z80_CLASS z80_int(Z80_STRUCTC uchar *bus)
     if(Z80_CPU(z)int_off) return;
     Z80_CPU(z)intr = 1;
     if(bus)
-	for(i=0; i < 8; i++) Z80_CPU(z)bus[i] = bus[i];
+        for(i=0; i < 8; i++) Z80_CPU(z)bus[i] = bus[i];
     else
-	for(i=0; i < 8; i++) Z80_CPU(z)bus[i] = 0xff;
+        for(i=0; i < 8; i++) Z80_CPU(z)bus[i] = 0xff;
 }
 
 #ifdef __cplusplus
@@ -1605,72 +1605,72 @@ void z80_loop(z80 *z, int cnt, int call, void (*callback)(z80*,void*), void *par
     z80dt xf;
     if(Z80_CPU(z)cpu_off) return;
     for(i = 0; i < cnt; i++){
-	if(!Z80_CPU(z)exit){
-	    Z80_CPU(z)call_cnt += Z80_CPU(z)_tic;
+    if(!Z80_CPU(z)exit){
+        Z80_CPU(z)call_cnt += Z80_CPU(z)_tic;
 
-	    if( Z80_CPU(z)call_cnt >= call){
+        if( Z80_CPU(z)call_cnt >= call){
 #ifdef __cplusplus
-    		callback(param);
+            callback(param);
 #else
-    		if(callback) callback(z, param);
+            if(callback) callback(z, param);
 #endif
-		Z80_CPU(z)call_cnt = Z80_CPU(z)call_cnt - call;;
-	    }
+        Z80_CPU(z)call_cnt = Z80_CPU(z)call_cnt - call;;
+        }
 
-	    if(Z80_CPU(z)_tic){
-    		i += Z80_CPU(z)_tic;
-		Z80_CPU(z)_tic = 0;
-		if(i >= cnt){
-		    Z80_CPU(z)_tic = i - cnt + 1;
-		    break;
-		}
-	    }
-	}
+        if(Z80_CPU(z)_tic){
+            i += Z80_CPU(z)_tic;
+        Z80_CPU(z)_tic = 0;
+        if(i >= cnt){
+            Z80_CPU(z)_tic = i - cnt + 1;
+            break;
+        }
+        }
+    }
 #ifdef __cplusplus
-	if(Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
+    if(Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
 #else
-	if(Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
+    if(Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
 #endif
-	if(Z80_CPU(z)exit) return;
-	*Z80_CPU(z)R_r = ((*Z80_CPU(z)R_r) + 1) & 0x7f;
+    if(Z80_CPU(z)exit) return;
+    *Z80_CPU(z)R_r = ((*Z80_CPU(z)R_r) + 1) & 0x7f;
 
-	if(!Z80_CPU(z)halt){
-	    if(!Z80_CPU(z)ipend) Z80_CPU(z)adrs = *Z80_CPU(z)PC_r;
-	    d = z80_fetch_byte(Z80_PTR);
-	} else d = 0;
+    if(!Z80_CPU(z)halt){
+        if(!Z80_CPU(z)ipend) Z80_CPU(z)adrs = *Z80_CPU(z)PC_r;
+        d = z80_fetch_byte(Z80_PTR);
+    } else d = 0;
 
-	xf = __z80_decoder__[d + Z80_CPU(z)pref_dd_fd + Z80_CPU(z)pref_cb_ed];
-	Z80_CPU(z)p0 = xf.reg0;	Z80_CPU(z)b = xf.bytes;	 Z80_CPU(z)a = xf.f_mask_and;
-	Z80_CPU(z)p1 = xf.reg1;	Z80_CPU(z)c = xf.cycles; Z80_CPU(z)o = xf.f_mask_or;
-	Z80_CPU(z)p2 = xf.reg2;	Z80_CPU(z)t = xf.ticks;	 Z80_CPU(z)x = xf.f_mask_chg;
-	xf.code(Z80_PTR);
+    xf = __z80_decoder__[d + Z80_CPU(z)pref_dd_fd + Z80_CPU(z)pref_cb_ed];
+    Z80_CPU(z)p0 = xf.reg0;	Z80_CPU(z)b = xf.bytes;	 Z80_CPU(z)a = xf.f_mask_and;
+    Z80_CPU(z)p1 = xf.reg1;	Z80_CPU(z)c = xf.cycles; Z80_CPU(z)o = xf.f_mask_or;
+    Z80_CPU(z)p2 = xf.reg2;	Z80_CPU(z)t = xf.ticks;	 Z80_CPU(z)x = xf.f_mask_chg;
+    xf.code(Z80_PTR);
 
-	if(!Z80_CPU(z)ipend) { /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
-	    if(Z80_CPU(z)inmi){
-		Z80_CPU(z)halt = 0;
-		Z80_CPU(z)inmi = 0;
-		Z80_CPU(z)iff2 = Z80_CPU(z)iff1;
-    		Z80_CPU(z)iff1 = 0;
-		z80_icall(Z80_PTR,0x66);
-	    }
-	    if(Z80_CPU(z)intr){
-		Z80_CPU(z)halt=0;
-		if(Z80_CPU(z)iff1){
-		    Z80_CPU(z)intr=0;
-	    	    switch(Z80_CPU(z)imode){
-			case 0: Z80_CPU(z)irupt=1; break; /* następna instrukcja będzie pobrana z magistrali */
-			case 1: z80_icall(Z80_PTR,0x38); break;
-			case 2: z80_icall(Z80_PTR, z80_mem_rword(
-				Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff)));
-				break;
-		    }
-		}
-	    }
-	}
+    if(!Z80_CPU(z)ipend) { /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
+        if(Z80_CPU(z)inmi){
+            Z80_CPU(z)halt = 0;
+            Z80_CPU(z)inmi = 0;
+            Z80_CPU(z)iff2 = Z80_CPU(z)iff1;
+                Z80_CPU(z)iff1 = 0;
+            z80_icall(Z80_PTR,0x66);
+            }
+            if(Z80_CPU(z)intr){
+            Z80_CPU(z)halt=0;
+            if(Z80_CPU(z)iff1){
+                Z80_CPU(z)intr=0;
+                    switch(Z80_CPU(z)imode){
+                case 0: Z80_CPU(z)irupt=1; break; /* następna instrukcja będzie pobrana z magistrali */
+                case 1: z80_icall(Z80_PTR,0x38); break;
+                case 2: z80_icall(Z80_PTR, z80_mem_rword(
+                    Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff)));
+                    break;
+                }
+            }
+        }
+    }
 #ifdef __cplusplus
-	if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
+    if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
 #else
-	if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
+    if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
 #endif
     }
 }
@@ -1687,50 +1687,50 @@ void z80_step(z80 *z)
     if(Z80_CPU(z)cpu_off) return;
 
 #ifdef __cplusplus
-	if(Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
+    if(Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
 #else
-	if(Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
+    if(Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_PRE,0);
 #endif
 
-	*Z80_CPU(z)R_r = ((*Z80_CPU(z)R_r) + 1) & 0x7f;
+    *Z80_CPU(z)R_r = ((*Z80_CPU(z)R_r) + 1) & 0x7f;
 
-	if(!Z80_CPU(z)halt){
-	    if(!Z80_CPU(z)ipend) Z80_CPU(z)adrs = *Z80_CPU(z)PC_r;
-	    d = z80_fetch_byte(Z80_PTR);
-	} else d = 0;
+    if(!Z80_CPU(z)halt){
+        if(!Z80_CPU(z)ipend) Z80_CPU(z)adrs = *Z80_CPU(z)PC_r;
+        d = z80_fetch_byte(Z80_PTR);
+    } else d = 0;
 
-	xf = __z80_decoder__[d + Z80_CPU(z)pref_dd_fd + Z80_CPU(z)pref_cb_ed];
-	Z80_CPU(z)p0 = xf.reg0;	Z80_CPU(z)b = xf.bytes;	 Z80_CPU(z)a = xf.f_mask_and;
-	Z80_CPU(z)p1 = xf.reg1;	Z80_CPU(z)c = xf.cycles; Z80_CPU(z)o = xf.f_mask_or;
-	Z80_CPU(z)p2 = xf.reg2;	Z80_CPU(z)t = xf.ticks;	 Z80_CPU(z)x = xf.f_mask_chg;
-	xf.code(Z80_PTR);
+    xf = __z80_decoder__[d + Z80_CPU(z)pref_dd_fd + Z80_CPU(z)pref_cb_ed];
+    Z80_CPU(z)p0 = xf.reg0;	Z80_CPU(z)b = xf.bytes;	 Z80_CPU(z)a = xf.f_mask_and;
+    Z80_CPU(z)p1 = xf.reg1;	Z80_CPU(z)c = xf.cycles; Z80_CPU(z)o = xf.f_mask_or;
+    Z80_CPU(z)p2 = xf.reg2;	Z80_CPU(z)t = xf.ticks;	 Z80_CPU(z)x = xf.f_mask_chg;
+    xf.code(Z80_PTR);
 
-	if(!Z80_CPU(z)ipend) { /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
-	    if(Z80_CPU(z)inmi){
-		Z80_CPU(z)halt = 0;
-		Z80_CPU(z)inmi = 0;
-		Z80_CPU(z)iff2 = Z80_CPU(z)iff1;
-    		Z80_CPU(z)iff1 = 0;
-		z80_icall(Z80_PTR,0x66);
-	    }
-	    if(Z80_CPU(z)intr){
-		Z80_CPU(z)halt=0;
-		if(Z80_CPU(z)iff1){
-		    Z80_CPU(z)intr=0;
-	    	    switch(Z80_CPU(z)imode){
-			case 0: Z80_CPU(z)irupt=1; break; /* następna instrukcja będzie pobrana z magistrali */
-			case 1: z80_icall(Z80_PTR,0x38); break;
-			case 2: z80_icall(Z80_PTR, z80_mem_rword(
-				Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff)));
-				break;
-		    }
-		}
-	    }
-	}
+    if(!Z80_CPU(z)ipend) { /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
+        if(Z80_CPU(z)inmi){
+        Z80_CPU(z)halt = 0;
+        Z80_CPU(z)inmi = 0;
+        Z80_CPU(z)iff2 = Z80_CPU(z)iff1;
+            Z80_CPU(z)iff1 = 0;
+        z80_icall(Z80_PTR,0x66);
+        }
+        if(Z80_CPU(z)intr){
+        Z80_CPU(z)halt=0;
+        if(Z80_CPU(z)iff1){
+            Z80_CPU(z)intr=0;
+                switch(Z80_CPU(z)imode){
+            case 0: Z80_CPU(z)irupt=1; break; /* następna instrukcja będzie pobrana z magistrali */
+            case 1: z80_icall(Z80_PTR,0x38); break;
+            case 2: z80_icall(Z80_PTR, z80_mem_rword(
+                Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff)));
+                break;
+            }
+        }
+        }
+    }
 #ifdef __cplusplus
-	if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
+    if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
 #else
-	if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
+    if(!Z80_CPU(z)halt && Z80_CPU(z)dbg_on && Z80_CPU(z)debug) Z80_CPU(z)debug(Z80_PTR,D_FLUSH,0);
 #endif
 
 }

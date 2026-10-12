@@ -47,7 +47,7 @@ uchar io_read(void *z, ushort addr)
 
 
     if(adec & PORT_CFE){
-	dout = key_matrix(el->kb, addr);
+        dout = key_matrix(el->kb, addr);
 
     }
 
@@ -65,25 +65,25 @@ void io_write(void *z, ushort addr, uchar data)
     uchar adec = ~prom_io[addr & 0x1ff];
 
     if(adec & PORT_CF7){
-	el->mem_mask = (data & 0xc0) | ( (data & 0x20) << 3 );
+        el->mem_mask = (data & 0xc0) | ( (data & 0x20) << 3 );
 
-	if(data & RELOK_R175){
-	    if(!(el->port_f7 & RELOK_R175))
-		msg_printf(MSG_MSG, "Relocate screen at 0xE000 address\n");
-		el->zx->zx_patt = el->ram + 0xE000;
-		el->zx->zx_attr = el->ram + 0xF800;
-	} else {
-	    if(el->port_f7 & RELOK_R175)
-		msg_printf(MSG_MSG, "Relocate screen at 0x4000 address\n");
-		el->zx->zx_patt = el->ram + 0x4000;
-		el->zx->zx_attr = el->ram + 0x5800;
-	}
-	el->port_f7  = data;
+        if(data & RELOK_R175){
+            if(!(el->port_f7 & RELOK_R175))
+                msg_printf(MSG_MSG, "Relocate screen at 0xE000 address\n");
+            el->zx->zx_patt = el->ram + 0xE000;
+            el->zx->zx_attr = el->ram + 0xF800;
+        } else {
+            if(el->port_f7 & RELOK_R175)
+                msg_printf(MSG_MSG, "Relocate screen at 0x4000 address\n");
+            el->zx->zx_patt = el->ram + 0x4000;
+            el->zx->zx_attr = el->ram + 0x5800;
+        }
+        el->port_f7  = data;
     }
     if(adec & PORT_CFE){
-	el->zx->border_color = data & 0x07;
-	snd_beeper(data, z);
-//	tape_save(data, z);
+        el->zx->border_color = data & 0x07;
+        snd_beeper(data, z);
+    //	tape_save(data, z);
     }
     if(adec & PORT_CF1) fdc_wr_r175(el->fdc, data);
     if(adec & PORT_CSFDC) fdc_wr_i8272(el->fdc, addr & 0x01, data);

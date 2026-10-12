@@ -53,16 +53,16 @@ void msg_printf(char lvl, const char *fmt, ...)
     va_start(ap, fmt);
 
     for(p = (char *)fmt; *p; p++){
-	if(*p!='%'){
-	    msg_putchar(*p);
-	    continue;
-	}
-	switch(*(++p)){
-	    case 's': for(sval = va_arg(ap, char *); *sval; sval++) msg_putchar(*sval); break;
-	    case 'c': ival = va_arg(ap, int); msg_putchar(ival); break;
-	    case 'i': ival = va_arg(ap, int); sprintf(tabl,"%i",ival); msg_putstr(tabl); break;
-	    case 'x': ival = va_arg(ap, int); sprintf(tabl,"0x%x",ival); msg_putstr(tabl); break;
-	}
+        if(*p!='%'){
+            msg_putchar(*p);
+            continue;
+        }
+        switch(*(++p)){
+            case 's': for(sval = va_arg(ap, char *); *sval; sval++) msg_putchar(*sval); break;
+            case 'c': ival = va_arg(ap, int); msg_putchar(ival); break;
+            case 'i': ival = va_arg(ap, int); sprintf(tabl,"%i",ival); msg_putstr(tabl); break;
+            case 'x': ival = va_arg(ap, int); sprintf(tabl,"0x%x",ival); msg_putstr(tabl); break;
+        }
     }
     va_end(ap);
 }
