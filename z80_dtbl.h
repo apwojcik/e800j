@@ -1189,13 +1189,13 @@
 
 #define _X_R_RY(n,r) n##r##_B, n##r##_C, n##r##_D, n##r##_E, n##r##_YH, n##r##_YL, n##r##_MIY, n##r##_A
 #define _X_R(n)	_X_R_R(n,B),_X_R_R(n,C),_X_R_R(n,D),_X_R_R(n,E),_X_R_R(n,H),_X_R_R(n,L),\
-	_X_R_R(n,MHL),_X_R_R(n,A)
+    _X_R_R(n,MHL),_X_R_R(n,A)
 
 #define _X_RX(n) _X_R_RX(n,B),_X_R_RX(n,C),_X_R_RX(n,D),_X_R_RX(n,E),_X_R_R(n,XH),_X_R_R(n,XL),\
-	_X_R_R(n,MIX),_X_R_RX(n,A)
+    _X_R_R(n,MIX),_X_R_RX(n,A)
 
 #define _X_RY(n) _X_R_RY(n,B),_X_R_RY(n,C),_X_R_RY(n,D),_X_R_RY(n,E),_X_R_R(n,YH),_X_R_R(n,YL),\
-	_X_R_R(n,MIY),_X_R_RY(n,A)
+    _X_R_R(n,MIY),_X_R_RY(n,A)
 
 #define _Y_R(n) _X_R_R(n,A)
 #define _LD_R	_X_R(_LD)
@@ -1232,221 +1232,221 @@
 
 
 #define PRE_00  \
-	    _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
-	    _EXAF_AF, _ADDHL_BC, _LDA_MBC, _DECBC, _INCC, _DECC, _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
-	    _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDHL_DE,\
-	    _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDHL_NN,\
-	    _LDMCDW_HL,  _INCHL,    _INCH,  _DECH,  _LDH_N,  _DAA,   _JRZ, _ADDHL_HL,\
-	    _LDHL_MCDW,  _DECHL,    _INCL,  _DECL,  _LDL_N,  _CPL,  _JRNC, _LDSP_NN,\
-	    _LDMCDW_A,   _INCSP,  _INCMHL,_DECMHL,_LDMHL_N,  _SCF,   _JRC, _ADDHL_SP,\
-	    _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
-	    _LD_R,  _ADD_R, _ADC_R, _SUB_R, _SBC_R,  _AND_R, _XOR_R, _OR_R, _CP_R,\
-	    _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
-	    _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
-	    _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
-	    _DD_, _SBCA_N, _RST18, _RETPO, _POPHL, _JPPO, _EXMSP_HL, _CALLPO, _PUSHHL,\
-	    _ANDA_N, _RST20, _RETPE, _JPHL, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
-	    _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
-	    _LDSP_HL, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
+        _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
+        _EXAF_AF, _ADDHL_BC, _LDA_MBC, _DECBC, _INCC, _DECC, _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
+        _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDHL_DE,\
+        _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDHL_NN,\
+        _LDMCDW_HL,  _INCHL,    _INCH,  _DECH,  _LDH_N,  _DAA,   _JRZ, _ADDHL_HL,\
+        _LDHL_MCDW,  _DECHL,    _INCL,  _DECL,  _LDL_N,  _CPL,  _JRNC, _LDSP_NN,\
+        _LDMCDW_A,   _INCSP,  _INCMHL,_DECMHL,_LDMHL_N,  _SCF,   _JRC, _ADDHL_SP,\
+        _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
+        _LD_R,  _ADD_R, _ADC_R, _SUB_R, _SBC_R,  _AND_R, _XOR_R, _OR_R, _CP_R,\
+        _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
+        _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
+        _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
+        _DD_, _SBCA_N, _RST18, _RETPO, _POPHL, _JPPO, _EXMSP_HL, _CALLPO, _PUSHHL,\
+        _ANDA_N, _RST20, _RETPE, _JPHL, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
+        _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
+        _LDSP_HL, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
 
 /* PO DD ->IX */
 #define PRE_DD  \
-	    _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
-	    _EXAF_AF, _ADDIX_BC, _LDA_MBC, _DECBC, _INCC, _DECC,  _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
-	    _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDIX_DE,\
-	    _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDIX_NN,\
-	    _LDMCDW_IX,  _INCIX,    _INCXH,  _DECXH, _LDXH_N,  _DAA,   _JRZ, _ADDIX_IX,\
-	    _LDIX_MCDW,  _DECIX,    _INCXL,  _DECXL,  _LDXL_N,  _CPL,  _JRNC, _LDSP_NN,\
-	    _LDMCDW_A,   _INCSP,  _INCMIX,_DECMIX,_LDMIX_N,  _SCF,   _JRC, _ADDIX_SP,\
-	    _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
-	    _LD_RX,  _ADD_RX, _ADC_RX, _SUB_RX, _SBC_RX,  _AND_RX, _XOR_RX, _OR_RX, _CP_RX,\
-	    _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
-	    _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
-	    _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
-	    _DD_, _SBCA_N, _RST18, _RETPO, _POPIX, _JPPO, _EXMSP_IX, _CALLPO, _PUSHIX,\
-	    _ANDA_N, _RST20, _RETPE, _JPIX, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
-	    _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
-	    _LDSP_IX, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
+        _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
+        _EXAF_AF, _ADDIX_BC, _LDA_MBC, _DECBC, _INCC, _DECC,  _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
+        _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDIX_DE,\
+        _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDIX_NN,\
+        _LDMCDW_IX,  _INCIX,    _INCXH,  _DECXH, _LDXH_N,  _DAA,   _JRZ, _ADDIX_IX,\
+        _LDIX_MCDW,  _DECIX,    _INCXL,  _DECXL,  _LDXL_N,  _CPL,  _JRNC, _LDSP_NN,\
+        _LDMCDW_A,   _INCSP,  _INCMIX,_DECMIX,_LDMIX_N,  _SCF,   _JRC, _ADDIX_SP,\
+        _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
+        _LD_RX,  _ADD_RX, _ADC_RX, _SUB_RX, _SBC_RX,  _AND_RX, _XOR_RX, _OR_RX, _CP_RX,\
+        _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
+        _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
+        _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
+        _DD_, _SBCA_N, _RST18, _RETPO, _POPIX, _JPPO, _EXMSP_IX, _CALLPO, _PUSHIX,\
+        _ANDA_N, _RST20, _RETPE, _JPIX, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
+        _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
+        _LDSP_IX, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
 
 /* PO FD ->IY */
 #define PRE_FD  \
-	    _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
-	    _EXAF_AF, _ADDIY_BC, _LDA_MBC, _DECBC, _INCC, _DECC,  _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
-	    _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDIY_DE,\
-	    _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDIY_NN,\
-	    _LDMCDW_IY,  _INCIY,    _INCYH,  _DECYH, _LDYH_N,  _DAA,   _JRZ, _ADDIY_IY,\
-	    _LDIY_MCDW,  _DECIY,    _INCYL,  _DECYL,  _LDYL_N,  _CPL,  _JRNC, _LDSP_NN,\
-	    _LDMCDW_A,   _INCSP,  _INCMIY,_DECMIY,_LDMIY_N,  _SCF,   _JRC, _ADDIY_SP,\
-	    _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
-	    _LD_RY,  _ADD_RY, _ADC_RY, _SUB_RY, _SBC_RY,  _AND_RY, _XOR_RY, _OR_RY, _CP_RY,\
-	    _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
-	    _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
-	    _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
-	    _DD_, _SBCA_N, _RST18, _RETPO, _POPIY, _JPPO, _EXMSP_IY, _CALLPO, _PUSHIY,\
-	    _ANDA_N, _RST20, _RETPE, _JPIY, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
-	    _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
-	    _LDSP_IY, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
+        _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
+        _EXAF_AF, _ADDIY_BC, _LDA_MBC, _DECBC, _INCC, _DECC,  _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
+        _LDMDE_A,    _INCDE,    _INCD,  _DECD,  _LDD_N,  _RLA,    _JR, _ADDIY_DE,\
+        _LDA_MDE,    _DECDE,    _INCE,  _DECE,  _LDE_N,  _RRA,  _JRNZ, _LDIY_NN,\
+        _LDMCDW_IY,  _INCIY,    _INCYH,  _DECYH, _LDYH_N,  _DAA,   _JRZ, _ADDIY_IY,\
+        _LDIY_MCDW,  _DECIY,    _INCYL,  _DECYL,  _LDYL_N,  _CPL,  _JRNC, _LDSP_NN,\
+        _LDMCDW_A,   _INCSP,  _INCMIY,_DECMIY,_LDMIY_N,  _SCF,   _JRC, _ADDIY_SP,\
+        _LDA_MCDW,   _DECSP,    _INCA,  _DECA,  _LDA_N,  _CCF,\
+        _LD_RY,  _ADD_RY, _ADC_RY, _SUB_RY, _SBC_RY,  _AND_RY, _XOR_RY, _OR_RY, _CP_RY,\
+        _RETNZ, _POPBC, _JPNZ, _JP, _CALLNZ, _PUSHBC, _ADDA_N, _RST00, _RETZ,\
+        _RET, _JPZ, _CB_, _CALLZ, _CALL, _ADCA_N, _RST08, _RETNC, _POPDE, _JPNC,\
+        _OUTA, _CALLNC, _PUSHDE, _SUBA_N, _RST10, _RETC, _EXX, _JPC, _INA, _CALLC,\
+        _DD_, _SBCA_N, _RST18, _RETPO, _POPIY, _JPPO, _EXMSP_IY, _CALLPO, _PUSHIY,\
+        _ANDA_N, _RST20, _RETPE, _JPIY, _JPPE, _EXDE_HL, _CALLPE, _ED_, _XORA_N,\
+        _RST28, _RETP, _POPAF, _JPP, _DI, _CALLP, _PUSHAF, _ORA_N, _RST30, _RETM,\
+        _LDSP_IY, _JPM, _EI, _CALLM, _FD_, _CPA_N, _RST38
 
 /* PO ED */
 #define PRE_ED \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _IN_B, _OUT_B, _SBCHL_BC, _LDMCDW_BC, _NEG, _RETN,\
-	    _IM0, _LDI_A, _IN_C, _OUT_C, _ADCHL_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
-	    _LDR_A, _IN_D, _OUT_D, _SBCHL_DE, _LDMCDW_DE, _NOP, _NOP,\
-	    _IM1, _LDA_I, _IN_E, _OUT_E, _ADCHL_DE, _LDDE_MCDW, _NOP, _NOP,\
-	    _IM2, _LDA_R, _IN_H, _OUT_H, _SBCHL_HL, _LDMCDW_HL,_NOP, _NOP, _NOP,\
-	    _RRD, _IN_L, _OUT_L, _ADCHL_HL, _LDHL_MCDW, _NOP, _NOP, _NOP,\
-	    _RLD, _IN_F, _NOP, _SBCHL_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
-	    _IN_A, _OUT_A, _ADCHL_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
-	    _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
-	    _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
-	    _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _IN_B, _OUT_B, _SBCHL_BC, _LDMCDW_BC, _NEG, _RETN,\
+        _IM0, _LDI_A, _IN_C, _OUT_C, _ADCHL_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
+        _LDR_A, _IN_D, _OUT_D, _SBCHL_DE, _LDMCDW_DE, _NOP, _NOP,\
+        _IM1, _LDA_I, _IN_E, _OUT_E, _ADCHL_DE, _LDDE_MCDW, _NOP, _NOP,\
+        _IM2, _LDA_R, _IN_H, _OUT_H, _SBCHL_HL, _LDMCDW_HL,_NOP, _NOP, _NOP,\
+        _RRD, _IN_L, _OUT_L, _ADCHL_HL, _LDHL_MCDW, _NOP, _NOP, _NOP,\
+        _RLD, _IN_F, _NOP, _SBCHL_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
+        _IN_A, _OUT_A, _ADCHL_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
+        _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
+        _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
+        _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
 
 /* PO ED I PO DD */
 #define PRE_ED_DD \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _IN_B, _OUT_B, _SBCIX_BC, _LDMCDW_BC, _NEG, _RETN,\
-	    _IM0, _LDI_A, _IN_C, _OUT_C, _ADCIX_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
-	    _LDR_A, _IN_D, _OUT_D, _SBCIX_DE, _LDMCDW_DE, _NOP, _NOP,\
-	    _IM1, _LDA_I, _IN_E, _OUT_E, _ADCIX_DE, _LDDE_MCDW, _NOP, _NOP,\
-	    _IM2, _LDA_R, _IN_XH, _OUT_XH, _SBCIX_IX, _LDMCDW_IX,_NOP, _NOP, _NOP,\
-	    _RRD, _IN_XL, _OUT_XL, _ADCIX_IX, _LDIX_MCDW, _NOP, _NOP, _NOP,\
-	    _RLD, _IN_F, _NOP, _SBCIX_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
-	    _IN_A, _OUT_A, _ADCIX_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
-	    _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
-	    _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
-	    _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _IN_B, _OUT_B, _SBCIX_BC, _LDMCDW_BC, _NEG, _RETN,\
+        _IM0, _LDI_A, _IN_C, _OUT_C, _ADCIX_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
+        _LDR_A, _IN_D, _OUT_D, _SBCIX_DE, _LDMCDW_DE, _NOP, _NOP,\
+        _IM1, _LDA_I, _IN_E, _OUT_E, _ADCIX_DE, _LDDE_MCDW, _NOP, _NOP,\
+        _IM2, _LDA_R, _IN_XH, _OUT_XH, _SBCIX_IX, _LDMCDW_IX,_NOP, _NOP, _NOP,\
+        _RRD, _IN_XL, _OUT_XL, _ADCIX_IX, _LDIX_MCDW, _NOP, _NOP, _NOP,\
+        _RLD, _IN_F, _NOP, _SBCIX_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
+        _IN_A, _OUT_A, _ADCIX_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
+        _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
+        _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
+        _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
 
 /* PO ED I PO FD */
 #define PRE_ED_FD \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _IN_B, _OUT_B, _SBCIY_BC, _LDMCDW_BC, _NEG, _RETN,\
-	    _IM0, _LDI_A, _IN_C, _OUT_C, _ADCIY_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
-	    _LDR_A, _IN_D, _OUT_D, _SBCIY_DE, _LDMCDW_DE, _NOP, _NOP,\
-	    _IM1, _LDA_I, _IN_E, _OUT_E, _ADCIY_DE, _LDDE_MCDW, _NOP, _NOP,\
-	    _IM2, _LDA_R, _IN_YH, _OUT_YH, _SBCIY_IY, _LDMCDW_IY,_NOP, _NOP, _NOP,\
-	    _RRD, _IN_YL, _OUT_YL, _ADCIY_IY, _LDIY_MCDW, _NOP, _NOP, _NOP,\
-	    _RLD, _IN_F, _NOP, _SBCIY_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
-	    _IN_A, _OUT_A, _ADCIY_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
-	    _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
-	    _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
-	    _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
-	    _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _IN_B, _OUT_B, _SBCIY_BC, _LDMCDW_BC, _NEG, _RETN,\
+        _IM0, _LDI_A, _IN_C, _OUT_C, _ADCIY_BC, _LDBC_MCDW, _NOP, _RETI, _NOP,\
+        _LDR_A, _IN_D, _OUT_D, _SBCIY_DE, _LDMCDW_DE, _NOP, _NOP,\
+        _IM1, _LDA_I, _IN_E, _OUT_E, _ADCIY_DE, _LDDE_MCDW, _NOP, _NOP,\
+        _IM2, _LDA_R, _IN_YH, _OUT_YH, _SBCIY_IY, _LDMCDW_IY,_NOP, _NOP, _NOP,\
+        _RRD, _IN_YL, _OUT_YL, _ADCIY_IY, _LDIY_MCDW, _NOP, _NOP, _NOP,\
+        _RLD, _IN_F, _NOP, _SBCIY_SP, _LDMCDW_SP, _NOP, _NOP, _NOP, _NOP,\
+        _IN_A, _OUT_A, _ADCIY_SP, _LDSP_MCDW, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _LDI, _CPI, _INI, _OUTI, _NOP, _NOP, _NOP, _NOP, \
+        _LDD, _CPD, _IND, _OUTD, _NOP, _NOP, _NOP, _NOP, \
+        _LDIR, _CPIR, _INIR, _OTIR, _NOP, _NOP, _NOP, _NOP,\
+        _LDDR, _CPDR, _INDR, _OTDR, _NOP, _NOP, _NOP, _NOP,\
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, \
+        _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP, _NOP
 
 /* PO CB */
 #define TMPL_0(cmd,reg0,reg1,regx)	cmd##_B, cmd##_C, cmd##_D, cmd##_E, cmd##_##reg0,\
-					cmd##_##reg1, cmd##regx, cmd##_A
+                    cmd##_##reg1, cmd##regx, cmd##_A
 
 #define TMPL_1(cmd)	TMPL_0(cmd,H,L,_MHL)
 #define TMPL_2(cmd)	TMPL_0(cmd,XH,XL,_MIX)
 #define TMPL_3(cmd)	TMPL_0(cmd,YH,YL,_MIY)
 #define TMPL_4(cmd)	TMPL_1(cmd##0),TMPL_1(cmd##1),TMPL_1(cmd##2),TMPL_1(cmd##3),\
-		        TMPL_1(cmd##4),TMPL_1(cmd##5),TMPL_1(cmd##6),TMPL_1(cmd##7)
+                TMPL_1(cmd##4),TMPL_1(cmd##5),TMPL_1(cmd##6),TMPL_1(cmd##7)
 #define TMPL_5(cmd)	TMPL_2(cmd##0),TMPL_2(cmd##1),TMPL_2(cmd##2),TMPL_2(cmd##3),\
-		        TMPL_2(cmd##4),TMPL_2(cmd##5),TMPL_2(cmd##6),TMPL_2(cmd##7)
+                TMPL_2(cmd##4),TMPL_2(cmd##5),TMPL_2(cmd##6),TMPL_2(cmd##7)
 #define TMPL_6(cmd)	TMPL_3(cmd##0),TMPL_3(cmd##1),TMPL_3(cmd##2),TMPL_3(cmd##3),\
-		        TMPL_3(cmd##4),TMPL_3(cmd##5),TMPL_3(cmd##6),TMPL_3(cmd##7)
+                TMPL_3(cmd##4),TMPL_3(cmd##5),TMPL_3(cmd##6),TMPL_3(cmd##7)
 
 #define PRE_CB \
-	    TMPL_1(_RLC), TMPL_1(_RRC), TMPL_1(_RL), TMPL_1(_RR), TMPL_1(_SLA), TMPL_1(_SRA),\
-	    TMPL_1(_SLI), TMPL_1(_SRL), TMPL_4(_BIT), TMPL_4(_RES), TMPL_4(_SET)
+        TMPL_1(_RLC), TMPL_1(_RRC), TMPL_1(_RL), TMPL_1(_RR), TMPL_1(_SLA), TMPL_1(_SRA),\
+        TMPL_1(_SLI), TMPL_1(_SRL), TMPL_4(_BIT), TMPL_4(_RES), TMPL_4(_SET)
 
 #define PRE_CB_DD \
-	    TMPL_2(_RLC), TMPL_2(_RRC), TMPL_2(_RL), TMPL_2(_RR), TMPL_2(_SLA), TMPL_2(_SRA),\
-	    TMPL_2(_SLI), TMPL_2(_SRL), TMPL_5(_BIT), TMPL_5(_RES), TMPL_5(_SET)
+        TMPL_2(_RLC), TMPL_2(_RRC), TMPL_2(_RL), TMPL_2(_RR), TMPL_2(_SLA), TMPL_2(_SRA),\
+        TMPL_2(_SLI), TMPL_2(_SRL), TMPL_5(_BIT), TMPL_5(_RES), TMPL_5(_SET)
 
 #define PRE_CB_FD \
-	    TMPL_3(_RLC), TMPL_3(_RRC), TMPL_3(_RL), TMPL_3(_RR), TMPL_3(_SLA), TMPL_3(_SRA),\
-	    TMPL_3(_SLI), TMPL_3(_SRL), TMPL_6(_BIT), TMPL_6(_RES), TMPL_6(_SET)
+        TMPL_3(_RLC), TMPL_3(_RRC), TMPL_3(_RL), TMPL_3(_RR), TMPL_3(_SLA), TMPL_3(_SRA),\
+        TMPL_3(_SLI), TMPL_3(_SRL), TMPL_6(_BIT), TMPL_6(_RES), TMPL_6(_SET)
 
 
 /************************************************************************************************/
 
 /* główna tabela dekodowania instrukcji */
 #define Z80_DECODE_TABLE { \
-			    PRE_00, PRE_DD,    PRE_FD,   \
-			    PRE_CB, PRE_CB_DD, PRE_CB_FD,\
-			    PRE_ED, PRE_ED_DD, PRE_ED_FD \
-			 }
+                PRE_00, PRE_DD,    PRE_FD,   \
+                PRE_CB, PRE_CB_DD, PRE_CB_FD,\
+                PRE_ED, PRE_ED_DD, PRE_ED_FD \
+             }
 
 
 #define Z80_PARITY_TABLE {\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
-			   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1 \
-			 }
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,\
+               1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1 \
+             }
 
 /*
     Tablica generacji przeniesień i przepełnień.
@@ -1459,26 +1459,26 @@
     tablica dla dodawania i odejmowania jest różna
 */
 #define Z80_ADD_CARRY_TBL { \
-			0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
-			0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11,\
-			0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11,\
-			0x05,0x15,0x15,0x15,0x05,0x05,0x05,0x15,\
-			0x04,0x14,0x14,0x14,0x04,0x04,0x04,0x14,\
-			0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
-			0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
-			0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11 \
-		      }
+            0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
+            0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11,\
+            0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11,\
+            0x05,0x15,0x15,0x15,0x05,0x05,0x05,0x15,\
+            0x04,0x14,0x14,0x14,0x04,0x04,0x04,0x14,\
+            0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
+            0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
+            0x01,0x11,0x11,0x11,0x01,0x01,0x01,0x11 \
+              }
 
 #define Z80_SUB_CARRY_TBL { \
-			0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
-			0x04,0x04,0x14,0x04,0x14,0x04,0x14,0x14,\
-			0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11,\
-			0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
-			0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11,\
-			0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
-			0x05,0x05,0x15,0x05,0x15,0x05,0x15,0x15,\
-			0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11 \
-		      }
+            0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
+            0x04,0x04,0x14,0x04,0x14,0x04,0x14,0x14,\
+            0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11,\
+            0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
+            0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11,\
+            0x00,0x00,0x10,0x00,0x10,0x00,0x10,0x10,\
+            0x05,0x05,0x15,0x05,0x15,0x05,0x15,0x15,\
+            0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11 \
+              }
 
 /* maska dla warunków testu rejestru flagowego */
 #define Z80_COND_MASK { 0xff, FZ,  FZ, FC, FC, FP, FP, FS, FS }

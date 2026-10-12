@@ -42,19 +42,19 @@ void disk_vlookup(int argc, char **argv,char *dparm, char *mode, vfdd_disk *disk
     int tmp, tmp1;
 
     if((tmp = file_lookup_option(argc, argv, dparm))){
-	if(tmp < argc) {
-	    if((tmp1 = file_lookup_option(argc, argv, mode))){
-		if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp+1]) < 0){
-		    msg_printf(MSG_ERROR,"Opening file %s failed.\n", argv[tmp + 1]);
-		}
-		msg_printf(MSG_MSG,"Open file %s for RW as drive %c.\n", argv[tmp+1], dn);
-	    } else {
-		if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, "mat.dsk") < 0){
-		    msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
-		}
-		msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
-	    }
-	}
+        if(tmp < argc) {
+            if((tmp1 = file_lookup_option(argc, argv, mode))){
+                if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp+1]) < 0){
+                    msg_printf(MSG_ERROR,"Opening file %s failed.\n", argv[tmp + 1]);
+                }
+                msg_printf(MSG_MSG,"Open file %s for RW as drive %c.\n", argv[tmp+1], dn);
+            } else {
+                if(vfdd_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, "mat.dsk") < 0){
+                    msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
+                }
+                msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
+            }
+        }
     }
 }
 

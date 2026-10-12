@@ -71,86 +71,86 @@ Z80_CLASS_NAME
 public:
 #endif
     union{
-	struct {
+    struct {
     /* rejestry p-value */
-	    union{
-		ushort *regs16[8];
-		struct{ ushort *AF_r, *BC_r, *DE_r, *HL_r, *IX_r, *IY_r, *SP_r, *PC_r; };
-	    };
-	    union{
-		uchar *regs8[20];
-		struct{
-		    uchar *A_r, *F_r, *B_r, *C_r, *D_r, *E_r, *H_r, *L_r;
-		    uchar *XH_r, *XL_r, *YH_r, *YL_r, *I_r, *R_r;
-		    uchar *MHL_r, *MIX_r, *MIY_r, *MSP_r, *MBC_r, *MDE_r;
-		};
-	    };
+        union{
+        ushort *regs16[8];
+        struct{ ushort *AF_r, *BC_r, *DE_r, *HL_r, *IX_r, *IY_r, *SP_r, *PC_r; };
+        };
+        union{
+        uchar *regs8[20];
+        struct{
+            uchar *A_r, *F_r, *B_r, *C_r, *D_r, *E_r, *H_r, *L_r;
+            uchar *XH_r, *XL_r, *YH_r, *YL_r, *I_r, *R_r;
+            uchar *MHL_r, *MIX_r, *MIY_r, *MSP_r, *MBC_r, *MDE_r;
+        };
+        };
 /* Rejestry l-value */
-	    union{
-		struct{ ushort AFs0, BCs0, DEs0, HLs0, AFs1, BCs1, DEs1, HLs1, IXs, IYs; };
-		struct{
-		    uchar  Fs0, As0, Cs0, Bs0, Es0, Ds0, Ls0, Hs0, Fs1, As1;
-    		    uchar  Cs1, Bs1, Es1, Ds1, Ls1, Hs1, XLs, XHs, YLs, YHs;
-		};
-	    };
-	    ushort SPs, PCs;
-	    uchar  Is, Rs;
-    	    uchar  MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
+        union{
+        struct{ ushort AFs0, BCs0, DEs0, HLs0, AFs1, BCs1, DEs1, HLs1, IXs, IYs; };
+        struct{
+            uchar  Fs0, As0, Cs0, Bs0, Es0, Ds0, Ls0, Hs0, Fs1, As1;
+                uchar  Cs1, Bs1, Es1, Ds1, Ls1, Hs1, XLs, XHs, YLs, YHs;
+        };
+        };
+        ushort SPs, PCs;
+        uchar  Is, Rs;
+            uchar  MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
 /* rejestry niejawne CPU */
-	    uchar  iff1;
-	    uchar  iff2;
+        uchar  iff1;
+        uchar  iff2;
 /* stany CPU */
-	    uchar  imode;   /* tryb przerwań                                       */
-	    uchar  intr;    /* wywołanie przerwania maskowalnego                   */
-	    uchar  inmi;    /* wywołanie przerwania niemaskowalnego                */
-	    uchar  halt;    /* CPU jest w stanie HALT                              */
+        uchar  imode;   /* tryb przerwań                                       */
+        uchar  intr;    /* wywołanie przerwania maskowalnego                   */
+        uchar  inmi;    /* wywołanie przerwania niemaskowalnego                */
+        uchar  halt;    /* CPU jest w stanie HALT                              */
 /* flagi dodatkowe, pomocnicze */
-	    uchar  alt_rg;  /* flaga określająca który bank rejestrów jest aktywny */
-	    uchar  alt_af;  /* flaga określająca który bank AF jest aktywny  */
-	    uchar  ipend;   /* jeśli ustawiona to instrukcja w toku */
-	    uchar  irupt;   /* wykonuje przerwanie */
+        uchar  alt_rg;  /* flaga określająca który bank rejestrów jest aktywny */
+        uchar  alt_af;  /* flaga określająca który bank AF jest aktywny  */
+        uchar  ipend;   /* jeśli ustawiona to instrukcja w toku */
+        uchar  irupt;   /* wykonuje przerwanie */
 /* zmienne sterowania CPU */
-	    int    pref_cb_ed;
-	    int    pref_dd_fd;
-	    int    ibus;
-	    char   bus[8];    /* bajty wystawione na magistrale w trybie IM 0 */
-	    int    call_cnt;   /* licznik co ile ma być wywołana procedura w pętli */
+        int    pref_cb_ed;
+        int    pref_dd_fd;
+        int    ibus;
+        char   bus[8];    /* bajty wystawione na magistrale w trybie IM 0 */
+	    int    call_cnt;   /* licznik co ile ma być wywołana procedura w petli */
 /* liczniki */
-	    long int cycles;  /* przechowuje ilość cykli  */
-	    long int ticks;   /* przechowuje ilość taktów */
-	    int	 _tic;	      /* ilość taktów na wykonaną instrukcję */
+        long int cycles;  /* przechowuje ilość cykli  */
+        long int ticks;   /* przechowuje ilość taktów */
+        int	 _tic;	      /* ilość taktów na wykonaną instrukcję */
 /* parametry wywołania instrukcji */
-	    uchar p0,p1,p2;
-	    uchar b, c, t;
-	    uchar a, o, x;
+        uchar p0,p1,p2;
+        uchar b, c, t;
+        uchar a, o, x;
 /* zmienne tymczasowe */
-	    uchar dd0, dd1, dd3;
-	    ushort dd2;
+        uchar dd0, dd1, dd3;
+        ushort dd2;
 /* dodatkowe informacje dla debuggera i flagi sterujące */
-	    uchar  int_off;	 	/* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
-	    uchar  jmp_off;	 	/* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
-	    uchar  dbg_on;	 	/* załączenie debuggera */
-	    uchar  cpu_off;	 	/* ustawienie ignoruje wywołanie funkcji CPU */
-	    uchar  djnz;       		/* cpu wykonuje instrukcję DJNZ */
-	    ushort adrs;         	/* wartość PC pod którą zaczyna się instrukcja */
-	    uchar cmd_type;	 	/* typ instrukcji */
-	    uchar reg80;	 	/* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
-	    uchar reg81;	 	/* rejestr 8 bit   drugi parametr */
-    	    uchar regx0;	 	/* rejestr 16 bit  pierwszy parametr */
-	    uchar regx1;	 	/* rejestr 16 bit  drugi parametr */
-	    uchar exit;			/* powoduje wyjście z pętli */
-	    char  dd;		 	/* stała 8 bitowa  */
-	    ushort nn;		 	/* stała 16 bitowa */
-	    uchar  last_in_data;	/* ostatnio pobrana dana z portu */
-	    ushort last_in_addr;	/* ostatni adres pobierania danych z portu */
-	    uchar  last_out_data;	/* ostatnio wpisana dana do portu */
-	    ushort last_out_addr;	/* ostatni adres odwołania do portu wyjściowego */
-	    ushort last_mem_rd;		/* ostatnio odczytana dana z pamięci */
-	    ushort last_mem_wr;		/* ostatnio zapisana dana do pamięci */
-	    unsigned int nested;	/* wskazuje zagłębienie podprogramów */
-	    int    force_in;		/* jeśli > 0 wartość będzie odczytana przez IN */
-	}; /*koniec struktury */
-	char z80_data[Z80_DATA_SIZE];   /* maksymalny dopuszczalny rozmiar pola danych */
+        uchar  int_off;	 	/* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
+        uchar  jmp_off;	 	/* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
+        uchar  dbg_on;	 	/* załączenie debuggera */
+        uchar  cpu_off;	 	/* ustawienie ignoruje wywołanie funkcji CPU */
+        uchar  djnz;       		/* cpu wykonuje instrukcję DJNZ */
+        ushort adrs;         	/* wartość PC pod którą zaczyna się instrukcja */
+        uchar cmd_type;	 	/* typ instrukcji */
+        uchar reg80;	 	/* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
+        uchar reg81;	 	/* rejestr 8 bit   drugi parametr */
+            uchar regx0;	 	/* rejestr 16 bit  pierwszy parametr */
+        uchar regx1;	 	/* rejestr 16 bit  drugi parametr */
+        uchar exit;			/* powoduje wyjście z pętli */
+        char  dd;		 	/* stała 8 bitowa  */
+        ushort nn;		 	/* stała 16 bitowa */
+        uchar  last_in_data;	/* ostatnio pobrana dana z portu */
+        ushort last_in_addr;	/* ostatni adres pobierania danych z portu */
+        uchar  last_out_data;	/* ostatnio wpisana dana do portu */
+        ushort last_out_addr;	/* ostatni adres odwołania do portu wyjściowego */
+        ushort last_mem_rd;		/* ostatnio odczytana dana z pamięci */
+        ushort last_mem_wr;		/* ostatnio zapisana dana do pamięci */
+        unsigned int nested;	/* wskazuje zagłębienie podprogramów */
+	    int    force_in;		/* jesli > 0 wartośc będzie odczytana przez IN */
+    }; /*koniec struktury */
+    char z80_data[Z80_DATA_SIZE];   /* maksymalny dopuszczalny rozmiar pola danych */
     }; /* koniec unii */
 #ifdef __cplusplus
 public:
@@ -203,7 +203,7 @@ enum
 };
 
 #define TAB_REGS8_NME { "A","F","B","C","D","E","H","L","XH","XL"\
-			,"YH","YL","I","R","(HL)","(IX)","(IY)","(SP)","(BC)","(DE)" }
+            ,"YH","YL","I","R","(HL)","(IX)","(IY)","(SP)","(BC)","(DE)" }
 #define TAB_REGSX_NME { "AF","BC","DE","HL","IX","IY","SP","PC","AF","AF'" }
 #define TAB_RCND_NME  { "","NZ","Z","NC","C","PO","PE","P","M" }
 #define DEB_DEC_TABL	\

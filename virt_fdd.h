@@ -111,11 +111,11 @@ enum{
     2 - dla akcji VFDD_LOAD
 */
 extern int vfdd_dsk_floppy(
-	vfdd_disk*,
-	char action,
-	char parm0,	/* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
-	char parm1,	/* sektor  | 2-typ emulacji */
-	char parm2,	/* głowica */
+    vfdd_disk*,
+    char action,
+    char parm0,	/* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
+    char parm1,	/* sektor  | 2-typ emulacji */
+    char parm2,	/* głowica */
         char *path	/* ścieżka do pliku/katalogu */
     );
 
@@ -123,10 +123,10 @@ extern int vfdd_dsk_floppy(
     Emulacja napędu
 */
 extern int vfdd_drive(
-	void *ptr, 	/* wskaźnik nadrzędnej struktury danych */
-	void *dsk, 	/* vfdd_disk */
-	uchar action, 	/* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
-	uchar wdata	/* dana dla operacji zapisu */
+    void *ptr, 	/* wskaźnik nadrzędnej struktury danych */
+    void *dsk, 	/* vfdd_disk */
+    uchar action, 	/* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
+    uchar wdata	/* dana dla operacji zapisu */
     );
 
 #endif

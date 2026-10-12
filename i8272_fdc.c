@@ -113,15 +113,15 @@ void i8272_tc(i8272 *fdc, uchar tc)
 {
     if(!tc) return;
     if(!fdc->rw){
-	fdc->phase  = FDC_COMMAND;
-	fdc->opcode = (void*)0;
-	fdc->icntr  = 0;
-	fdc->msr &= ~(FDC_DIO | FDC_RQM);
-	fdc->msr |= FDC_RQM;
-	fdc->int_line=0;
+        fdc->phase  = FDC_COMMAND;
+        fdc->opcode = (void*)0;
+        fdc->icntr  = 0;
+        fdc->msr &= ~(FDC_DIO | FDC_RQM);
+        fdc->msr |= FDC_RQM;
+        fdc->int_line=0;
     } else {
-	fdc->rw = 2;
-	fdc->msr |= FDC_RQM | FDC_DIO;
+        fdc->rw = 2;
+        fdc->msr |= FDC_RQM | FDC_DIO;
     }
     msg_printf(MSG_NVERB_MSG,"FDC i8272A TC received\n");
 }
@@ -139,8 +139,8 @@ uchar i8272_in(i8272 *fdc, uchar a0)
 
     fdc->int_line=0;
     if(!(a0 & 1)){
-	msg_printf(MSG_UNVERB_MSG,"FDC IN MSR %x\n", (unsigned char)fdc->msr);
-	return fdc->msr;
+        msg_printf(MSG_UNVERB_MSG,"FDC IN MSR %x\n", (unsigned char)fdc->msr);
+        return fdc->msr;
     }
 
     if((fdc->msr & (FDC_RQM | FDC_DIO)) != (FDC_RQM | FDC_DIO)) return 0xff;
@@ -149,8 +149,8 @@ uchar i8272_in(i8272 *fdc, uchar a0)
     tmp = fdc->data;
     if(!fdc->rw)
     {
-	fdc->msr &= ~FDC_RQM;
-	i8272_result(fdc, FDC_IN_DATA_1);
+        fdc->msr &= ~FDC_RQM;
+        i8272_result(fdc, FDC_IN_DATA_1);
     }
     msg_printf(MSG_UNVERB_MSG,"FDC IN DATA %x\n", (unsigned char)tmp);
     return tmp;
@@ -161,17 +161,17 @@ void i8272_out(i8272 *fdc, unsigned char address_bit, unsigned char data)
 {
     fdc->int_line=0;
     if(!(address_bit & 1)){
-	msg_printf(MSG_ERROR, "FDC Illegal port operation! \n");
-	return;
+        msg_printf(MSG_ERROR, "FDC Illegal port operation! \n");
+        return;
     }
     if((fdc->msr & FDC_RQM) != FDC_RQM)  return;
     if(!fdc->rw) i8272_command(fdc, FDC_OUT_DATA_0);
     fdc->data = data;
     fdc->msr &= ~FDC_RQM;
     if(!fdc->rw)
-	i8272_command(fdc, FDC_OUT_DATA_1);
+        i8272_command(fdc, FDC_OUT_DATA_1);
     else
-	i8272_call(fdc, FDC_OUT_DATA_1);
+        i8272_call(fdc, FDC_OUT_DATA_1);
     msg_printf(MSG_UNVERB_MSG,"FDC OUT PORT %x\n", data);
 }
 
@@ -199,27 +199,27 @@ void i8272_command(i8272 *fdc,  char plc)
 {
     if(fdc->phase != FDC_COMMAND) return;
     if(plc == FDC_OUT_DATA_1){
-	if(!fdc->opcode){	/* pobranie pierwszego bajtu rozkazu */
-	    fdc->opcode = (i8272opc *)&opcodes_tabl[fdc->data & 0x1f];
-	    fdc->idx_0 = 0;
-	    fdc->rw = 0;
-	    fdc->err = 0;
-	    fdc->msr |= FDC_CB; /* ? */
-	    fdc->idx_1 = fdc->opcode->cmd_len;
-	}
+    if(!fdc->opcode){	/* pobranie pierwszego bajtu rozkazu */
+        fdc->opcode = (i8272opc *)&opcodes_tabl[fdc->data & 0x1f];
+        fdc->idx_0 = 0;
+        fdc->rw = 0;
+        fdc->err = 0;
+        fdc->msr |= FDC_CB; /* ? */
+        fdc->idx_1 = fdc->opcode->cmd_len;
+    }
 
-	fdc->buffer[fdc->idx_0++] = fdc->data;
-	if(fdc->idx_0 == fdc->idx_1){
-	    fdc->phase = FDC_EXEC;
-	    fdc->msr &= ~FDC_RQM;
-	    fdc->icntr = 0;
-	    fdc->rw = 0;
-	    msg_printf(MSG_VERB_MSG,"FDC execute command %s\n",fdc->opcode->name);
-	    fdc->opcode->command(fdc);
-	    return;
-	}
-	fdc->msr |= FDC_RQM;
-	fdc->msr &= ~FDC_DIO;
+    fdc->buffer[fdc->idx_0++] = fdc->data;
+    if(fdc->idx_0 == fdc->idx_1){
+        fdc->phase = FDC_EXEC;
+        fdc->msr &= ~FDC_RQM;
+        fdc->icntr = 0;
+        fdc->rw = 0;
+        msg_printf(MSG_VERB_MSG,"FDC execute command %s\n",fdc->opcode->name);
+        fdc->opcode->command(fdc);
+        return;
+    }
+    fdc->msr |= FDC_RQM;
+    fdc->msr &= ~FDC_DIO;
     }
 }
 
@@ -227,13 +227,13 @@ void i8272_command(i8272 *fdc,  char plc)
 void i8272_result(i8272 *fdc, char plc)
 {
     if(fdc->rw && fdc->opcode && fdc->phase == FDC_EXEC){
-	fdc->opcode->command(fdc);
-	return;
+        fdc->opcode->command(fdc);
+        return;
     }
     if(plc != FDC_CMD && plc != FDC_IN_DATA_1) return;
     if(fdc->idx_0 == fdc->idx_1){
-	i8272_end_cmd(fdc);
-	return;
+        i8272_end_cmd(fdc);
+        return;
     }
     fdc->data = fdc->buffer[(fdc->idx_0++) & 0x0f];
     fdc->msr |= FDC_RQM | FDC_DIO;
@@ -253,7 +253,7 @@ void i8272_rdata(i8272 *fdc, char mode)
     fdc->st3 = FDC_RDY;
 /* odczyt bajtu z FDD */
     if(!fdc->err)
-	tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0x00);
+        tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0x00);
     fdc->data = tmp;
     if(tmp < 0) fdc->err = tmp;
 /* reakcja na brak dysku */
@@ -270,8 +270,8 @@ void i8272_rdata(i8272 *fdc, char mode)
     fdc->sbyte++;
 /* jeśli odczyt kolejnego sektora zeruj licznik bajtów i zwiększ nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
-	fdc->sbyte = 0;
-	fdc->rec++;
+        fdc->sbyte = 0;
+        fdc->rec++;
     }
 /*
   Przypuszczam, że po EOT zerowany jest licznik sektorów, ale słowa brak o tym w dokumentacji i8272.
@@ -282,26 +282,26 @@ void i8272_rdata(i8272 *fdc, char mode)
 void i8272_read_data(i8272 *fdc, char mode)
 {
     if(fdc->rw == 1){
-	i8272_rdata(fdc, mode);
-	return;
+        i8272_rdata(fdc, mode);
+        return;
     }
 
     if(fdc->rw == 2){
-	fdc->idx_0 = 0;
-	fdc->idx_1 = fdc->opcode->res_len;
-	fdc->opcode = (void *)0;
-	fdc->buffer[0] = fdc->st0;
-	fdc->buffer[1] = fdc->st1;
-	fdc->buffer[2] = fdc->st2;
-	fdc->buffer[3] = fdc->cn;
-	fdc->buffer[4] = fdc->ha;
-	fdc->buffer[5] = fdc->rec;
-	fdc->buffer[6] = fdc->nb;
-	fdc->phase = FDC_RESULT;
-	fdc->rw = 0;
-	i8272_result(fdc, FDC_CMD);
-	i8272_int(fdc, FDC_IC_IC);
-	return;
+        fdc->idx_0 = 0;
+        fdc->idx_1 = fdc->opcode->res_len;
+        fdc->opcode = (void *)0;
+        fdc->buffer[0] = fdc->st0;
+        fdc->buffer[1] = fdc->st1;
+        fdc->buffer[2] = fdc->st2;
+        fdc->buffer[3] = fdc->cn;
+        fdc->buffer[4] = fdc->ha;
+        fdc->buffer[5] = fdc->rec;
+        fdc->buffer[6] = fdc->nb;
+        fdc->phase = FDC_RESULT;
+        fdc->rw = 0;
+        i8272_result(fdc, FDC_CMD);
+        i8272_int(fdc, FDC_IC_IC);
+        return;
     }
 
     if(fdc->phase != FDC_EXEC) return;
@@ -329,7 +329,7 @@ void i8272_read_data(i8272 *fdc, char mode)
     fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
 
     msg_printf(MSG_NVERB_MSG,"D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
-	fdc->ds, fdc->cn,fdc->ha, fdc->rec,fdc->nb,fdc->eot,fdc->gpl,fdc->dtl );
+        fdc->ds, fdc->cn,fdc->ha, fdc->rec,fdc->nb,fdc->eot,fdc->gpl,fdc->dtl );
 }
 
 
@@ -428,7 +428,7 @@ void i8272_wdata(i8272 *fdc, char mode)
     fdc->st2 = 0;
     fdc->st3 = FDC_RDY;
     if(!fdc->err)
-	fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_WRITE_TRACK, fdc->data);
+        fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_WRITE_TRACK, fdc->data);
 /* reakcja na blokadę zapisu */
     if(fdc->err == FDD_ERR_WPROT){
         fdc->st0 = FDC_NR | (fdc->ds & 0x03) | 0x40;
@@ -451,8 +451,8 @@ void i8272_wdata(i8272 *fdc, char mode)
     fdc->sbyte++;
 /* jeśli odczyt kolejnego sektora zeruj licznik bajtów i zwiększ nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
-	fdc->sbyte = 0;
-	fdc->rec++;
+        fdc->sbyte = 0;
+        fdc->rec++;
     }
 
     if(fdc->rec > fdc->eot) fdc->rec = 1;
@@ -461,26 +461,26 @@ void i8272_wdata(i8272 *fdc, char mode)
 void i8272_write_data(i8272 *fdc, char mode)
 {
     if(fdc->rw == 1){
-	i8272_wdata(fdc, mode);
-	return;
+        i8272_wdata(fdc, mode);
+        return;
     }
 
     if(fdc->rw == 2){
-	fdc->idx_0 = 0;
-	fdc->idx_1 = fdc->opcode->res_len;
-	fdc->opcode = (void *)0;
-	fdc->buffer[0] = fdc->st0;
-	fdc->buffer[1] = fdc->st1;
-	fdc->buffer[2] = fdc->st2;
-	fdc->buffer[3] = fdc->cn;
-	fdc->buffer[4] = fdc->ha;
-	fdc->buffer[5] = fdc->rec;
-	fdc->buffer[6] = fdc->nb;
-	fdc->phase = FDC_RESULT;
-	fdc->rw = 0;
-	i8272_result(fdc, FDC_CMD);
-	i8272_int(fdc, FDC_IC_IC);
-	return;
+        fdc->idx_0 = 0;
+        fdc->idx_1 = fdc->opcode->res_len;
+        fdc->opcode = (void *)0;
+        fdc->buffer[0] = fdc->st0;
+        fdc->buffer[1] = fdc->st1;
+        fdc->buffer[2] = fdc->st2;
+        fdc->buffer[3] = fdc->cn;
+        fdc->buffer[4] = fdc->ha;
+        fdc->buffer[5] = fdc->rec;
+        fdc->buffer[6] = fdc->nb;
+        fdc->phase = FDC_RESULT;
+        fdc->rw = 0;
+        i8272_result(fdc, FDC_CMD);
+        i8272_int(fdc, FDC_IC_IC);
+        return;
     }
 
     if(fdc->phase != FDC_EXEC) return;
@@ -507,7 +507,7 @@ void i8272_write_data(i8272 *fdc, char mode)
     fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
 
     msg_printf(MSG_NVERB_MSG,"D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
-	fdc->ds, fdc->cn,fdc->ha, fdc->rec,fdc->nb,fdc->eot,fdc->gpl,fdc->dtl);
+        fdc->ds, fdc->cn,fdc->ha, fdc->rec,fdc->nb,fdc->eot,fdc->gpl,fdc->dtl);
 }
 
 /************************************************************************************************/
