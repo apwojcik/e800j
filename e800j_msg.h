@@ -22,27 +22,27 @@
 #define _e800j_msg_h_
 
 /* 
- zmienna globalna definiuj±ca gdzie komunikaty maj± zostaæ wysy³ane
- warto¶æ 0 (domy¶lna) to stdout
+ zmienna globalna definiujÄ…ca gdzie komunikaty majÄ… zostaÄ‡ wysyÅ‚ane
+ wartoÅ›Ä‡ 0 (domyÅ›lna) to stdout
 */
 extern char msg_stream;
 
 /*
- zmienna globalna definiuj±ca poziom wysy³anych komunikatów
- domysln± warto¶ci± jest 0, czyli jedynie b³êdy krytyczne bêd± wysy³ane
+ zmienna globalna definiujÄ…ca poziom wysyÅ‚anych komunikatÃ³w
+ domyslnÄ… wartoÅ›ciÄ… jest 0, czyli jedynie bÅ‚Ä™dy krytyczne bÄ™dÄ… wysyÅ‚ane
 */
 extern char msg_level;
 
 /*
-    wys³anie komunikatu
+    wysÅ‚anie komunikatu
 */
 extern void msg_printf(const char level, const char *fmt, ...);
 
-/* poziomy komunikatów */
+/* poziomy komunikatÃ³w */
 enum{
-    MSG_CRITICAL_ERROR,	/* B³êdy krytyczne dla dzia³ania programu */
-    MSG_ERROR,		/* B³êdy, które pozwalaj± emulacji mimo to dzia³aæ dalej */
-    MSG_WARN,		/* Ostrze¿enia */
+    MSG_CRITICAL_ERROR,	/* BÅ‚Ä™dy krytyczne dla dziaÅ‚ania programu */
+    MSG_ERROR,		/* BÅ‚Ä™dy, ktÃ³re pozwalajÄ… emulacji mimo to dziaÅ‚aÄ‡ dalej */
+    MSG_WARN,		/* OstrzeÅ¼enia */
     MSG_MSG,		/* Komunikaty poziom 0 */
     MSG_VERB_MSG,	/* Komunikaty poziom 1 */
     MSG_NVERB_MSG,	/* Komunikaty poziom 2 */

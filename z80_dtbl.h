@@ -21,11 +21,11 @@
 /*
     z80dectabl.h
 
-    Tablice sta³ych do dekodowania instrukcji, obliczania znaczników i detektora warunku
+    Tablice staÅ‚ych do dekodowania instrukcji, obliczania znacznikÃ³w i detektora warunku
 
     
-    Z80_DECODE_TABLE - tablica dekoduj±ca instrukcje CPU Z80, sk³ada siê z 9 bloków po 256 struktur,
-    ka¿dy blok dekoduje instrukcje wg kombinacji wszystkich prefiksów:
+    Z80_DECODE_TABLE - tablica dekodujÄ…ca instrukcje CPU Z80, skÅ‚ada siÄ™ z 9 blokÃ³w po 256 struktur,
+    kaÅ¼dy blok dekoduje instrukcje wg kombinacji wszystkich prefiksÃ³w:
         CB ED DD FD
     0 - 0  0  0  0
     1 - 0  0  1  0
@@ -37,10 +37,10 @@
     7 - 0  0  1  0
     8 - 0  0  0  1
 
-    Na ka¿d± strukturê przypada 10 danych w kolejno¶ci:
-    0 - wska¼nik do funkcji obs³ugi instrukcji
+    Na kaÅ¼dÄ… strukturÄ™ przypada 10 danych w kolejnoÅ›ci:
+    0 - wskaÅºnik do funkcji obsÅ‚ugi instrukcji
     1,2,3 - parametry instrukcji (rejestry, ofsety itp) 
-    4 - ilo¶æ bajtów / instrukcjê
+    4 - iloÅ›Ä‡ bajtÃ³w / instrukcjÄ™
     5 - cykle
     6 - takty
     7 - maska AND (pozytywna, tzn 1 na pozycji zeruje bit)
@@ -48,21 +48,21 @@
     9 - maska zezwolenia modyfikacji
 
 
-    Z80_PARITY_TABLE - tablica zwraca informacjê o parzysto¶ci liczby
-    Z80_CARRY4_TABLE - przeniesienia przy dodawaniu argumentów 4 bitowych (5x4 bity)
-    Z80_CARRY3_TABLE - przeniesienia przy dodawaniu argumentów 3 bitowych (4x3 bity)
+    Z80_PARITY_TABLE - tablica zwraca informacjÄ™ o parzystoÅ›ci liczby
+    Z80_CARRY4_TABLE - przeniesienia przy dodawaniu argumentÃ³w 4 bitowych (5x4 bity)
+    Z80_CARRY3_TABLE - przeniesienia przy dodawaniu argumentÃ³w 3 bitowych (4x3 bity)
     Z80_COND_MASK - detektor warunku, maska bitowa
     Z80_COND_PLRT - detektor warunku, polaryzacja
 
  
-    Wyst±pienie warunku jest liczone w nastêpuj±cy sposób:
+    WystÄ…pienie warunku jest liczone w nastÄ™pujÄ…cy sposÃ³b:
     
     war = (cond_mask[cond] & (Fr | F5)) ^ cond_plrt[cond]
     gdzie:
     war - warunek, typu boolean
     cond - numer warunku
     Fr - rejestr F
-    F5 - bit 5, ustawiany jest przy te¶cie dla warunku 0, aby zawsze by³ spe³niony
+    F5 - bit 5, ustawiany jest przy teÅ›cie dla warunku 0, aby zawsze byÅ‚ speÅ‚niony
     
 */
 
@@ -123,7 +123,7 @@
 #define _LDL_H		_LDR_W(L,H)
 #define _LDL_L		_LDR_W(L,L)
 #define _LDL_A		_LDR_W(L,A)
-/* nieoficjalne przeslania */
+/* nieoficjalne przesÅ‚ania */
 #define _LDXL_B		_LDR_X(XL,B)
 #define _LDXL_C		_LDR_X(XL,C)
 #define _LDXL_D		_LDR_X(XL,D)
@@ -601,7 +601,7 @@
 #define _DECIX		{ DECX, RIX, RNR,  DEC,  0x02, 0x02, 0x0a,     0x00, 0x00, 0x00 }
 #define _DECIY		{ DECX, RIY, RNR,  DEC,  0x02, 0x02, 0x0a,     0x00, 0x00, 0x00 }
 
-/***********************   Rozkazy dzialan na bitach   **********************************/
+/***********************   Rozkazy dziaÅ‚aÅ„ na bitach   **********************************/
 /*         		    OC,   D,  R0,   R1,    LC,   CC,   TC,     AM,   OM,   CM    */
 #define _BITR(bit,r)	{ BIT,1 << bit,R##r,  bit,  0x02, 0x02, 0x08,     FN, FH, FH+FN+FZ+FP }
 #define _BITR_x(bit,r)	{ BIT,1 << bit,R##r,  bit,  0x03, 0x03, 0x0b,     FN, FH, FH+FN+FZ+FP }
@@ -1107,7 +1107,7 @@
 #define _RLD	{ RLD,  RA,  RA,  RNR,  0x02, 0x05, 0x18,     FN+FH, 0x00, 0xfe }
 #define _RRD	{ RRD,  RA,  RA,  RNR,  0x02, 0x05, 0x18,     FN+FH, 0x00, 0xfe }
 
-/*************************** Instrukcje skoków *****************************************/
+/*************************** Instrukcje skokÃ³w *****************************************/
 
 #define _JP	{ JP,  CDW,  NOC, RNR,  0x03, 0x03, 0x0a,     0x00, 0x00, 0x00 }
 #define _JPNZ	{ JP,  CDW,  NZ,  RNR,  0x03, 0x03, 0x0a,     0x00, 0x00, 0x00 }
@@ -1131,7 +1131,7 @@
 
 #define _DJNZ	{ DJNZ,RNR, RNR,  RNR,  0x02, 0x03, 0x0d,     0x00, 0x00, 0x00 }
 
-/*************************** Instrukcje podprogramów *****************************************/
+/*************************** Instrukcje podprogramÃ³w *****************************************/
 
 #define _CALL	{ CALL,  CDW,  NOC, RNR,  0x03, 0x05, 0x11,     0x00, 0x00, 0x00 }
 #define _CALLNZ	{ CALL,  CDW,  NZ,  RNR,  0x03, 0x05, 0x11,     0x00, 0x00, 0x00 }
@@ -1172,7 +1172,7 @@
 
 /**************************************************************************************
 
- elementy tablicy dekoduj±cej
+ elementy tablicy dekodujÄ…cej
 
 */
 
@@ -1421,7 +1421,7 @@
 
 /************************************************************************************************/
 
-/* g³ówna tabela dekodowania instrukcji */	    
+/* gÅ‚Ã³wna tabela dekodowania instrukcji */	    
 #define Z80_DECODE_TABLE { \
 			    PRE_00, PRE_DD,    PRE_FD,   \
 			    PRE_CB, PRE_CB_DD, PRE_CB_FD,\
@@ -1449,14 +1449,14 @@
 			 }
 
 /*
-    Tablica generacji przeniesieñ i przepe³nieñ.
-    indeks tablicy stanowi 6 bitów, bêd±cych kopiami bitów trecich i siódmych argumentów i wyniku:
+    Tablica generacji przeniesieÅ„ i przepeÅ‚nieÅ„.
+    indeks tablicy stanowi 6 bitÃ³w, bÄ™dÄ…cych kopiami bitÃ³w trecich i siÃ³dmych argumentÃ³w i wyniku:
     
     5..0 -> r7,a7,b7,r3,a3,b3
     
-    Warto¶ci± zwracan± jest maska OR bitowa na znacznikach
+    WartoÅ›ciÄ… zwracanÄ… jest maska OR bitowa na znacznikach
     
-    tablica dla dodawania i odejmowania jest ró¿na
+    tablica dla dodawania i odejmowania jest rÃ³Å¼na
 */
 #define Z80_ADD_CARRY_TBL { \
 			0x00,0x10,0x10,0x10,0x00,0x00,0x00,0x10,\
@@ -1480,7 +1480,7 @@
 			0x01,0x01,0x11,0x01,0x11,0x01,0x11,0x11 \
 		      }
 
-/* maska dla warunków testu rejestru flagowego */
+/* maska dla warunkÃ³w testu rejestru flagowego */
 #define Z80_COND_MASK { 0xff, FZ,  FZ, FC, FC, FP, FP, FS, FS }
 /* maska negacji warunku */
 #define Z80_COND_PLRT { 0x00, FZ, 0x00, FC, 0x00, FP, 0x00, FS, 0x00 }

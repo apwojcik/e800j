@@ -22,13 +22,13 @@
 #include "z80_cpu.h"
 #include "e800j.h"
 
-/* tablica mapowania pami阠i - obraz pami阠i PROM 'MEM' Elwro 800 junior */
+/* tablica mapowania pami臋ci - obraz pami臋ci PROM 'MEM' Elwro 800 junior */
 unsigned char prom_mem[512] = PROM_MEM;
 
 
 /*********************************************************************************************/
 /*                                   ZX SPECTRUM 48K                                         */
-/*                                         PAMI势                                            */
+/*                                         PAMI臉膯                                            */
 /*********************************************************************************************/
 
 uchar mem_zx48_read(void *z, ushort addr)
@@ -44,7 +44,7 @@ void mem_zx48_write(void *z, ushort addr, uchar data)
 
 /*********************************************************************************************/
 /*                                   ELWRO 800 JUNIOR                                        */
-/*                                         PAMI势                                            */
+/*                                         PAMI臉膯                                            */
 /*********************************************************************************************/
 
 uchar mem_e800j_read(void *z, ushort addr)
@@ -57,8 +57,8 @@ uchar mem_e800j_read(void *z, ushort addr)
     if(bank & 0x01) return el->rom[ 0x0000 + romaddr ];  /* BAS0 */
     if(bank & 0x02) return el->rom[ 0x2000 + romaddr ];  /* BAS1 */
     if(bank & 0x10) return el->rom[ 0x4000 + romaddr ];  /* BOOT */
-    if(bank & 0x08) return el->ram[ addr ]; // pami赕 RAM
-    if(bank & 0x04) return el->ram[ addr ]; // pami赕 atrybut體
+    if(bank & 0x08) return el->ram[ addr ]; // pami臋膰 RAM
+    if(bank & 0x04) return el->ram[ addr ]; // pami臋膰 atrybut贸w
 
     return 0xff;
 }
@@ -70,7 +70,7 @@ void mem_e800j_write(void *z, ushort addr, uchar data)
 
 /*********************************************************************************************/
 /*                                   ZX SPECTRUM 128K                                        */
-/*                                         PAMI势                                            */
+/*                                         PAMI臉膯                                            */
 /*********************************************************************************************/
 
 uchar mem_zx128_read(void *z, ushort addr)

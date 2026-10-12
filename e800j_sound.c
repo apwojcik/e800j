@@ -49,7 +49,7 @@ void snd_init_rbuffer(sound *w, int lbsize)
     w->old_r373=0;
 }
 
-/* kopiuje len bajtÛw z bufora rbuffer i zwraca ilo∂Ê skopiowanych bajtÛw */
+/* kopiuje len bajt√≥w z bufora rbuffer i zwraca ilo≈õƒá skopiowanych bajt√≥w */
 char snd_rbuffer_pop(sound *w)
 {
     char a;
@@ -61,21 +61,21 @@ char snd_rbuffer_pop(sound *w)
 
 void snd_rbuffer_push(sound *w, char data)
 {
-    /* detekcja przepe≥nienia bufora */
+    /* detekcja przepe≈Çnienia bufora */
     if( ((w->head == w->size) && (w->tail == 0)) || ( w->head + 1 == w->tail )){
 	if(!w->ovr) printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
 	w->ovr=1;
 	return;
     }
-    w->rbuffer[w->head] = data;      /* wk≥adam dan± do bufora    */
-    if(w->head < w->size) w->head++; /* je∂li nie dosz≥o do koÒca bufora, to przesuÒ wskaºnik head */
-	else w->head = 0;            /* inaczej zawiÒ na pocz±tek */
+    w->rbuffer[w->head] = data;      /* wk≈Çadam danƒÖ do bufora    */
+    if(w->head < w->size) w->head++; /* je≈õli nie dosz≈Ço do ko≈Ñca bufora, to przesu≈Ñ wska≈∫nik head */
+	else w->head = 0;            /* inaczej zawi≈Ñ na poczƒÖtek */
 }
 
 void snd_beeper_callback(void *ud, Uint8 *stream, int len)
 {
     int i;
-    /* kopiowanie len bajtÛw z bufora ko≥owego do liniowego */
+    /* kopiowanie len bajt√≥w z bufora ko≈Çowego do liniowego */
     for(i=0; i < len; i++) ((sound*)ud)->lbuffer[i] = snd_rbuffer_pop(ud);
     /* skopiowanie bufora liniowego do bufora karty */    
     SDL_MixAudio(stream, ((sound*)ud)->lbuffer, len, ((sound*)ud)->volume);
@@ -90,9 +90,9 @@ void snd_init(void *elw)
     if(ww->nosound) return;
     printf("(II)Sound init\n");
 
-    spec.freq     = ww->freq;	/* ilo∂Ê sampli/sec */
+    spec.freq     = ww->freq;	/* ilo≈õƒá sampli/sec */
     spec.format   = AUDIO_U8;	/* format danych    */
-    spec.channels = ww->chn;	/* ilo∂Ê kana≥Ûw    */
+    spec.channels = ww->chn;	/* ilo≈õƒá kana≈Ç√≥w    */
     spec.samples  = ww->len;	/* rozmiar bufora w samplach */
     spec.callback = snd_beeper_callback;
     spec.userdata = ww; /* bufor danych */
@@ -115,9 +115,9 @@ void snd_beeper(char r373, z80 *z)
     double period, data;
 
     if(ww->nosound) return;    
-    if(!((r373 ^ ww->old_r373) & 0x10)) return; /* jesli nie nast±pi≥a zmiana bitu 4 portu wyjdº */
+    if(!((r373 ^ ww->old_r373) & 0x10)) return; /* je≈õli nie nastƒÖpi≈Ça zmiana bitu 4 portu wyjd≈∫ */
     ww->old_r373 = r373;
-    period = (z->ticks - ww->old_ticks) / (float)ww->scale; /* ile up≥ynÍ≥o przedzia≥Ûw 20ms od zmiany */
+    period = (z->ticks - ww->old_ticks) / (float)ww->scale; /* ile up≈Çynƒô≈Ço przedzia≈Ç√≥w 20ms od zmiany */
     smpls = period * 256;
     ww->old_ticks = z->ticks;
 

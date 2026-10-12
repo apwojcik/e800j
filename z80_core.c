@@ -20,7 +20,7 @@
 
 /*
     z80_core.c
-    Implementacja realizacji emulacji rozkazów
+    Implementacja realizacji emulacji rozkazÃ³w
 
 */
 #include "z80_cpu.h"
@@ -86,7 +86,7 @@
 	    if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z80_fetch_byte(z));\
 	    b = z->mem_rd(z,z->dd2);
 
-/* tablice sta³ych */
+/* tablice staÅ‚ych */
 static const z80dt __z80_decoder__[]  = Z80_DECODE_TABLE;
 static const uchar __z80_parity__[]   = Z80_PARITY_TABLE;
 static const uchar __z80_cond_mask[]  = Z80_COND_MASK;
@@ -1658,7 +1658,7 @@ void z80_loop(z80 *z, int cnt, int call, void (*callback)(z80*,void*), void *par
 		if(Z80_CPU(z)iff1){
 		    Z80_CPU(z)intr=0;
 	    	    switch(Z80_CPU(z)imode){
-			case 0: Z80_CPU(z)irupt=1; break; /* nastêpna instrukcja bêdzie pobrana z magistrali */
+			case 0: Z80_CPU(z)irupt=1; break; /* nastÄ™pna instrukcja bÄ™dzie pobrana z magistrali */
 			case 1: z80_icall(Z80_PTR,0x38); break;
 			case 2: z80_icall(Z80_PTR, z80_mem_rword(
 				Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff))); 
@@ -1718,7 +1718,7 @@ void z80_step(z80 *z)
 		if(Z80_CPU(z)iff1){
 		    Z80_CPU(z)intr=0;
 	    	    switch(Z80_CPU(z)imode){
-			case 0: Z80_CPU(z)irupt=1; break; /* nastêpna instrukcja bêdzie pobrana z magistrali */
+			case 0: Z80_CPU(z)irupt=1; break; /* nastÄ™pna instrukcja bÄ™dzie pobrana z magistrali */
 			case 1: z80_icall(Z80_PTR,0x38); break;
 			case 2: z80_icall(Z80_PTR, z80_mem_rword(
 				Z80_PTR,(ushort)(*Z80_CPU(z)I_r << 8) | (Z80_CPU(z)bus[0] & 0xff))); 

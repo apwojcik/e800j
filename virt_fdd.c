@@ -50,12 +50,12 @@ int vfdd_seek_track(vfdd_disk *dsk, int trk, char hd)
     if(fseek(dsk->f, 0x0L, SEEK_END)) return 1;
     fsize = ftell(dsk->f);
     
-    /* ustawienie na ¶cie¿kê 00 */
+    /* ustawienie na Å›cieÅ¼kÄ™ 00 */
     if(fseek(dsk->f, 0x100, SEEK_SET)) return 1;
     dsk->sbyte = 0;    
     dsk->seek = 0x100;
     while(!feof(dsk->f)){
-    /* odczyt nag³ówka ¶ciezki */
+    /* odczyt nagÅ‚Ã³wka Å›cieÅ¼ki */
 	fread(&dsk->th,sizeof(vfdd_trk_hdr),1,dsk->f);
 	if(dsk->th.tr_nb == trk && dsk->th.hd_nb == hd) break;
 	dsk->seek = dsk->seek + (0x80 << dsk->th.bps) * dsk->th.spt + 0x100;
@@ -72,12 +72,12 @@ int vfdd_seek_sector(vfdd_disk *dsk, int trk, int sec, int hd)
 vfdd_seek_track(dsk,trk, hd);
     if(fseek(dsk->f, dsk->seek + sizeof(vfdd_trk_hdr), SEEK_SET)) return 1;
 
-    /* przeszukuje tablicê w poszukiwaniu w³a¶ciwego sektora */
+    /* przeszukuje tablicÄ™ w poszukiwaniu wÅ‚aÅ›ciwego sektora */
     for(i = 0; i < dsk->th.spt; i++){
 	if(feof(dsk->f)) return -3;
 	fread(&dsk->sh, sizeof(vfdd_sec_hdr), 1, dsk->f);
 	if(dsk->sh.tr_nb == trk && dsk->sh.sc_nb == sec && dsk->sh.hd_nb == hd){
-	    /* ustawia na poczatek danych sektora */
+	    /* ustawia na poczÄ…tek danych sektora */
 	    dsk->lbytes = (0x80 << dsk->th.bps);
 	    if(fseek(dsk->f, dsk->seek + 0x100 + dsk->lbytes * i, SEEK_SET)) return -3;
 	    dsk->sbyte = 0;

@@ -37,9 +37,9 @@ enum{
 typedef struct
 {
     char cond_type;	/* typ warunku    */
-    int  address;	/* warto¶æ adresu */
-    int  life;		/* ilo¶æ warunków  'czas ¿ycia warunku' */
-    void *next;		/* nastêpny warunek */
+    int  address;	/* wartoÅ›Ä‡ adresu */
+    int  life;		/* iloÅ›Ä‡ warunkÃ³w  'czas Å¼ycia warunku' */
+    void *next;		/* nastÄ™pny warunek */
 } dbg_bp;
 
 typedef struct
@@ -47,23 +47,23 @@ typedef struct
     char mach[MAX_BYTES]; 	/* kod maszynowy instrukcji */
     char cmdline[MAX_CMDCHR];
     char line[LINE_LEN]; 	/* bufor wyniku zdeasemblowanej linii */
-    int  len;  			/* d³ugo¶æ ³añcucha kodu maszynowego */
+    int  len;  			/* dÅ‚ugoÅ›Ä‡ Å‚aÅ„cucha kodu maszynowego */
     int  icnt; 			/* licznik instrukcji */
-    char console;   		/* w³±czenie konsoli */    
-    char deasm;			/* w³±czenie wy¶wietlania dekodowanej instr */
-    char noregs;		/* jesli ustawiony, nie wy¶wietla stanu rejestrów */
-    char trace;			/* flaga trybu ¶ledzenia */
+    char console;   		/* wÅ‚Ä…czenie konsoli */    
+    char deasm;			/* wÅ‚Ä…czenie wyÅ›wietlania dekodowanej instr */
+    char noregs;		/* jeÅ›li ustawiony, nie wyÅ›wietla stanu rejestrÃ³w */
+    char trace;			/* flaga trybu Å›ledzenia */
     void (*out)(char *);    	/* funkcja zwrotna do wyrzucania tekstu */
     char (*in)();
     z80  *z;
-/* warunek za³aczenia */
+/* warunek zaÅ‚Ä…czenia */
     char cond;
-/* wartosc za³aczenia */
+/* wartoÅ›Ä‡ zaÅ‚Ä…czenia */
     int addr;
-/* ilo¶æ instrukcji do wykonania */
+/* iloÅ›Ä‡ instrukcji do wykonania */
     int cntr;
     dbg_bp *bp; /* break pointy */
-/* adres przy wy¶wietlaniu mapy pamiêci */
+/* adres przy wyÅ›wietlaniu mapy pamiÄ™ci */
     int daddr;
     int dline;
 /* adres deasemblacji */    
@@ -77,24 +77,24 @@ enum{
 };
 
 /*
-    funkcja ³±cz±ca debugger z emulacj± CPU i inicjuj±ca debugger
-    komunikaty konsolowe I/O s± wyprowadzane domy¶lnie na stdin/stdout, chyba
-    ¿e zostanie u¿yta funkcja dbg_set_stream.
+    funkcja Å‚Ä…czÄ…ca debugger z emulacjÄ… CPU i inicjujÄ…ca debugger
+    komunikaty konsolowe I/O sÄ… wyprowadzane domyÅ›lnie na stdin/stdout, chyba
+    Å¼e zostanie uÅ¼yta funkcja dbg_set_stream.
 */
 extern void dbg_init(dbg *d, z80 *z, char debugg_on, char console_on);
 
 /*
-    przekierowanie strumienia komunikatów I/O
+    przekierowanie strumienia komunikatÃ³w I/O
 */
 extern void dbg_set_stream(dbg *d, char (*s_in)(void), void (*s_out)(char *));
 
 /*
-    w³±czenie/wy³±czenie debuggera
+    wÅ‚Ä…czenie/wyÅ‚Ä…czenie debuggera
 */
 extern void dbg_don(dbg *d, char flag);
 
 /*
-    w³±czenie/wy³±czenie konsoli
+    wÅ‚Ä…czenie/wyÅ‚Ä…czenie konsoli
 */
 extern void dbg_con(dbg *d, char flag);
 #endif

@@ -25,7 +25,7 @@
 
 void fdc_clk(e800j_fdc *fdc)
 {
-/* symulacja uniwibratorów 74123 sterowania w³±czania silnika napêdu FDD */
+/* symulacja uniwibratorÃ³w 74123 sterowania wÅ‚Ä…czania silnika napÄ™du FDD */
     if(fdc->drive_a) fdc->drive_a--;
     if(fdc->drive_b) fdc->drive_a--;
 /* wykonanie sekwencji i8272 */

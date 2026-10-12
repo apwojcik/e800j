@@ -18,7 +18,7 @@
  *
  */
 
-/* Symulacja karty kontrolera dysków elastycznych Elwro 800 Junior */
+/* Symulacja karty kontrolera dyskÃ³w elastycznych Elwro 800 Junior */
 #ifndef _e800j_fdc_h_
 #define _e800j_fdc_h_
 #include "i8272_fdc.h"

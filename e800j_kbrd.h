@@ -26,7 +26,7 @@
 #define KB_MODE_PC	2	/* Mapowanie klawiatury PC (programisty ) na E800J */
 
 
-#define KB_ROWS		10	/* ilo¶æ rzêdów matrycy klawiatury */
+#define KB_ROWS		10	/* iloÅ›Ä‡ rzÄ™dÃ³w matrycy klawiatury */
 #define KB_ZX_ROW_MASK	0x0
 #define KB_ZX_COL_MASK	0x0
 
@@ -36,33 +36,33 @@ typedef struct
     int		  key_code;		/* ostatni kod klawisza  */
     char	  state;		/* ostatni stan klawisza */
     char	  mode;			/* tryb klawiatury       */
-    char	  alt_r;		/* wci¶niêty prawy ALT	 */
+    char	  alt_r;		/* wciÅ›niÄ™ty prawy ALT	 */
     unsigned char matrix[KB_ROWS];	/* matryca klawiszy      */
-    char	  *matrix_map1;		/* pierwszy stopien mapowania klawiszy */    
-    unsigned short int row_mask;	/* maska adresu (odcina czê¶æ linii adresowych ) */ 
-    unsigned char col_mask;		/* maska danych (odcina czê¶æ linii kolumn     ) */
+    char	  *matrix_map1;		/* pierwszy stopieÅ„ mapowania klawiszy */    
+    unsigned short int row_mask;	/* maska adresu (odcina czÄ™Å›Ä‡ linii adresowych ) */ 
+    unsigned char col_mask;		/* maska danych (odcina czÄ™Å›Ä‡ linii kolumn     ) */
 
 /* Joystick */
     char        joy_mode;	/* tryb emulacji joysticka */
-    unsigned char in1f;	/* zawarto¶æ portu 31 */
+    unsigned char in1f;	/* zawartoÅ›Ä‡ portu 31 */
 /* Sinclair & AGF */
     int		joy_map_l0;	/* mapowanie klawisza klawiatury na joystick lewo   */
     int		joy_map_r0;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_u0;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_d0;	/* mapowanie klawisza klawiatury na joystick dó³    */
-    int		joy_map_f0;	/* mapowanie klawisza klawiatury na joystick strza³ */
+    int		joy_map_u0;	/* mapowanie klawisza klawiatury na joystick gÃ³ra   */
+    int		joy_map_d0;	/* mapowanie klawisza klawiatury na joystick dÃ³Å‚    */
+    int		joy_map_f0;	/* mapowanie klawisza klawiatury na joystick strzaÅ‚ */
 /* Sinclair */
     int		joy_map_l1;	/* mapowanie klawisza klawiatury na joystick lewo   */
     int		joy_map_r1;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_u1;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_d1;	/* mapowanie klawisza klawiatury na joystick dó³    */
-    int		joy_map_f1;	/* mapowanie klawisza klawiatury na joystick strza³ */
+    int		joy_map_u1;	/* mapowanie klawisza klawiatury na joystick gÃ³ra   */
+    int		joy_map_d1;	/* mapowanie klawisza klawiatury na joystick dÃ³Å‚    */
+    int		joy_map_f1;	/* mapowanie klawisza klawiatury na joystick strzaÅ‚ */
 /* Kempston */
     int		joy_map_lk;	/* mapowanie klawisza klawiatury na joystick lewo   */
     int		joy_map_rk;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_uk;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_dk;	/* mapowanie klawisza klawiatury na joystick dó³    */
-    int		joy_map_fk;	/* mapowanie klawisza klawiatury na joystick strza³ */
+    int		joy_map_uk;	/* mapowanie klawisza klawiatury na joystick gÃ³ra   */
+    int		joy_map_dk;	/* mapowanie klawisza klawiatury na joystick dÃ³Å‚    */
+    int		joy_map_fk;	/* mapowanie klawisza klawiatury na joystick strzaÅ‚ */
     
 } kbrd ;
 
@@ -75,7 +75,7 @@ enum{
 
 /*******************************************************************/
 extern void key_init( kbrd *);
-/*	..:: Inicjuje klawiaturê w trybie 'mode' ::..
+/*	..:: Inicjuje klawiaturÄ™ w trybie 'mode' ::..
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
@@ -83,31 +83,31 @@ extern void key_set( kbrd *, unsigned int key, unsigned char state);
 /*
 	..:: podobniem jak key_update, ale dodatkowo mapuje klawisze ::..
 	key - kod SDL klawisza
-	state - 1 wci¶niêty, 0- wyci¶niêty
+	state - 1 wciÅ›niÄ™ty, 0- wyciÅ›niÄ™ty
 
 */
 /*******************************************************************/
 extern unsigned char key_matrix( kbrd *, unsigned short int addr);
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15
-	warto¶æ zwracana - linie KL0..KL6
+	wartoÅ›Ä‡ zwracana - linie KL0..KL6
 */
 
 /*******************************************************************/
 extern void key_update( kbrd *, int key, char state);
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
-	state - =1 wci¶niêto, =0 puszczono 
+	state - =1 wciÅ›niÄ™to, =0 puszczono 
 */
 
 extern unsigned char key_kempston( kbrd *);
 /*
-    zwraca warto¶æ dla portu 31 - symulacja wej¶cia joysticka KEMPSTON
+    zwraca wartoÅ›Ä‡ dla portu 31 - symulacja wejÅ›cia joysticka KEMPSTON
 */
 
 /*********************************************
 
-        ..:: Wspó³rzêdne klawiszy ::..
+        ..:: WspÃ³Å‚rzÄ™dne klawiszy ::..
 
 *********************************************/
 
@@ -167,19 +167,19 @@ extern unsigned char key_kempston( kbrd *);
 #define KEY_V		0x74
 #define KEY_SEMICOLON	0x75
 #define KEY_PLUS	0x77
-#define KEY_E_		0x80	/* ê */
-#define KEY_O_		0x81	/* ó */
-#define KEY_S_		0x82	/* ¶ */
-#define KEY_L_		0x83	/* ³ */
-#define KEY_Z__		0x84	/* ¼ */
-#define KEY_N_		0x85	/* ñ */
-#define KEY_A_		0x87	/* ± */
-#define KEY_Z_		0x97	/* ¿ */
+#define KEY_E_		0x80	/* Ä™ */
+#define KEY_O_		0x81	/* Ã³ */
+#define KEY_S_		0x82	/* Å› */
+#define KEY_L_		0x83	/* Å‚ */
+#define KEY_Z__		0x84	/* Åº */
+#define KEY_N_		0x85	/* Å„ */
+#define KEY_A_		0x87	/* Ä… */
+#define KEY_Z_		0x97	/* Å¼ */
 #define KEY_CUR_D	0x91
 #define KEY_CUR_U	0x92
 #define KEY_CUR_R	0x93
 #define KEY_CUR_L	0x94
-#define KEY_C_		0x95	/* æ */
+#define KEY_C_		0x95	/* Ä‡ */
 #define KEY_DIR		0x90
 
 /* elementy tablicy mapowania */
@@ -193,11 +193,11 @@ extern unsigned char key_kempston( kbrd *);
 			KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,\
 			KEY_Y,KEY_Z
 #define KEY_LETTERS_CNT	26
-/* pliterki: ±,æ,ê,³,ñ,ó,¶,¼,¿ */
+/* pliterki: Ä…,Ä‡,Ä™,Å‚,Å„,Ã³,Å›,Åº,Å¼ */
 #define KEY_PLETTERS	KEY_A_,KEY_C_,KEY_E_,KEY_L_,KEY_N_,\
 			KEY_O_,KEY_S_,KEY_Z__,KEY_Z_
 #define KEY_PLETTERS_CNT 9
-/* klawisze steruj±ce */
+/* klawisze sterujÄ…ce */
 #define KEY_CONTROL	KEY_CR,KEY_SHIFT,KEY_CAPS,KEY_SPC,KEY_ALT,KEY_ALT,KEY_CTRL,KEY_DEL,KEY_BS,KEY_ESC,\
 			KEY_TAB,KEY_DIR,KEY_CUR_L,KEY_CUR_R,KEY_CUR_U,KEY_CUR_D
 #define KEY_CONTROL_CNT 16
@@ -206,7 +206,7 @@ extern unsigned char key_kempston( kbrd *);
 			KEY_DOT,KEY_SEMICOLON,KEY_COMMA,KEY_MINUS,KEY_PLUS
 #define KEY_SIGNS_CNT	10
 
-/* zawarto¶æ tablicy mapowania */
+/* zawartoÅ›Ä‡ tablicy mapowania */
 #define KEY_MAP_TABLE	{ KEY_CONTROL,KEY_SIGNS,KEY_PLETTERS,KEY_DIGITS,KEY_LETTERS }
 
 /* numer klawisza w tabeli mapowania */
@@ -283,7 +283,7 @@ extern unsigned char key_kempston( kbrd *);
 
 #else
 
-/* tu mo¿na dodaæ definicje dla innych bibliotek, na razie atrapa */
+/* tu moÅ¼na dodaÄ‡ definicje dla innych bibliotek, na razie atrapa */
 #define E8K_ENTER	0
 #define E8K_SHIFT_L	1
 #define E8K_SHIFT_R	2

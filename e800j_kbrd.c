@@ -23,15 +23,15 @@
 #include "e800j_kbrd.h"
 
 
-unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na wspó³rzêdne w matrycy */
+unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na wspÃ³Å‚rzÄ™dne w matrycy */
 
 void key_init(kbrd *kb)
 {
     int i;
-    /* zerowanie ca³ej struktury */
+    /* zerowanie caÅ‚ej struktury */
     for(i=0; i < sizeof(kbrd); i++) *((char *)kb + i) = 0;
     kb->mode = KB_MODE_PC;
-    /* wype³nienie matrycy klawiatury warto¶ciami 0xff - nie naci¶niêty ¿aden klawisz */
+    /* wypeÅ‚nienie matrycy klawiatury wartoÅ›ciami 0xff - nie naciÅ›niÄ™ty Å¼aden klawisz */
     for(i=0; i < sizeof(kb->matrix); i++) *(kb->matrix + i) = 0xff;
 }
 
@@ -53,7 +53,7 @@ unsigned char key_matrix(kbrd *kb, unsigned short int addr)
 }
 
 /* 
-  Ustawia stan klawisza w matrycy na wspó³rzêdnych row,col 
+  Ustawia stan klawisza w matrycy na wspÃ³Å‚rzÄ™dnych row,col 
 
 coord:
     06 05 04 03 02 01 00
@@ -61,7 +61,7 @@ coord:
     .. .. .. .. .. .. ..
     96 95 94 93 92 91 90
 state:
-    1 - wci¶niêto
+    1 - wciÅ›niÄ™to
     0 - zwolniono
 */
 void key_matrix_update(kbrd *kb, unsigned char coord, unsigned char  state)
@@ -151,7 +151,7 @@ void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
 {
 //    int nkey=key;
 //kb->joy_mode = JOY_KEM;
-    /* mapaowanie klawiszy specjalnych */
+    /* mapowanie klawiszy specjalnych */
     switch(key){
 	case E8K_ENTER    : key = KB_ENTER; break;
 	case E8K_SHIFT_L  : 

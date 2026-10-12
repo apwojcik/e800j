@@ -1,10 +1,10 @@
 Elwro 800 Junior emulator v 0.2
 
 Sporo jeszcze do zrobienia:
- - poprawa d¼wiêku. Obecna obs³uga jest jedynie szkieletem funkcjonalno¶ci.
+ - poprawa dÅºwiÄ™ku. Obecna obsÅ‚uga jest jedynie szkieletem funkcjonalnoÅ›ci.
  - dodanie rozkazu format do FDC
- - sieæ Junet, obs³uga 8251 (szeregówka i ethernet)
- - obs³uga RST #48 pod CP/J
+ - sieÄ‡ Junet, obsÅ‚uga 8251 (szeregÃ³wka i ethernet)
+ - obsÅ‚uga RST #48 pod CP/J
  - GUI
  - joystick i drukarka ( 8255 )
  - emulacja dyskietek jako katalogu i rzeczywista na FDD
@@ -12,9 +12,9 @@ Sporo jeszcze do zrobienia:
  - dokumentacja
 
 Dalsze, dalsze plany:
- - emulacja trybu pamiêci Spectrum 128
+ - emulacja trybu pamiÄ™ci Spectrum 128
  - emulacja ekranu Timex
- - d¼wiêk AY3-89-10
+ - dÅºwiÄ™k AY3-89-10
  - konfiguracja z GUI
 
 

@@ -2,10 +2,10 @@
 ;;
 ;; v 0.1
 ;;
-;; Deasemblacja zawarto¶ci BIOS BOOT komputera Elwro 800 Junior.
+;; Deasemblacja zawartoÅ›ci BIOS BOOT komputera Elwro 800 Junior.
 ;;
-;; Nie jest to pe³na deasemblacja, nie mo¿na jej skompilowaæ bo zawiera wiele b³êdów sk³adniowych.
-;; Nie wszystkie fragmenty zosta³y rozpracowane. Komentarze wymagaj± jeszcze poprawy w wielu 
+;; Nie jest to peÅ‚na deasemblacja, nie moÅ¼na jej skompilowaÄ‡ bo zawiera wiele bÅ‚Ä™dÃ³w skÅ‚adniowych.
+;; Nie wszystkie fragmenty zostaÅ‚y rozpracowane. Komentarze wymagajÄ… jeszcze poprawy w wielu 
 ;; miejscach.
 ;;
 ;; 
@@ -17,7 +17,7 @@
      ORG 0x0000
 L0000:			      ; RST 00
      LD        A,0x40       
-     OUT       0xf7,A         ; za³±czenie ROM BOOT, wy³±czenie NMI
+     OUT       0xf7,A         ; zaÅ‚Ä…czenie ROM BOOT, wyÅ‚Ä…czenie NMI
      LD        HL,0x3db0      ; wyzerowanie obszaru danych RAM 0x3DB0...0x3FFF
 L0007:
      LD        (HL   ),0x00   ;    
@@ -25,7 +25,7 @@ L0007:
      LD        A,H         
      CP        0x40         
      JR        NZ,L0007       ; for(HL = 0x3db0; HL < 0x4000; HL++) *HL = 0;
-     JP        L1794          ; dalszy ci±g procedury pod adresem L1794 (test pamieci)
+     JP        L1794          ; dalszy ciÄ…g procedury pod adresem L1794 (test pamiÄ™ci)
 
     ORG 0x0019
 L0019:
@@ -34,7 +34,7 @@ L0019:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Funkcja powrotu do ZX BASIC BIOS
-;; tu koñcz± wywo³ania z ZX BASIC BIOS
+;; tu koÅ„czÄ… wywoÅ‚ania z ZX BASIC BIOS
 ;;
 ;;
 ;;
@@ -43,9 +43,9 @@ L0019:
 L0028:                    ; RST #28
      LD        A,0x00       
      EI                    
-     OUT       0xf7,A     ; powrót do ROM ZX BASIC
+     OUT       0xf7,A     ; powrÃ³t do ROM ZX BASIC
 ;0x002D adres w ROM BASIC JP 0x39B2
-; lub, gdyby prze³±czenie nie nast±pi³o  jp 150 ??
+; lub, gdyby przeÅ‚Ä…czenie nie nastÄ…piÅ‚o  jp 150 ??
      JP        0x0150        
 
 L0030:			  ; RST #30 
@@ -57,8 +57,8 @@ L0038:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Dalsza czê¶æ obs³ugi RST #00 - spod adresu #1794
-;; po te¶cie RAM i ROM, oraz po komunikatach ekranowych i wyswietleniu logo
+;; Dalsza czÄ™Å›Ä‡ obsÅ‚ugi RST #00 - spod adresu #1794
+;; po teÅ›cie RAM i ROM, oraz po komunikatach ekranowych i wyÅ›wietleniu logo
 ;;
 ;; Skopiowanie obszaru UDG (semigrafiki) z ROM BAS1 do RAM  
 ;;
@@ -70,10 +70,10 @@ L0040:
      LD        DE,0x3c80      ; 
      EX        DE,HL          ; DE = *(UDG)+88; HL = 0x3c80
      LD        BC,0x0020      ; 32 bajty
-     LD        A,0xc0         ; za³±czenie górnej po³ówki ZX BASIC ROM
+     LD        A,0xc0         ; zaÅ‚Ä…czenie gÃ³rnej poÅ‚Ã³wki ZX BASIC ROM
      OUT       0xf7,A         ; 0..1FFF - BOOT ROM, 2000..3FFF - BAS1 ROM
      LDIR                     ; skopiowanie skopiowanie obszaru UDG z BAS1 do RAM
-     JP        0x0080         ; dalszy ci±g pod adresem #80 i dalej pod #141
+     JP        0x0080         ; dalszy ciÄ…g pod adresem #80 i dalej pod #141
 
 T0057:
     DB 0xff,0xff,0xff,0xff,0xff
@@ -87,7 +87,7 @@ T0057:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Obs³uga NMI
+;; ObsÅ‚uga NMI
 ;;
 ;;
 L0066:
@@ -108,7 +108,7 @@ L0067:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Ci±g dalszy procedury startowej spod adresu #40
+;; CiÄ…g dalszy procedury startowej spod adresu #40
 ;; 
 ;;
     ORG 0x0080
@@ -119,7 +119,7 @@ L0083:
     JP        0x04eb        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Wy¶wietlenie napisu:
+;; WyÅ›wietlenie napisu:
 ;; 
 ;; "wersja dyskowa"
 ;;
@@ -131,7 +131,7 @@ L0090:
   96 JR        0x009e         
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Wy¶wietlenie napisu:
+;; WyÅ›wietlenie napisu:
 ;; 
 ;; "wersja bezdyskowa"
 ;;
@@ -145,10 +145,10 @@ L009E:
      LD        DE,0x413b     ; L00A7(0x1771, 0x413b) - "dyskowa"			     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Skopiowanie piêciu 7 liniowych znaków na ekran
+;;  Skopiowanie piÄ™ciu 7 liniowych znakÃ³w na ekran
 ;;
-;;  Par wej¶ciowe:
-;;   HL - sk±d kopiowaæ
+;;  Par wejÅ›ciowe:
+;;   HL - skÄ…d kopiowaÄ‡
 ;;   DE - w jakie miejsce
 ;;
 L00A7:
@@ -163,20 +163,20 @@ L00AC:			    ;  	do{
      INC       D            ;   	DE += 256;
      DJNZ      L00AC        ;  	} while( --B )
      POP       DE           ;  	DE = stk
-     INC       DE           ;  	DE++      - nastepny znak
+     INC       DE           ;  	DE++      - nastÄ™pny znak
      DEC       C            ;  
      JR        NZ,L00A9     ; }
      RET                    ;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Funkcja:
-;;   Skopiowanie dziesiêciu, 7-liniowych znaków na ekran
-;; HL- sk±d kopiowaæ
+;;   Skopiowanie dziesiÄ™ciu, 7-liniowych znakÃ³w na ekran
+;; HL- skÄ…d kopiowaÄ‡
 ;; DE- w jakie miejsce
 ;;
 L00B8:
-     LD        C,0x0a ; wy¶wietlamy 10 znaków
-     JR        0x00a9 ; skok do procedury wy¶wietlania znaków
+     LD        C,0x0a ; wyÅ›wietlamy 10 znakÃ³w
+     JR        0x00a9 ; skok do procedury wyÅ›wietlania znakÃ³w
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ORG 0x00c0
 T00C0:
@@ -227,36 +227,36 @@ L0100:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Ci±g dalszy procedury startowej RST #00, po te¶cie pamiêci
+;; CiÄ…g dalszy procedury startowej RST #00, po teÅ›cie pamiÄ™ci
 ;; i skopiowaniu obszaru UDG do RAM
 ;;
 ;;
 L0141:
      LD	       A,0x40		;
-     OUT       0xf7,A       	; wy³±czenie ROM BAS1, za³±czonego podczas kopiowania UDG
+     OUT       0xf7,A       	; wyÅ‚Ä…czenie ROM BAS1, zaÅ‚Ä…czonego podczas kopiowania UDG
      LD        HL,0x3209     
      LD        (HL   ),0x00  
      LD        BC,0x2000     
-     JP        0x05d9           ; (0x3209) = 0; BC=0x2000; ci±g dalszy pod adresem #5d9
+     JP        0x05d9           ; (0x3209) = 0; BC=0x2000; ciÄ…g dalszy pod adresem #5d9
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Punkt wej¶cia z BIOS-u ZX BASIC do BIOS-u BOOT. 
+;; Punkt wejÅ›cia z BIOS-u ZX BASIC do BIOS-u BOOT. 
 ;;
 ;; 
 ;;
 
 L014F:
      PUSH      IY            ; zachowanie adresu zmiennych systemoiwych interpretera BASIC
-     CALL      0x13f5        ; funkcja obs³ugi rozkazu DIR
+     CALL      0x13f5        ; funkcja obsÅ‚ugi rozkazu DIR
      POP       IY            ; odtworzenie adresu zmiennych BASIC
      LD        A,(0x3208)    
      OR        A           
      JP        Z,0x0028      
      SCF                   
-     JP        0x0028        ; powrót do ZX BASIC
+     JP        0x0028        ; powrÃ³t do ZX BASIC
 
 
 
@@ -347,13 +347,13 @@ L014F:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Za³±czenie silnika napêdu FDD
+;; ZaÅ‚Ä…czenie silnika napÄ™du FDD
 ;;
-;; C - numer napêdu, 0 - A, 1- B
+;; C - numer napÄ™du, 0 - A, 1- B
 ;;
 L01ED:
      LD        A,C         
-     INC       A       ; aby sie ustaw bitów zgadza³o     
+     INC       A       ; aby siÄ™ ustaw bitÃ³w zgadzaÅ‚o     
      OR        0x08    ; reset = 0     
      OUT       0xf1,A  ; ustaw port
      OR        A       ; CY = 0
@@ -363,7 +363,7 @@ L01ED:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Wy³±czenie silników napêdu FDD
+;; WyÅ‚Ä…czenie silnikÃ³w napÄ™du FDD
 ;;
 ;; 
 ;;
@@ -376,59 +376,59 @@ L01F8:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Pobranie/wys³anie pakietu danych do operacji READ, WRITE i FORMAT
+;; Pobranie/wysÅ‚anie pakietu danych do operacji READ, WRITE i FORMAT
 ;;
-;; Funkcja odczytuje (zapisuje) 512 bajtów do FDC
+;; Funkcja odczytuje (zapisuje) 512 bajtÃ³w do FDC
 ;; DE - adres bufora zapisu/odczytu
-;; IY - IYH zawiera maskê dla rejestru FDC 0xF1
+;; IY - IYH zawiera maskÄ™ dla rejestru FDC 0xF1
 ;;
 ;;
 
 L0200:
      EX        DE,HL       
-     LD        B,0x00       ; 256 bajtów do odczytania/zapisu x 2
+     LD        B,0x00       ; 256 bajtÃ³w do odczytania/zapisu x 2
      LD        A,C          ; A = C   
      CP        0x06         
      LD        C,0xef       ; C = 0xef
-     JP        Z,0x022a     ; if( A == 6) goto L022A /* jesli komenda READ DATA */
+     JP        Z,0x022a     ; if( A == 6) goto L022A /* jeÅ›li komenda READ DATA */
 L020B:
      IN        A,0xee       ; pobierz msr FDC
      BIT       7,A         
-     JR        Z,0x020b     ; czekaj na bit gotowo¶ci danych RQM
+     JR        Z,0x020b     ; czekaj na bit gotowoÅ›ci danych RQM
      BIT       5,A          ; czy ustawione DMA ?
-     JR        Z,0x0253     ; jesli tak to return;
+     JR        Z,0x0253     ; jeÅ›li tak to return;
      OUTI                   ; (C) <- (HL)
-     JR        NZ,0x020b    ; zapisz nastêpn± dan±
+     JR        NZ,0x020b    ; zapisz nastÄ™pnÄ… danÄ…
 L0219:
      IN        A,0xee       
      BIT       7,A         
-     JR        Z,0x0219     ; czekaj na gotowo¶æ danej  
+     JR        Z,0x0219     ; czekaj na gotowoÅ›Ä‡ danej  
      BIT       5,A         
-     JR        Z,0x0253     ; wyjd¼
+     JR        Z,0x0253     ; wyjdÅº
      OUTI                  
-     JR        NZ,0x0219    ; zapisz nastêpn± dan±
+     JR        NZ,0x0219    ; zapisz nastÄ™pnÄ… danÄ…
      JP        0x0246        
 L022A:
      IN        A,0xee       
      BIT       7,A         
-     JR        Z,0x022a       ; czekaj na gotowo¶æ danej (bit RQM)
+     JR        Z,0x022a       ; czekaj na gotowoÅ›Ä‡ danej (bit RQM)
      BIT       5,A            ; BIT NO_DMA
      JR        Z,0x0253       ; jak DMA to return
      INI                      ; (HL) <- IN(C); B--; HL++
-     JR        NZ,0x022a      ; je¶li B !=0 goto L022A
+     JR        NZ,0x022a      ; jeÅ›li B !=0 goto L022A
 
 L0238:
      IN        A,0xee       
      BIT       7,A         
-     JR        Z,0x0238       ; czekaj na gotowo¶æ danej (bit RQM)
+     JR        Z,0x0238       ; czekaj na gotowoÅ›Ä‡ danej (bit RQM)
      BIT       5,A         
      JR        Z,0x0253       ; no to return
      INI                   
-     JR        NZ,0x0238      ; je¶li B != 0 goto L0238
+     JR        NZ,0x0238      ; jeÅ›li B != 0 goto L0238
 L0246:
      PUSH      IY        
      POP       AF             ; AF = IY
-; Wys³anie TC do FDC
+; WysÅ‚anie TC do FDC
      AND       0x03           ; A &= 0x03; /* run0 =0, run1 =0*/
      OR        0x0c           ; A |= 0x0c; 0000 1100 /* TC=1, RESET=0 */
      OUT       0xf1,A         ; outb(0xf1, (IYH & 0x03) | 0x0c);
@@ -438,16 +438,16 @@ L0253:
      RET
 
 T0254:
- DB 0xa0	; maksymalny numer sektora na ¶cie¿ce
+ DB 0xa0	; maksymalny numer sektora na Å›cieÅ¼ce
 
 T0255:
- DB 0x00	; minimalny numer ¶cie¿ki
+ DB 0x00	; minimalny numer Å›cieÅ¼ki
                     
  256 LD        (BC),A      
  257 LD        (BC),A      
 
 T0258:
-     DB 0x02 ; ilo¶æ bajtów na sektor
+     DB 0x02 ; iloÅ›Ä‡ bajtÃ³w na sektor
 
 T0259:
      DB 0x40 ; pole MT MFM
@@ -460,33 +460,33 @@ T025A:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;; Czyzby zamierzeniem autora by³o umieszczenie tego jako zmienne w RAM, ale "w praktyce"
-;; okaza³o siê ¿e nie warto i umieszczono je w ROM ? Inaczej po co by³aby procedura
-;; obliczania parametrów, wg sta³ych :|
+;; Czyzby zamierzeniem autora byÅ‚o umieszczenie tego jako zmienne w RAM, ale "w praktyce"
+;; okazaÅ‚o siÄ™ Å¼e nie warto i umieszczono je w ROM ? Inaczej po co byÅ‚aby procedura
+;; obliczania parametrÃ³w, wg staÅ‚ych :|
 ;;
 
-; warto¶æ pola SRT w instrukcji SPECIFY kontrolera FDC
+; wartoÅ›Ä‡ pola SRT w instrukcji SPECIFY kontrolera FDC
 C025D:
     DB 0x02
-; warto¶æ pola HLT w instrukcji SPECIFY kontrolera FDC
+; wartoÅ›Ä‡ pola HLT w instrukcji SPECIFY kontrolera FDC
 C025E:
     DB 0x80
-; warto¶æ pola HUT w instrukcji SPECIFY kontrolera FDC
+; wartoÅ›Ä‡ pola HUT w instrukcji SPECIFY kontrolera FDC
 C025F:
     DB 0x00
 C0260:
     DB 0x00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Wywo³ywane jako pierwsza funkcja w 5d9
+;; WywoÅ‚ywane jako pierwsza funkcja w 5d9
 ;;
-;; Funkcja wysy³a komendê SPYCIFY do kontrolera FDC
+;; Funkcja wysyÅ‚a komendÄ™ SPYCIFY do kontrolera FDC
 ;;
 ;; DE - 0x2000 - adres bazowy bufora rozkazu dla kontrolera FDC
 ;;
 L0261:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Poni¿szy kod OBLICZA STA£E !!!:                     ;;
+;; PoniÅ¼szy kod OBLICZA STAÅE !!!:                     ;;
 ;; *(DE + 09d) = 0x03 = instr_code                     ;;
 ;; *(DE + 10d) = 0xe0 = (SRT << 4) | ((HUT & 0xf8)>>4) ;;
 ;; *(DE + 11d) = 0x81 = (HLT & 0xfe) | (ND & 1)        ;;
@@ -494,7 +494,7 @@ L0261:
      LD        HL,0x0009     
      ADD       HL,DE     	; HL = DE +9
      LD        (HL   ),0x03  	; *(DE + 9) = 0x03	- kod instrukcji SPECIFY dla FDC
-     LD        A,(0x025d)       ; A = (0x25d) ->  A=2   - warto¶æ pola SRT
+     LD        A,(0x025d)       ; A = (0x25d) ->  A=2   - wartoÅ›Ä‡ pola SRT
      CPL                   	; A = fd
      INC       A           	; A = -2	
      ADD       A,A         	; A = -4
@@ -502,25 +502,25 @@ L0261:
      ADD       A,A         	; A = -16
      ADD       A,A         	; A = (-(0x25d)) << 4 = -32 = -0xe0
      PUSH      AF          	; push A
-     LD        A,(0x025f)    	; A = 0			- warto¶æ pola HUT
-     AND       0xf8         	; hmm b³±d ??, wg mojej dok. pole HUT ma 4 bity, wiêc sk±d f8 ??
+     LD        A,(0x025f)    	; A = 0			- wartoÅ›Ä‡ pola HUT
+     AND       0xf8         	; hmm bÅ‚Ä…d ??, wg mojej dok. pole HUT ma 4 bity, wiÄ™c skÄ…d f8 ??
      RRA                   	; 
      RRA                   	; 
      RRA                   	; 
      RRA                   	; A = 0 A = A >> 4 = 0
      POP       BC          	; C = B = -32 (0xe0)
      LD        C,B         
-     OR        C           	; A = (SRT << 4) | (HUT >> 4)= 0x0e  - z³o¿enie pola SRT i HUT razem
+     OR        C           	; A = (SRT << 4) | (HUT >> 4)= 0x0e  - zÅ‚oÅ¼enie pola SRT i HUT razem
      INC       HL        	; HL = DE + 10
      LD        (HL  ),A 	; *(DE+10) = -32	- zapis danej do bufora
-     LD        A,(0x025e)       ; A = 0x80		- warto¶æ pola HLT
+     LD        A,(0x025e)       ; A = 0x80		- wartoÅ›Ä‡ pola HLT
      AND       0xfe             ; A = 0x80		- maskowanie bitowe dla tego pola
      PUSH      AF          
-     LD        A,0x01       	; A=1                   - warto¶æ pola ND (1 bit) - BEZ DMA
+     LD        A,0x01       	; A=1                   - wartoÅ›Ä‡ pola ND (1 bit) - BEZ DMA
      AND       0x01         	; 			- maskowanie bitowe dla tego pola
      POP       BC          	; B = 0x80
      LD        C,B         	; C = B = 0x80
-     OR        C           	; A = HLT | ND		- z³o¿enie pól bitowych
+     OR        C           	; A = HLT | ND		- zÅ‚oÅ¼enie pÃ³l bitowych
      INC       HL        	; HL = DE +11
      LD        (HL  ),A 	; *(DE+11) = 0x81	- zapis danej do bufora
      LD        BC,0x0007     
@@ -528,7 +528,7 @@ L0261:
      ADD       HL,BC            ; 
      LD        C,L         	; BC = HL = DE + 07, DE = DE + 0b
      LD        B,H         
-     CALL      L099A            ; wys³anie rozkazu do FDC
+     CALL      L099A            ; wysÅ‚anie rozkazu do FDC
      RET                   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -536,9 +536,9 @@ L0261:
 ;; Funkcja:
 ;;   Wykonanie operacji SEEK lub RECALIBRATE
 ;;
-;; Wej¶cie:
-;; 	B  - nr napêdu
-;; 	C  - NCN | HDS (numer cyllindra | numer g³owicy); je¶li 0 to operacja RECALIBRATE
+;; WejÅ›cie:
+;; 	B  - nr napÄ™du
+;; 	C  - NCN | HDS (numer cyllindra | numer gÅ‚owicy); jeÅ›li 0 to operacja RECALIBRATE
 ;; 	DE - adres bufora instrukdcji
 ;; 	
 ;;  DE+9,10,11 - bufor instrukcji (de + 2,3,4 po stronie 99a)
@@ -549,13 +549,13 @@ L0261:
 L0299:
      LD        A,C         	
      CP        0x00         	; jaki rodzaj instrukcji ?
-     JP        NZ,L02AA     	; jesli SEEK skocz pod 2AA
+     JP        NZ,L02AA     	; jeÅ›li SEEK skocz pod 2AA
 ; dla C=0
      LD        HL,0x0009     
      ADD       HL,DE     
      LD        (HL   ),0x07  	; (DE+9)  = 7	- kod instrukcji RECALIBRATE FDC
      INC       HL        
-     LD        (HL  ),B 	; (DE+10) = B	- nr napêdu
+     LD        (HL  ),B 	; (DE+10) = B	- nr napÄ™du
      JP        L02B8            ; goto 0x02B8
 L02AA:
      LD        HL,0x0009     	
@@ -566,7 +566,7 @@ L02AA:
      AND       0x01             ; A &= 1
      ADD       A,A         	; A += A *2
      ADD       A,A         	; A += A *4
-     OR        B           	; A |= B	- nr napêdu
+     OR        B           	; A |= B	- nr napÄ™du
      LD        (HL  ),A 	; (DE+10) = B | (A << 3)
 ; kod instrukcji ustalony
 L02B8:
@@ -575,17 +575,17 @@ L02B8:
      LD        A,C         	; 
      RRA                   	; 
      LD        (HL  ),A 	; (DE + 11) = C >> 1 - NCN (nowy numer cylindra)
-; wys³anie kodu instrukcji do FDC
-     PUSH      BC          	; zachowaj parametry wej¶ciowe
-     PUSH      DE          	; zachowaj parametry wej¶ciowe
+; wysÅ‚anie kodu instrukcji do FDC
+     PUSH      BC          	; zachowaj parametry wejÅ›ciowe
+     PUSH      DE          	; zachowaj parametry wejÅ›ciowe
      EX        DE,HL       
      LD        BC,0x0007     	
      ADD       HL,BC     
      LD        C,L         
      LD        B,H         	; BC = DE + 7 -> adres bufora rozkazu
-     CALL      0x099a        	; wy¶lij komendê do FDC
-     POP       DE          	; odtwórz parametry wej¶ciowe
-     POP       BC          	; odtwórz parametry wej¶ciowe
+     CALL      0x099a        	; wyÅ›lij komendÄ™ do FDC
+     POP       DE          	; odtwÃ³rz parametry wejÅ›ciowe
+     POP       BC          	; odtwÃ³rz parametry wejÅ›ciowe
 ; uaktualnienie zmiennych systemowych ?? 
      LD        HL,0x001a     
      ADD       HL,DE     
@@ -597,7 +597,7 @@ L02B8:
      PUSH      BC          
      LD        BC,0x002f     
      ADD       HL,BC     	
-     ADD       HL,DE     	; HL = DE + 0x2f + B  (B-numer napêdu)
+     ADD       HL,DE     	; HL = DE + 0x2f + B  (B-numer napÄ™du)
      POP       BC          
      LD        (HL  ),C 	; (HL) = C ( C - NCN | HDS )
      JP        L02ED		; return
@@ -606,31 +606,31 @@ L02E3:
      LD        H,0x00       	
      LD        BC,0x002f     
      ADD       HL,BC     
-     ADD       HL,DE     	; HL = DE + 0x2f + B  (B-numer napêdu)
+     ADD       HL,DE     	; HL = DE + 0x2f + B  (B-numer napÄ™du)
      LD        (HL   ),0xff  	; (HL) = 0xff
 L02ED:
      RET                   	; return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja obs³ugi b³êdu operacji FDC: READ/WRITE DATA
+;; Funkcja obsÅ‚ugi bÅ‚Ä™du operacji FDC: READ/WRITE DATA
 ;;
-;; Wywo³ywana, gdy kod b³êdu po operacji FDC jest równy 2. Ustawia odpowiedni kod b³êdu.
+;; WywoÅ‚ywana, gdy kod bÅ‚Ä™du po operacji FDC jest rÃ³wny 2. Ustawia odpowiedni kod bÅ‚Ä™du.
 ;; 
-;; DE - wska¼nik na obszar zmiennych
+;; DE - wskaÅºnik na obszar zmiennych
 ;;
-;; dane wej¶ciowe:
-;; (DE+0x12) - kod b³êdu po operacji FDC: READ/WRITE DATA -> ferr
+;; dane wejÅ›ciowe:
+;; (DE+0x12) - kod bÅ‚Ä™du po operacji FDC: READ/WRITE DATA -> ferr
 ;; (DE+0x13)
 ;; (DE+0x14)
 ;;
-;; Zmienne wykorzystywane wewn±trz:
+;; Zmienne wykorzystywane wewnÄ…trz:
 ;; (DE+0x35)
 ;; (DE+0x36)
 ;; (DE+0x37)
 ;;
-;; dane wyj¶ciowe:
-;; A - kod b³êdu
+;; dane wyjÅ›ciowe:
+;; A - kod bÅ‚Ä™du
 ;;
 ;; char fdc_error( char *de)
 ;; {
@@ -644,11 +644,11 @@ L02ED:
 ;;	st1 = *(de + 0x37) = *(de+0x14);  /* ST1 */
 ;;
 ;;	if( err_0 & 1 )	 return 0x80;
-;;	if( st0 & 1 )  	 return st1 & 1 ? 0x0f: 0x0e;   /* b³±d nap. 0, 0x0f jesli brak znacznika  */
-;;	if( st0 & 2 )  	 return 0x20; 		        /* b³±d nap. 1 */
+;;	if( st0 & 1 )  	 return st1 & 1 ? 0x0f: 0x0e;   /* bÅ‚Ä…d nap. 0, 0x0f jeÅ›li brak znacznika  */
+;;	if( st0 & 2 )  	 return 0x20; 		        /* bÅ‚Ä…d nap. 1 */
 ;;	if( err_0 & 2 )	 return err_0 & 4 ? 0x04 : 0x40;
-;;	if( st0 & 0x10 ) return 0x10;			/* b³±d FDD, brak track 0 */
-;;	if( st0 & 0x80 ) return 0x08;			/* b³êdny rozkaz FDC ?? */
+;;	if( st0 & 0x10 ) return 0x10;			/* bÅ‚Ä…d FDD, brak track 0 */
+;;	if( st0 & 0x80 ) return 0x08;			/* bÅ‚Ä™dny rozkaz FDC ?? */
 ;;	if( st1 & 1 || st1 & 8 ) return 0x04; 		/* brak znacznika lub overrun */
 ;;	if( st0 & 0x20 && st1 & 0x20) return 0x02;	/* data CRC error lub */
 ;;	if( st1 & 0x40 ) return 0x01;
@@ -657,7 +657,7 @@ L02ED:
 ;;	return 0xae;
 ;; }
 ;;
-;; Zwracane kody b³êdów:
+;; Zwracane kody bÅ‚Ä™dÃ³w:
 ;;	
 ;;	0x01 -
 ;;	0x02 -
@@ -848,22 +848,22 @@ L03B0:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Kontrola poprawno¶ci zakresu parametrów funkcji odczytu (zapisu?) sektorów
+;; Kontrola poprawnoÅ›ci zakresu parametrÃ³w funkcji odczytu (zapisu?) sektorÃ³w
 ;;
-;; Funkcja sprawdza, czy parametry wej¶ciowe funkcji odczytu sektora maj± sens.
-;; Funkcja zwraca kod b³êdu 8, je¶li stwierdzi, ze:
-;;   1. - ilo¶æ odczytywanych sektorów, przekracza d³ugo¶æ ¶cie¿ki,
-;;   2. - odczytywany sektor startowy nie miesci sie w dopuszczalnym przedziale (1..160),
-;;   3. - nr scie¿ki jest poza zakresem,
-;; je¶li parametry s± prawid³owe, funkcja ustawia kod b³êdu na 0.
+;; Funkcja sprawdza, czy parametry wejÅ›ciowe funkcji odczytu sektora majÄ… sens.
+;; Funkcja zwraca kod bÅ‚Ä™du 8, jeÅ›li stwierdzi, Å¼e:
+;;   1. - iloÅ›Ä‡ odczytywanych sektorÃ³w, przekracza dÅ‚ugoÅ›Ä‡ Å›cieÅ¼ki,
+;;   2. - odczytywany sektor startowy nie mieÅ›ci siÄ™ w dopuszczalnym przedziale (1..160),
+;;   3. - nr Å›cieÅ¼ki jest poza zakresem,
+;; jeÅ›li parametry sÄ… prawidÅ‚owe, funkcja ustawia kod bÅ‚Ä™du na 0.
 ;;
-;; wej¶cie: DE - wska¼nik na obszar zmiennych
-;; wyj¶cie: A -> 0, je¶li wyst±pi³ b³±d, 1 je¶li parametry prawid³owe
+;; wejÅ›cie: DE - wskaÅºnik na obszar zmiennych
+;; wyjÅ›cie: A -> 0, jeÅ›li wystÄ…piÅ‚ bÅ‚Ä…d, 1 jeÅ›li parametry prawidÅ‚owe
 ;;
-;; (DE+02) -> sects - ilo¶æ sektorów do odczytu
-;; (DE+03) -> trk - numer ¶cie¿ki i g³owicy 
-;; (DE+04) -> sec0 - pocz±tkowy numer sektora
-;; (DE+1a) -> err - kod b³êdu
+;; (DE+02) -> sects - iloÅ›Ä‡ sektorÃ³w do odczytu
+;; (DE+03) -> trk - numer Å›cieÅ¼ki i gÅ‚owicy 
+;; (DE+04) -> sec0 - poczÄ…tkowy numer sektora
+;; (DE+1a) -> err - kod bÅ‚Ä™du
 ;;
 ;; MAX_SECT -> (T0254) /* 0xa0 */
 ;; MIN_TRK  -> (T0255) /* 0x00 */
@@ -918,7 +918,7 @@ L03B3:
      OR        C           	; A = A | B
      RRA                   
      POP       DE          
-     JP        NC,0x03f0     	; jesli !A  goto 3f0
+     JP        NC,0x03f0     	; jeÅ›li !A  goto 3f0
      LD        HL,0x001a     
      ADD       HL,DE     
      LD        (HL   ),0x08  
@@ -930,41 +930,41 @@ L03F0:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja obs³ugi b³êdów po operacji FDC READ/WRITE DATA
+;; Funkcja obsÅ‚ugi bÅ‚Ä™dÃ³w po operacji FDC READ/WRITE DATA
 ;;
-;; Dane wej¶ciowe:
-;;  DE - wska¼nik obszaru zmiennych
-;;  (DE+1a) - kod b³êdu 0
-;;  (DE+12) - kod b³êdu 1 ?
-;;  (DE+13) - kod b³êdu 2 ?
+;; Dane wejÅ›ciowe:
+;;  DE - wskaÅºnik obszaru zmiennych
+;;  (DE+1a) - kod bÅ‚Ä™du 0
+;;  (DE+12) - kod bÅ‚Ä™du 1 ?
+;;  (DE+13) - kod bÅ‚Ä™du 2 ?
 ;;
 ;; Zwracany wynik:
-;; (DE+33) - kod b³êdu, je¶li nie by³o b³êdu zwróæ 0
+;; (DE+33) - kod bÅ‚Ä™du, jeÅ›li nie byÅ‚o bÅ‚Ä™du zwrÃ³Ä‡ 0
 ;;
 
 L03F3:
      LD        HL,0x001a     
      ADD       HL,DE     
-     LD        A,(HL  ) 	; A = (DE+1a) - kod b³êdu po operacji FDC
+     LD        A,(HL  ) 	; A = (DE+1a) - kod bÅ‚Ä™du po operacji FDC
      CP        0x00         
-     JP        NZ,0x0406     	; je¶li wyst±pi³ b³±d skocz do L0406
+     JP        NZ,0x0406     	; jeÅ›li wystÄ…piÅ‚ bÅ‚Ä…d skocz do L0406
      LD        HL,0x0033     
      ADD       HL,DE     
-     LD        (HL   ),0x00  	; (DE+33) = 0; wyjd¼ z kodem b³êdu 0
+     LD        (HL   ),0x00  	; (DE+33) = 0; wyjdÅº z kodem bÅ‚Ä™du 0
      JP        0x041f        
 
 L0406:
      CP        0x02         
-     JP        NZ,0x0418        ; czy b³±d FDC=2 ? jesli nie skocz do 418
+     JP        NZ,0x0418        ; czy bÅ‚Ä…d FDC=2 ? jeÅ›li nie skocz do 418
      PUSH      DE          
-     CALL      0x02ee        	; wylicz b³±d
+     CALL      0x02ee        	; wylicz bÅ‚Ä…d
      POP       DE          
      LD        HL,0x0033     
      ADD       HL,DE     
      LD        (HL  ),A 	; (DE+33) = funkcja_bledu();
      JP        0x041f        
 
-L0418:				; wyst±pi³ b³±d, ale jest ró¿ny od 2 
+L0418:				; wystÄ…piÅ‚ bÅ‚Ä…d, ale jest rÃ³Å¼ny od 2 
      OR        0x80         
      LD        HL,0x0033     
      ADD       HL,DE     
@@ -975,37 +975,37 @@ L041F:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja odczytu (zapisu ?) sektorów.
+;; Funkcja odczytu (zapisu ?) sektorÃ³w.
 ;;
-;; Wykonuje wpierw rozkaz SEEK na napêdzie disk, ustawiaj±c g³owicê na w³a¶ciwej ¶cie¿ce trk, 
-;; a nastêpnie dokonuje odczytu (zapisu ?) nsect sektorów.
+;; Wykonuje wpierw rozkaz SEEK na napÄ™dzie disk, ustawiajÄ…c gÅ‚owicÄ™ na wÅ‚aÅ›ciwej Å›cieÅ¼ce trk, 
+;; a nastÄ™pnie dokonuje odczytu (zapisu ?) nsect sektorÃ³w.
 ;;
-;; DE - wska¼nik na obszar zmiennych
+;; DE - wskaÅºnik na obszar zmiennych
 ;; C  - kod operacji odczytu (zapisu ?)
 ;;
-;; parametry wej¶ciowe funkcji:
-;; (DE+00) - numer napêdu                -> disk
-;; (DE+02) - ilo¶æ sektorów dla operacji -> nsect
-;; (DE+03) - numer ¶ciezki i g³owicy     -> trk
-;; (DE+04) - pocz±tkowy numer sektora    -> sector
-;; (DE+05,06) - adres bufora odczytywanych sektorów
+;; parametry wejÅ›ciowe funkcji:
+;; (DE+00) - numer napÄ™du                -> disk
+;; (DE+02) - iloÅ›Ä‡ sektorÃ³w dla operacji -> nsect
+;; (DE+03) - numer Å›cieÅ¼ki i gÅ‚owicy     -> trk
+;; (DE+04) - poczÄ…tkowy numer sektora    -> sector
+;; (DE+05,06) - adres bufora odczytywanych sektorÃ³w
 ;;
 ;; parametry zwracane:
-;; (DE+1a) - kod b³êdu, je¶li z³e parametry to 8
-;; (DE+2f) - wynik operacji seek dla napêdu 0 -> sres[0]
-;; (DE+30) - wynik operacji seek dla napêdu 1 -> sres[1]
+;; (DE+1a) - kod bÅ‚Ä™du, jeÅ›li zÅ‚e parametry to 8
+;; (DE+2f) - wynik operacji seek dla napÄ™du 0 -> sres[0]
+;; (DE+30) - wynik operacji seek dla napÄ™du 1 -> sres[1]
 ;;
-;; zmienne u¿ywane wewnêtrznie:
-;; (DE+07,08) -> tmp - kopia bufora odczytywanych sektorów
+;; zmienne uÅ¼ywane wewnÄ™trznie:
+;; (DE+07,08) -> tmp - kopia bufora odczytywanych sektorÃ³w
 ;; (DE+09...11) - kolejne parametry komendy odczytu ->  opc[0...8]
-;; (DE+12) - kod b³êdu po operacji FDC READ/WRITE DATA -> rerr
+;; (DE+12) - kod bÅ‚Ä™du po operacji FDC READ/WRITE DATA -> rerr
 ;; 
 ;;
 
 L0420:
      PUSH      BC          
      PUSH      DE          
-     CALL      0x03b3        ; test parametrów wej¶ciowych
+     CALL      0x03b3        ; test parametrÃ³w wejÅ›ciowych
      POP       DE          
      POP       BC          
      RRA                   
@@ -1028,8 +1028,8 @@ L042C:
      JP        Z,0x0459      	; if( sres[disk] == trk) goto L0459
      LD        HL,0x0000     
      ADD       HL,DE     
-     LD        B,(HL  ) 	; B = disk   /* numer napêdu */
-     LD        C,A         	; C = trk    /* numer cylindra i g³owicy */
+     LD        B,(HL  ) 	; B = disk   /* numer napÄ™du */
+     LD        C,A         	; C = trk    /* numer cylindra i gÅ‚owicy */
      PUSH      DE          
      CALL      0x0299        	; fdc_seek(B,C,DE);
      POP       DE          
@@ -1041,7 +1041,7 @@ L042C:
      POP       BC          
      RET                   
 
-; rozkaz SEEK wykona³ siê pomy¶lnie
+; rozkaz SEEK wykonaÅ‚ siÄ™ pomyÅ›lnie
 L0459:
      LD        HL,0x0005     
      ADD       HL,DE     	 
@@ -1052,11 +1052,11 @@ L0459:
      ADD       HL,DE     
      LD        (HL  ),C 	
      INC       HL        
-     LD        (HL  ),B 	; kopia pocz±tku adresu bufora, na operacjê odczytu
+     LD        (HL  ),B 	; kopia poczÄ…tku adresu bufora, na operacjÄ™ odczytu
      INC       HL        	
      POP       BC          
 
-; parametry wej¶ciowe komendy
+; parametry wejÅ›ciowe komendy
      LD        A,(T0259)    	; 
      OR        C           	;
      PUSH      HL        
@@ -1087,7 +1087,7 @@ L0459:
      LD        (HL  ),A 	; opc[2] = (trk >> 1) | ( A ? 0x80:0x00)
      INC       HL        
      LD        A,C         
-     AND       0x01         	; numer g³owicy
+     AND       0x01         	; numer gÅ‚owicy
      LD        (HL  ),A 	; opc[3] = trk & 0x01
      POP       BC          
      INC       DE              	;
@@ -1095,7 +1095,7 @@ L0459:
      INC       HL              	; numer sektora 
      LD        (HL  ),A        	; opc[4] = sector
      LD        A,(0x0258)      	; A = 0x02
-     INC       HL        	; ilo¶æ bajtów na sektor
+     INC       HL        	; iloÅ›Ä‡ bajtÃ³w na sektor
      LD        (HL  ),A 	; opc[5] = (T0258) 
      LD        A,(0x0254)    
      INC       HL        	; pole EOT
@@ -1114,8 +1114,8 @@ L04B1:
 L04B3:
      POP       DE          	; 
 
-; bufor rozkazu przygotowany, zawiera wszystkie 9 bajtów, czas na odczyt poszczególnych sektorów
-; w pêtli
+; bufor rozkazu przygotowany, zawiera wszystkie 9 bajtÃ³w, czas na odczyt poszczegÃ³lnych sektorÃ³w
+; w pÄ™tli
      LD        HL,0x0002   
      ADD       HL,DE     	;
      LD        C,(HL  ) 	; C = nsect
@@ -1127,7 +1127,7 @@ L04B9:
      ADD       HL,BC       	;
      LD        C,L         	; bc = de + 7 - adres bufora
      LD        B,H         
-     CALL      0x099a        	; wysy³a komendê do fdc
+     CALL      0x099a        	; wysyÅ‚a komendÄ™ do fdc
 
      POP       BC          
      POP       DE          
@@ -1136,12 +1136,12 @@ L04B9:
      LD        A,(HL  ) 	
      AND       0xd0         
      CP        0x00         
-     JP        Z,L04D6     	; if(rerr != 0 ) return; /* b³ad wys³ania komendy */
+     JP        Z,L04D6     	; if(rerr != 0 ) return; /* bÅ‚ad wysÅ‚ania komendy */
      JP        L04EA        
 L04D6:
 
-     DEC       C           	; C-- ; ilo¶c sektorów -1
-     JP        Z,0x04ea      	; if( C==0 ) return; je¶li wszystkie sektory odczytane wyjd¼
+     DEC       C           	; C-- ; iloÅ›Ä‡ sektorÃ³w -1
+     JP        Z,0x04ea      	; if( C==0 ) return; jeÅ›li wszystkie sektory odczytane wyjdÅº
      LD        HL,0x0008     
      ADD       HL,DE     
      LD        A,0x02       
@@ -1149,8 +1149,8 @@ L04D6:
      LD        (HL  ),A 	; tmp += 2 ; index bufora + 2, miejsce na kolejny sektor
      LD        HL,0x000d     
      ADD       HL,DE     
-     INC       (HL  )   	; opc[4]++ ; nastepny sektor
-     JP        0x04b9           ; odczyt nastêpnego sektora
+     INC       (HL  )   	; opc[4]++ ; nastÄ™pny sektor
+     JP        0x04b9           ; odczyt nastÄ™pnego sektora
 
 L04EA:
      RET                   
@@ -1161,41 +1161,41 @@ L04EA:
 ;;
 ;; L04EB
 ;;
-;; Funkcja grupuj±ca operacje FDC
+;; Funkcja grupujÄ…ca operacje FDC
 ;;
 ;; DE - adres bufora operacji. Adres ten nie jest modyfikowany i przekazany dalej
 ;; BC - adres zmiennych
 ;;
 ;; -----------------------------------------------------------------------------------------------
-;; Funkcja kopiuje obszar zmiennych spod wska¼nika w BC pod wska¼nik w DE, a nastêpnie
-;; wykonuje skok wzglêdem numeru funkcji w (BC+1).
+;; Funkcja kopiuje obszar zmiennych spod wskaÅºnika w BC pod wskaÅºnik w DE, a nastÄ™pnie
+;; wykonuje skok wzglÄ™dem numeru funkcji w (BC+1).
 ;;
-;;                          -> Tablica skoków:
-;; +0 *(DE + 0) = *(BC + 0) |  [0] L050B - L053B z pozytywnym zakoñczeniem i kodem b³êdu 00
-;; +1 *(DE + 1) = *(BC + 1) -  [1] L0514 - wykonuje operacjê SEEK
+;;                          -> Tablica skokÃ³w:
+;; +0 *(DE + 0) = *(BC + 0) |  [0] L050B - L053B z pozytywnym zakoÅ„czeniem i kodem bÅ‚Ä™du 00
+;; +1 *(DE + 1) = *(BC + 1) -  [1] L0514 - wykonuje operacjÄ™ SEEK
 ;; +2 *(DE + 2) = *(BC + 2)    [2] L053B -> L053B
-;; +3 *(DE + 3) = *(BC + 3)    [3] L053E - wykonuje operacjê RECALIBRATE
-;; +4 *(DE + 4) = *(BC + 4)    [4] L0579 - wykonuje operacjê odczytu sektorów (READ_SECTORS)
+;; +3 *(DE + 3) = *(BC + 3)    [3] L053E - wykonuje operacjÄ™ RECALIBRATE
+;; +4 *(DE + 4) = *(BC + 4)    [4] L0579 - wykonuje operacjÄ™ odczytu sektorÃ³w (READ_SECTORS)
 ;; +5 *(DE + 5) = *(BC + 5)    [5] L0583 -> L053B
-;; +6 *(DE + 6) = *(BC + 6)    [6] L0586 - wykonuje operacjê zapisu sektorów (WRITE_SECTORS)
-;;                             [7] L0590 -> L053B - koniec funkcji odczytu sektorów, kontrola b³êdów
+;; +6 *(DE + 6) = *(BC + 6)    [6] L0586 - wykonuje operacjÄ™ zapisu sektorÃ³w (WRITE_SECTORS)
+;;                             [7] L0590 -> L053B - koniec funkcji odczytu sektorÃ³w, kontrola bÅ‚Ä™dÃ³w
 ;;
 ;; -----------------------------------------------------------------------------------------------
-;; Parametry wej¶ciowe:
+;; Parametry wejÅ›ciowe:
 ;;
 ;; BC - adres bufora zmiennych z parametrami funkcji
 ;; DE - adres bufora roboczego funkcji
 ;;
-;; *(BC + 00) - numer napêdu, 0 - 'A', 1- 'B'
-;; *(BC + 01) - kod operacji FDC (patrz tabelka wy¿ej)
-;; *(BC + 02) - ilo¶æ sektorów 
-;; *(BC + 03) - numer ¶cie¿ki
+;; *(BC + 00) - numer napÄ™du, 0 - 'A', 1- 'B'
+;; *(BC + 01) - kod operacji FDC (patrz tabelka wyÅ¼ej)
+;; *(BC + 02) - iloÅ›Ä‡ sektorÃ³w 
+;; *(BC + 03) - numer Å›cieÅ¼ki
 ;; *(BC + 04) - numer pierwszego sektora
-;; *(BC + 05) - adres bufora danych odczytu/zapisu, m³odszy bajt
+;; *(BC + 05) - adres bufora danych odczytu/zapisu, mÅ‚odszy bajt
 ;; *(BC + 06) - adres bufora danych odczytu/zapisu, starszy bajt
 ;;
-;; Parametry wyj¶ciowe:
-;;   A -> kod b³êdu operacji FDC
+;; Parametry wyjÅ›ciowe:
+;;   A -> kod bÅ‚Ä™du operacji FDC
 ;;
 L04EB:
      PUSH      DE          ; zachowaj DE
@@ -1222,27 +1222,27 @@ L04F0:
      INC       HL        
      LD        D,(HL  )     
      EX        DE,HL        
-     POP       DE          ; odtwórz DE
+     POP       DE          ; odtwÃ³rz DE
      JP        (HL)        ; goto *(0x593 + 2*(*(pt2+1) & 0x7))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Wymuszenie pozytywnego zakoñczenia funkcji
+;; Wymuszenie pozytywnego zakoÅ„czenia funkcji
 ;;
 L050B:
- 50b LD        HL,0x001a     ; wska¼nik zmiennej kodu b³êdu po operacji FDC
+ 50b LD        HL,0x001a     ; wskaÅºnik zmiennej kodu bÅ‚Ä™du po operacji FDC
  50e ADD       HL,DE     
  50f LD        (HL   ),0x00  ; (DE + 0x001a) = 0
- 511 JP        0x05a3        ; obs³uga b³êdów
+ 511 JP        0x05a3        ; obsÅ‚uga bÅ‚Ä™dÃ³w
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Wykonanie operacji SEEK, wraz ze sprawdzeniem poprawno¶ci parametrów
+;; Wykonanie operacji SEEK, wraz ze sprawdzeniem poprawnoÅ›ci parametrÃ³w
 ;;
-;; (DE+00) - nr napêdu
-;; (DE+03) - nr ¶cie¿ki i g³owicy
-;; (DE+1a) - kod b³êdu
-;; *T0255 - min numer ¶ciezki
+;; (DE+00) - nr napÄ™du
+;; (DE+03) - nr Å›cieÅ¼ki i gÅ‚owicy
+;; (DE+1a) - kod bÅ‚Ä™du
+;; *T0255 - min numer Å›cieÅ¼ki
 ;;
 L0514:
      LD        HL,0x0003     
@@ -1254,19 +1254,19 @@ L0514:
      LD        HL,0x001a     
      ADD       HL,DE     
      LD        (HL   ),0x08     ; (DE+1a) = 0x08
-     JP        0x0538 		; skocz do kontroli b³êdów       
+     JP        0x0538 		; skocz do kontroli bÅ‚Ä™dÃ³w       
 L0529:
      LD        HL,0x0000     
      ADD       HL,DE     
-     LD        B,(HL  )         ; B = (DE+00) ; - nr napêdu
+     LD        B,(HL  )         ; B = (DE+00) ; - nr napÄ™du
      LD        HL,0x0003     
      ADD       HL,DE     
-     LD        C,(HL  )         ; C = (DE +3) ; - numer cylindra/g³owicy
+     LD        C,(HL  )         ; C = (DE +3) ; - numer cylindra/gÅ‚owicy
      PUSH      DE          
      CALL      0x0299           ; wykonaj SEEK/RECALIBRATE
      POP       DE          
 L0538:
-     JP        0x05a3           ; kontynuuj w kontroli b³êdów
+     JP        0x05a3           ; kontynuuj w kontroli bÅ‚Ä™dÃ³w
 L053B:
      JP        0x05a3        
 
@@ -1274,9 +1274,9 @@ L053B:
 ;;
 ;; Wykonanie operacji RECALIBRATE
 ;; 
-;; (DE+00) - numer napêdu
-;; (DE+2f) - kod b³êdu dla napêdu 0
-;; (DE+30) - kod b³êdu dla napêdu 1
+;; (DE+00) - numer napÄ™du
+;; (DE+2f) - kod bÅ‚Ä™du dla napÄ™du 0
+;; (DE+30) - kod bÅ‚Ä™du dla napÄ™du 1
 ;;
 L053E:
  53e LD        HL,0x0009     
@@ -1284,29 +1284,29 @@ L053E:
  542 LD        (HL   ),0x07  	; (DE+09) = 7 - kod operacji RECALIBRATE
  544 LD        A,(DE)           ; 
  545 INC       HL        
- 546 LD        (HL  ),A         ; DB (DE+0a) = (DE+00) - numer napêdu
+ 546 LD        (HL  ),A         ; DB (DE+0a) = (DE+00) - numer napÄ™du
  547 LD        BC,0x0007     
  54a PUSH      DE          
  54b EX        DE,HL       
  54c ADD       HL,BC     
  54d LD        C,L         
  54e LD        B,H         	; BC = DE + 7
- 54f CALL      0x099a           ; wykonaj komendê FDC RECALIBRATE
+ 54f CALL      0x099a           ; wykonaj komendÄ™ FDC RECALIBRATE
  552 POP       DE          
  553 LD        HL,0x001a     
  556 ADD       HL,DE     
- 557 LD        A,(HL  ) 	; A=(DE+1a) - kod b³êdu po RECALIBRATE
+ 557 LD        A,(HL  ) 	; A=(DE+1a) - kod bÅ‚Ä™du po RECALIBRATE
  558 CP        0x00         
- 55a JP        NZ,0x056b        ; if( *(DE+1a) !=0 ) goto 0x056b <- jesli wystapi³ b³±d
+ 55a JP        NZ,0x056b        ; if( *(DE+1a) !=0 ) goto 0x056b <- jeÅ›li wystÄ…piÅ‚ bÅ‚Ä…d
  55d LD        A,(DE)      
  55e LD        L,A         
  55f LD        H,0x00      	 
  561 LD        BC,0x002f     
  564 ADD       HL,BC     
  565 ADD       HL,DE            ; 
- 566 LD        (HL   ),0x00  	; (DE + 0x2f + (DE+00)) = 0; // wyzerowanie b³êdu napêdu
+ 566 LD        (HL   ),0x00  	; (DE + 0x2f + (DE+00)) = 0; // wyzerowanie bÅ‚Ä™du napÄ™du
  568 JP        0x0576        
-; nie powiod³a siê komenda RECALIBRATE
+; nie powiodÅ‚a siÄ™ komenda RECALIBRATE
 L056B:
  56b LD        A,(DE)      
  56c LD        L,A         
@@ -1314,27 +1314,27 @@ L056B:
  56f LD        BC,0x002f     
  572 ADD       HL,BC     
  573 ADD       HL,DE     
- 574 LD        (HL   ),0xff   	; (DE + 0x2f + (DE+00)) = 0; // ustawienie b³êdu napêdu
+ 574 LD        (HL   ),0xff   	; (DE + 0x2f + (DE+00)) = 0; // ustawienie bÅ‚Ä™du napÄ™du
 L0576:
- 576 JP        0x05a3           ; skok do obs³ugi b³êdu
+ 576 JP        0x05a3           ; skok do obsÅ‚ugi bÅ‚Ä™du
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja odczytu sektorów READ_SECTORS
+;; Funkcja odczytu sektorÃ³w READ_SECTORS
 ;;
-;; Funkcja realizuje operacjê odczytu sektorów, wraz z ustawieniem na w³a¶ciw± ¶cie¿kê.
+;; Funkcja realizuje operacjÄ™ odczytu sektorÃ³w, wraz z ustawieniem na wÅ‚aÅ›ciwÄ… Å›cieÅ¼kÄ™.
 ;;
-;; DE - wska¼nik obszaru zmiennych
+;; DE - wskaÅºnik obszaru zmiennych
 ;;
-;; parametry wej¶ciowe funkcji:
-;; (DE+00) - numer napêdu                -> disk
-;; (DE+02) - ilo¶æ sektorów dla operacji -> nsect
-;; (DE+03) - numer ¶ciezki i g³owicy     -> trk
-;; (DE+04) - pocz±tkowy numer sektora    -> sector
-;; (DE+05,06) - adres bufora odczytywanych sektorów
+;; parametry wejÅ›ciowe funkcji:
+;; (DE+00) - numer napÄ™du                -> disk
+;; (DE+02) - iloÅ›Ä‡ sektorÃ³w dla operacji -> nsect
+;; (DE+03) - numer Å›cieÅ¼ki i gÅ‚owicy     -> trk
+;; (DE+04) - poczÄ…tkowy numer sektora    -> sector
+;; (DE+05,06) - adres bufora odczytywanych sektorÃ³w
 ;;
 ;; parametry zwracane:
-;; //(DE+1a) - kod b³êdu, je¶li z³e parametry to 8
+;; //(DE+1a) - kod bÅ‚Ä™du, jeÅ›li zÅ‚e parametry to 8
 ;; (DE+0x33) -
 ;;
 L0579:
@@ -1348,19 +1348,19 @@ L0583:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja zapisu sektorów WRITE_SECTORS
+;; Funkcja zapisu sektorÃ³w WRITE_SECTORS
 ;;
-;; Funkcja realizuje operacjê zapisu sektorów, wraz z ustawieniem na w³a¶ciw± ¶cie¿kê.
+;; Funkcja realizuje operacjÄ™ zapisu sektorÃ³w, wraz z ustawieniem na wÅ‚aÅ›ciwÄ… Å›cieÅ¼kÄ™.
 ;;
-;; parametry wej¶ciowe funkcji:
-;; (DE+00) - numer napêdu                -> disk
-;; (DE+02) - ilo¶æ sektorów dla operacji -> nsect
-;; (DE+03) - numer ¶ciezki i g³owicy     -> trk
-;; (DE+04) - pocz±tkowy numer sektora    -> sector
-;; (DE+05,06) - adres bufora sektorów z danymi do zapisu
+;; parametry wejÅ›ciowe funkcji:
+;; (DE+00) - numer napÄ™du                -> disk
+;; (DE+02) - iloÅ›Ä‡ sektorÃ³w dla operacji -> nsect
+;; (DE+03) - numer Å›cieÅ¼ki i gÅ‚owicy     -> trk
+;; (DE+04) - poczÄ…tkowy numer sektora    -> sector
+;; (DE+05,06) - adres bufora sektorÃ³w z danymi do zapisu
 ;;
 ;; //parametry zwracane:
-;; //(DE+1a) - kod b³êdu, je¶li z³e parametry to 8
+;; //(DE+1a) - kod bÅ‚Ä™du, jeÅ›li zÅ‚e parametry to 8
 ;;
 ;;
 
@@ -1375,20 +1375,20 @@ L0590:
 
 ; skoki do procedur 
 T0593:
-    DB 0x0b,0x05 ; (0) L050B - L05A3 z pozytywnym kodem b³êdu
+    DB 0x0b,0x05 ; (0) L050B - L05A3 z pozytywnym kodem bÅ‚Ä™du
     DB 0x14,0x05 ; (1) L0514 - SEEK
     DB 0x3b,0x05 ; (2) L053B -> L05A3
     DB 0x3e,0x05 ; (3) L053E - RECALIBRATE
-    DB 0x79,0x05 ; (4) L0579 - odczyt sektorów
+    DB 0x79,0x05 ; (4) L0579 - odczyt sektorÃ³w
     DB 0x83,0x05 ; (5) L0583 -> L05A3
-    DB 0x86,0x05 ; (6) L0586 -  zapis sektorów
-    DB 0x90,0x05 ; (7) L0590 -> L05A3 - koniec funkcji odczytu sektorów, kontrola b³êdów
+    DB 0x86,0x05 ; (6) L0586 -  zapis sektorÃ³w
+    DB 0x90,0x05 ; (7) L0590 -> L05A3 - koniec funkcji odczytu sektorÃ³w, kontrola bÅ‚Ä™dÃ³w
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Koniec wykonania funkcji READ_SECTORS i WRITE_SECTORS
 ;;
-;; w A zwraca kod b³êdu operacji
+;; w A zwraca kod bÅ‚Ä™du operacji
 ;;
 
 L05A3:
@@ -1429,22 +1429,22 @@ L05A3:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Ci±g dalszy RST #00 spod adresu #141
+;; CiÄ…g dalszy RST #00 spod adresu #141
 ;;
 ;; Inicjowanie FDC, test czy jest to wersja dyskowa/bezdyskowa
 ;; 
-;; Dane wej¶ciowe
-;; BC = 0x2000 - pocz±tek RAM, (0x3209) = 0
+;; Dane wejÅ›ciowe
+;; BC = 0x2000 - poczÄ…tek RAM, (0x3209) = 0
 ;;
-;; Dane wyj¶ciowe: brak
+;; Dane wyjÅ›ciowe: brak
 ;;
 L05D9:
      LD        A,0x0b       
-     OUT       0xf1,A       ; w³±cz silniki obu napêdów, RESET_FDC=0, TC_FDC=0
+     OUT       0xf1,A       ; wÅ‚Ä…cz silniki obu napÄ™dÃ³w, RESET_FDC=0, TC_FDC=0
      PUSH      BC          
      POP       DE           ; DE = BC
 
-; opó¼nienie -czas potrzebny na pewne wyj¶cie FDC 8272 z resetu, oraz reakcji FDD
+; opÃ³Åºnienie -czas potrzebny na pewne wyjÅ›cie FDC 8272 z resetu, oraz reakcji FDD
      LD        BC,0x03e8    ; BC = 1000d
 L05E2:			    ; do {
      DEC       BC           ;
@@ -1453,42 +1453,42 @@ L05E2:			    ; do {
      JP        NZ,L05E2	    ; } while(BC & 0xff00)
 
      IN        A,0xee       ; pobierz rejestr statusu  FDC
-     CP        0x80         ; czy mo¿na wys³aæ komendê dla FDC ?
-     JP        Z,L05F9      ; je¶li tak to znaczy ¿e mamy kontroler zainstalowany -> inicjowanie FDC
-     CALL      0x0098       ; w przeciwnym razie wy¶wietl komunikat "wersja bezdyskowa"
+     CP        0x80         ; czy moÅ¼na wysÅ‚aÄ‡ komendÄ™ dla FDC ?
+     JP        Z,L05F9      ; jeÅ›li tak to znaczy Å¼e mamy kontroler zainstalowany -> inicjowanie FDC
+     CALL      0x0098       ; w przeciwnym razie wyÅ›wietl komunikat "wersja bezdyskowa"
 
-L05F2:			    ; zakoñczenie funkcji
+L05F2:			    ; zakoÅ„czenie funkcji
      LD        A,0xc8       ; 
-     OUT       0xf1,A       ; wy³±cz silniki FDD
-     OUT       0xf7,A       ; powrót do zxrom ???
+     OUT       0xf1,A       ; wyÅ‚Ä…cz silniki FDD
+     OUT       0xf7,A       ; powrÃ³t do zxrom ???
      RET                    ; koniec procedury RST #00
 
-; mamy kontroler, wiêc teraz inicjowanie FDC
+; mamy kontroler, wiÄ™c teraz inicjowanie FDC
 L05F9: 
-     PUSH      DE           ; zachowaj parametr wej¶ciowy z BC na stosie  - pocz±tek obszaru RAM
-     CALL      L0261        ; wys³anie komendy SPECIFY do kontrolera FDC, ustawienie transmisji bez DMA
-     POP       HL           ; HL - pocz±tek RAM
+     PUSH      DE           ; zachowaj parametr wejÅ›ciowy z BC na stosie  - poczÄ…tek obszaru RAM
+     CALL      L0261        ; wysÅ‚anie komendy SPECIFY do kontrolera FDC, ustawienie transmisji bez DMA
+     POP       HL           ; HL - poczÄ…tek RAM
      PUSH      HL           ; kopia na stos
      LD        BC,0x001b    ;
      ADD       HL,BC        ;
      LD        C,L          ;
      LD        B,H          ; BC = HL + 0x1b - adres bufora wynikowego
-     CALL      0x07d4	    ; wysy³a komendê SENSE INTERRUPT STATUS do FDC
-     POP       DE           ; DE - pocz±tek RAM
+     CALL      0x07d4	    ; wysyÅ‚a komendÄ™ SENSE INTERRUPT STATUS do FDC
+     POP       DE           ; DE - poczÄ…tek RAM
      LD        HL,0x0000    ; 
      ADD       HL,DE        ; 
      LD        (HL   ),0x00 ; (DE + 0000) = 0
      LD        HL,0x0003    ;
      ADD       HL,DE        ;
      LD        (HL   ),0x00 ; (DE + 0003) = 0
-     PUSH      DE           ; i znowu zapamiêtujemy parametr wej¶ciowy z BC
+     PUSH      DE           ; i znowu zapamiÄ™tujemy parametr wejÅ›ciowy z BC
      LD        BC,0x0000    ;
-     CALL      0x0299       ; wysy³a komendê RECALIBRATE DISK 0
-     POP       DE           ; DE - parametr wej¶ciowy z BC
+     CALL      0x0299       ; wysyÅ‚a komendÄ™ RECALIBRATE DISK 0
+     POP       DE           ; DE - parametr wejÅ›ciowy z BC
      LD        BC,0x0100    ;
-     CALL      0x0299       ; wysy³a komendê RECALIBRATE DISK 1
-     CALL      0x0090       ; wy¶wietl komunikat "wersja dyskowa"
-     JP        L05F2        ; zakoñcz funkcjê 
+     CALL      0x0299       ; wysyÅ‚a komendÄ™ RECALIBRATE DISK 1
+     CALL      0x0090       ; wyÅ›wietl komunikat "wersja dyskowa"
+     JP        L05F2        ; zakoÅ„cz funkcjÄ™ 
 
 T0629:
     DB  0x00,0x00
@@ -1516,7 +1516,7 @@ T0629:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Tablica ilo¶ci bajtów rozkazu do wys³ania 
+;; Tablica iloÅ›ci bajtÃ³w rozkazu do wysÅ‚ania 
 ;;
 ;;       
 T0649:
@@ -1547,30 +1547,30 @@ TAB_01:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Funkcja:
-;;    Testuje rejestr statusowy czy mo¿na wykonaæ zapis do rejestru danych FDC
+;;    Testuje rejestr statusowy czy moÅ¼na wykonaÄ‡ zapis do rejestru danych FDC
 ;;  
-;;  Parametry wej¶ciowe: brak
+;;  Parametry wejÅ›ciowe: brak
 ;;
-;;  Parametry Wyj¶ciowe:
-;;  A = 0 - nie mozna wys³aæ danej (FDC znajduje sie np w fazie RESULT)
-;;  A = 1 - mo¿na wys³aæ dan±
+;;  Parametry WyjÅ›ciowe:
+;;  A = 0 - nie moÅ¼na wysÅ‚aÄ‡ danej (FDC znajduje siÄ™ np w fazie RESULT)
+;;  A = 1 - moÅ¼na wysÅ‚aÄ‡ danÄ…
 ;;
 ;;  Modyfikuje: AF,BC
 ;;
 L0669:
      LD        A,0x02       
-     CALL      L1572       ; L1572(2) - opó¼nienie
+     CALL      L1572       ; L1572(2) - opÃ³Åºnienie
 L066E:
-     IN        A,0xee      ; test czy mo¿na robiæ zapis/odczyt do FDC
+     IN        A,0xee      ; test czy moÅ¼na robiÄ‡ zapis/odczyt do FDC
      AND       0x80         
      CP        0x00         
-     JP        NZ,L067a    ; mo¿na  
-     JP        0x066e      ; nie mo¿na - sprawdzaj tak d³ugo, a¿ bêdzie mo¿na   
+     JP        NZ,L067a    ; moÅ¼na  
+     JP        0x066e      ; nie moÅ¼na - sprawdzaj tak dÅ‚ugo, aÅ¼ bÄ™dzie moÅ¼na   
 L067A:
-     IN        A,0xee      ; test czy mo¿na zrobiæ zapis do rejestru danych FDC
+     IN        A,0xee      ; test czy moÅ¼na zrobiÄ‡ zapis do rejestru danych FDC
      AND       0x40         
      CP        0x00         
-     JP        NZ,L0686    ; wyj¶cie z A=0;
+     JP        NZ,L0686    ; wyjÅ›cie z A=0;
      LD        A,0x01       
      RET                   ; A=1; return;
 L0686:
@@ -1582,36 +1582,36 @@ L0686:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Funkcja:
-;;   Test rejestru statusowego, oczekiwanie na gotowo¶æ transmisji
+;;   Test rejestru statusowego, oczekiwanie na gotowoÅ›Ä‡ transmisji
 ;;
-;; Wej¶cie:brak
+;; WejÅ›cie:brak
 ;;
-;; Wyj¶cie:
-;;    A = 0 -> mozna pisaæ do rejestru danych FDC
-;;    A = 1 -> nalezy odczytaæ rejestr danych FDC (np w wyniku fazy result FDC)
+;; WyjÅ›cie:
+;;    A = 0 -> moÅ¼na pisaÄ‡ do rejestru danych FDC
+;;    A = 1 -> naleÅ¼y odczytaÄ‡ rejestr danych FDC (np w wyniku fazy result FDC)
 ;;    A = 3 -> FDC jest w stanie oczekiwania (nie wykonuje rozkazu zapis/odczyt)
 ;;    
 L068A:
      LD        A,0x02       
-     CALL      0x1572        ; opó¼nienie
-     IN        A,0xee        ; pobierz rejestr g³ówny statusu FDC
+     CALL      0x1572        ; opÃ³Åºnienie
+     IN        A,0xee        ; pobierz rejestr gÅ‚Ã³wny statusu FDC
      AND       0x10          ; bit CB - FDC jest w trakcie wykonywania rozkazu odczytu/zapisu
      CP        0x00          ; 
      JP        NZ,L069B      ; wykonywany jest rozkaz zapis/odczyt -> testuj dalej
-     LD        A,0x03        ; jesli nie wykonuje rozkazu zapis/odczyt -> A=3; return
+     LD        A,0x03        ; jeÅ›li nie wykonuje rozkazu zapis/odczyt -> A=3; return
      RET                   
 L069B: 
-     IN        A,0xee        ; pobierz rejestr g³ówny statusu FDC
-     AND       0x80          ; bit RQM - rejestr danych FDC jest gotowy do przyjêcia/wys³ania danej
+     IN        A,0xee        ; pobierz rejestr gÅ‚Ã³wny statusu FDC
+     AND       0x80          ; bit RQM - rejestr danych FDC jest gotowy do przyjÄ™cia/wysÅ‚ania danej
      CP        0x00         
      JP        NZ,L06A7      ; jest gotowy - > testuj dalej
-     JP        0x069b        ; testuj dopuki bêdzie gotowy
+     JP        0x069b        ; testuj dopÃ³ki bÄ™dzie gotowy
 L06A7:
-     IN        A,0xee        ; pobierz rejestr g³ówny statusu FDC
+     IN        A,0xee        ; pobierz rejestr gÅ‚Ã³wny statusu FDC
      AND       0x40          ; BIT DIO - wskazuje kierunek transmisji danych CPU <-> FDC
      CP        0x00         
-     JP        Z,L06B3       ; mo¿na pisaæ do rejestru danych -> A=0; return
-     LD        A,0x01        ; nalezy odczytaæ rejestr danych -> A=1; return
+     JP        Z,L06B3       ; moÅ¼na pisaÄ‡ do rejestru danych -> A=0; return
+     LD        A,0x01        ; naleÅ¼y odczytaÄ‡ rejestr danych -> A=1; return
      RET                   
 L06B3:
      LD        A,0x00       
@@ -1621,13 +1621,13 @@ L06B6:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Funkcja:
-;;	Wysy³a dan± do rejestru danych FDC
+;;	WysyÅ‚a danÄ… do rejestru danych FDC
 ;;
-;;  Parametry wej¶ciowe:
+;;  Parametry wejÅ›ciowe:
 ;;      C - kod rozkazu
-;;  Parametry wyj¶ciowe:
-;;      A = 0 - nie powiod³o siê (nie mo¿na w tej chwili wysy³aæ (np FDC jest w fazie RESULT )
-;;	A = 1 - dana wys³ana
+;;  Parametry wyjÅ›ciowe:
+;;      A = 0 - nie powiodÅ‚o siÄ™ (nie moÅ¼na w tej chwili wysyÅ‚aÄ‡ (np FDC jest w fazie RESULT )
+;;	A = 1 - dana wysÅ‚ana
 ;;
 ;;  Modyfikuje:
 ;;	AF,HL,BC
@@ -1635,41 +1635,41 @@ L06B6:
 
 L06B7:
      LD        B,C          ; 
-     PUSH      BC           ; parametr wej¶ciowy na stos
+     PUSH      BC           ; parametr wejÅ›ciowy na stos
      INC       SP           ; SP teraz wskazuje na 
-     CALL      L0669        ; A=L0669(); funkcja testuje czy mo¿na wys³aæ dan±
+     CALL      L0669        ; A=L0669(); funkcja testuje czy moÅ¼na wysÅ‚aÄ‡ danÄ…
      RRA                   
-     JP        C,L06C5      ; if(A & 1) goto L06C5 -> mo¿na wys³aæ
+     JP        C,L06C5      ; if(A & 1) goto L06C5 -> moÅ¼na wysÅ‚aÄ‡
      LD        A,0x00       
-     INC       SP           ; wska¼nik stosu jak przed wykonaniem push BC
+     INC       SP           ; wskaÅºnik stosu jak przed wykonaniem push BC
      RET                    ; A=0; return;
 L06C5:
      LD        HL,0x0000     
      ADD       HL,SP     
      LD        A,(HL  )   
-     OUT       0xef,A      ; wyslij komende do FDC - numer komendy jako parametr wej¶ciowy w C 
+     OUT       0xef,A      ; wyÅ›lij komendÄ™ do FDC - numer komendy jako parametr wejÅ›ciowy w C 
      LD        A,0x01       
-     INC       SP          ; wska¼nik stosu jak przed wykonaniem push BC
+     INC       SP          ; wskaÅºnik stosu jak przed wykonaniem push BC
      RET                   ; A=1; return; 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;; Funkcja:
-;;    Pobranie danej z FDC w fazie RESULT, je¿eli dana znajduje siê w rejestrze FDC
+;;    Pobranie danej z FDC w fazie RESULT, jeÅ¼eli dana znajduje siÄ™ w rejestrze FDC
 ;;
-;; Wej¶cie:
-;;   BC - adres bufora, gdzie nale¿y zapisaæ dan± z fazy RESULT FDC "parm"
+;; WejÅ›cie:
+;;   BC - adres bufora, gdzie naleÅ¼y zapisaÄ‡ danÄ… z fazy RESULT FDC "parm"
 ;;
-;; Wyj¶cie:
-;; A = 0 -> FDC jest w stanie przyjmowania rozkazu - mo¿na s³aæ dan± do FDC
+;; WyjÅ›cie:
+;; A = 0 -> FDC jest w stanie przyjmowania rozkazu - moÅ¼na sÅ‚aÄ‡ danÄ… do FDC
 ;; A = 1 -> dana odebrana w buforze pod adresem wskazywanym przez BC
 ;; A = 3 -> FDC jest w stanie oczekiwania (nie wykonuje rozkazu R/W)
 ;;
 L06D0:
      DEC       SP            ; zmienna tymczasowa na stosie (sp+2) -> tmp
      PUSH      BC            ; parametr z BC na stos (sp+0) -> parm
-     CALL      L068a         ; Test rejestru statusowego FDC, oczekiwanie na zakoñczenie rozkazu R/W
+     CALL      L068a         ; Test rejestru statusowego FDC, oczekiwanie na zakoÅ„czenie rozkazu R/W
      LD        HL,0x0002     
      ADD       HL,SP     
      LD        (HL  ),A      ; tmp = A - wynik operacji Testu FDC
@@ -1677,24 +1677,24 @@ L06D0:
      ADD       HL,SP     
      LD        A,(HL  )      ; A = tmp 
      RRA                   
-     JP        C,L06E8      ; je¶li nie mo¿na pisac danej do rejestru FDC skocz dalej
-     LD        A,0x00       ; gotowo¶æ do wys³ania kolejnej danej
+     JP        C,L06E8      ; jeÅ›li nie moÅ¼na pisaÄ‡ danej do rejestru FDC skocz dalej
+     LD        A,0x00       ; gotowoÅ›Ä‡ do wysÅ‚ania kolejnej danej
      INC       SP           
      POP       HL        
-     RET                    ; A=0; return - mo¿na wys³aæ kolejn± dan± do FDC
+     RET                    ; A=0; return - moÅ¼na wysÅ‚aÄ‡ kolejnÄ… danÄ… do FDC
 
 L06E8:
      LD        HL,0x0002    
      ADD       HL,SP     
      LD        A,(HL  )     ; A = tmp - pobranie wyniku testu
      CP        0x03         ; nie wykonuje rozkazu R/W ?
-     JP        NZ,0x06f7    ; jesli wykonuje, tzn ¿e faza RESULT i transmisja CPU<-FDC
+     JP        NZ,0x06f7    ; jeÅ›li wykonuje, tzn Å¼e faza RESULT i transmisja CPU<-FDC
      LD        A,0x03       
      INC       SP          
      POP       HL        
      RET                    ; A=3; return
 
-; Faza RESULT rozkazu - nale¿y odczytaæ rejestr danych FDC
+; Faza RESULT rozkazu - naleÅ¼y odczytaÄ‡ rejestr danych FDC
 L06F7:
      IN        A,0xef       ; odczytaj rejestr danych FDC
      LD        HL,0x0000     
@@ -1712,10 +1712,10 @@ L06F7:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  Wys³anie rozkazu do FDC
+;;  WysÅ‚anie rozkazu do FDC
 ;;
 ;;
-;; BC - par1 - wska¼nik
+;; BC - par1 - wskaÅºnik
 ;;
 ;;
 ;;
@@ -1737,17 +1737,17 @@ L0710E:
  717 INC       BC          
  718 INC       BC          	; 
  719 LD        A,(BC)      	;  
- 71a AND       0x1f         	; A = *(par1+2) & 0x1f - pobranie danej spod wska¼nika/ ogranicznie wart do 5 bitów
+ 71a AND       0x1f         	; A = *(par1+2) & 0x1f - pobranie danej spod wskaÅºnika/ ogranicznie wart do 5 bitÃ³w
  71c LD        C,A         	
  71d LD        B,0x00       	
  71f LD        HL,0x0649     
  722 ADD       HL,BC     	; HL = 0x649 + A ; a=0...31
- 723 LD        A,(HL  ) 	; A = *HL; - ilosc danych do przes³ania ?
+ 723 LD        A,(HL  ) 	; A = *HL; - iloÅ›Ä‡ danych do przesÅ‚ania ?
  724 DEC       A           	
  725 LD        HL,0x0002     
  728 ADD       HL,SP     
  729 CP        (HL  )   	 
- 72a JP        C,0x0756      	; if(i > A) goto L0756 - wyjdz z A=1
+ 72a JP        C,0x0756      	; if(i > A) goto L0756 - wyjdÅº z A=1
  72d LD        HL,0x0002     
  730 ADD       HL,SP     
  731 LD        C,(HL  ) 	; C = i	
@@ -1760,13 +1760,13 @@ L0710E:
  73d POP       DE          	; DE = BC +2
  73e CALL      0x1569        	; HL = DE + (HL); -> HL=BC+2 + i; -> HL=i+2+i; -> HL=2*i+2;
  741 LD        C,(HL  ) 	; C  = (2*i+2) - kod danej
- 742 CALL      0x06b7        	; Wys³anie do rejestru danych FDC kodu z C
+ 742 CALL      0x06b7        	; WysÅ‚anie do rejestru danych FDC kodu z C
  745 RRA                   
- 746 JP        C,0x074e      	; je¶li uda³o siê wys³aæ dan±
+ 746 JP        C,0x074e      	; jeÅ›li udaÅ‚o siÄ™ wysÅ‚aÄ‡ danÄ…
  749 LD        A,0x00       
  74b INC       SP          
  74c POP       HL        
- 74d RET                   	; A=0; return; - nie uda³o siê wys³aæ 
+ 74d RET                   	; A=0; return; - nie udaÅ‚o siÄ™ wysÅ‚aÄ‡ 
 
 L074E:
  74e LD        HL,0x0002     
@@ -1786,13 +1786,13 @@ L0756:
 ;; 
 ;; BC - param_1
 ;;
-;; A = 0 - pobrano wszystkie dane, mozna wysy³ac nowe dane do FDC
-;; A = 1 - oczekiwanie na koniec operacji W/R, nie mozna pobrac danej
+;; A = 0 - pobrano wszystkie dane, moÅ¼na wysyÅ‚aÄ‡ nowe dane do FDC
+;; A = 1 - oczekiwanie na koniec operacji W/R, nie moÅ¼na pobraÄ‡ danej
 ;;
 L075B:
-     DEC       SP          	; (sp+4) - tmp_0  - wynik funkcji pobieraj±cej dan±
+     DEC       SP          	; (sp+4) - tmp_0  - wynik funkcji pobierajÄ…cej danÄ…
      PUSH      HL        	; (sp+3) - tmp_1  - odczytana dana 
-    				; (sp+2) - tmp_2  - licznik pobranych bajtów
+    				; (sp+2) - tmp_2  - licznik pobranych bajtÃ³w
      PUSH      BC          	; (sp+0) - param_1 
      LD        HL,0x0002     
      ADD       HL,SP     	; 
@@ -1805,9 +1805,9 @@ L0764:
      JP        C,L07BB      	; if( tmp_2 < 7) goto 7bb
      LD        HL,0x0003     
      ADD       HL,SP     
-     LD        B,H         	; BC = &tmp_1 - tmp1 bêdzie zawierac dan± odczytan± z FDC
-     LD        C,L         	; BC - adres bufora wyj¶ciowego
-     CALL      L06D0        	; Pobranie danej z fazy RESULT, dana znajduje siê w (BC)
+     LD        B,H         	; BC = &tmp_1 - tmp1 bÄ™dzie zawieraÄ‡ danÄ… odczytanÄ… z FDC
+     LD        C,L         	; BC - adres bufora wyjÅ›ciowego
+     CALL      L06D0        	; Pobranie danej z fazy RESULT, dana znajduje siÄ™ w (BC)
      LD        HL,0x0004     
      ADD       HL,SP     
      LD        (HL  ),A 	; tmp_0 = A - wynik funkcji pobierania danej
@@ -1816,8 +1816,8 @@ L0764:
      ADD       HL,SP     
      LD        A,(HL  ) 	; A = tmp_0
      RRA                   
-     JP        C,L078b      	; if(tmp != 0) goto 78b - dana pobrana, lub nie mozna bylo pobrac
-     LD        A,0x00           ; nie ma wiecej danych do pobrania
+     JP        C,L078b      	; if(tmp != 0) goto 78b - dana pobrana, lub nie moÅ¼na byÅ‚o pobraÄ‡
+     LD        A,0x00           ; nie ma wiÄ™cej danych do pobrania
      INC       SP          	
      POP       HL        
      POP       HL        
@@ -1829,12 +1829,12 @@ L078B:
      LD        A,(HL  ) 	; A = tmp_0
      CP        0x03         	; 
      JP        NZ,L079B     	; if(A != 3) goto 79B -> dana pobrana, czeka w tmp_1
-     LD        A,0x01           ; nie mozna bylo pobrac danej - FDC w stanie oczekiwania
+     LD        A,0x01           ; nie moÅ¼na byÅ‚o pobraÄ‡ danej - FDC w stanie oczekiwania
      INC       SP          
      POP       HL        
      POP       HL        
      RET                   	; A = 1; return; - oczekiwanie na koniec operacji W/R
-;; dana zosta³a odebrana i czeka w tmp_1, nale¿y j± skopiowaæ do bufora, i pobraæ nastêpn±
+;; dana zostaÅ‚a odebrana i czeka w tmp_1, naleÅ¼y jÄ… skopiowaÄ‡ do bufora, i pobraÄ‡ nastÄ™pnÄ…
 ;; :| ?????
 L079B:
      LD        HL,0x0002        
@@ -1845,7 +1845,7 @@ L079B:
      LD        HL,0x000b        
      ADD       HL,BC     	; HL = &param_1[0x0b] ??
      PUSH      HL        	
-     LD        HL,0x0002        ; - hmmm, gdyby by³o 0000, to by siê wszystko zgadza³o
+     LD        HL,0x0002        ; - hmmm, gdyby byÅ‚o 0000, to by siÄ™ wszystko zgadzaÅ‚o
      ADD       HL,SP     	; HL = &tmp_2 = SP+2
      POP       DE          	; DE = tmp_2 + 11 
      CALL      0x1569        	; HL = DE + (HL+0) + 256*(HL+1); DE= HL+1=SP+3
@@ -1856,7 +1856,7 @@ L079B:
      LD        HL,0x0002     
      ADD       HL,SP     
      INC       (HL  )   	; tmp_2++
-     JP        NZ,0x0764     	; if(tmp_2 !=0 ) goto L0764 - nastêpna dana do odczytu
+     JP        NZ,0x0764     	; if(tmp_2 !=0 ) goto L0764 - nastÄ™pna dana do odczytu
 L07BB:
      IN        A,0xee       	;
      AND       0x10         	;
@@ -1882,7 +1882,7 @@ L07CA:
  7d3 RET                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Wysy³a komendê SENSE INTERRUPT STATUS do kontrolera FDC, oraz zapamiêtuje wynik
+;; WysyÅ‚a komendÄ™ SENSE INTERRUPT STATUS do kontrolera FDC, oraz zapamiÄ™tuje wynik
 ;; komendy w buforze wskazywanym przez BC
 ;;
 ;; BC = 201b - adres bufora wynikowego 
@@ -1903,12 +1903,12 @@ L07D5:
      JP        Z,0x080a         ; if (A == 2) return
 
      LD        C,0x08       	; kod komendy SENSE INTERRUPT STATUS
-     CALL      0x06b7           ; wy¶lij komendê do kontrolera FDC
+     CALL      0x06b7           ; wyÅ›lij komendÄ™ do kontrolera FDC
      RRA                   
-     JP        C,0x07f6         ; jesli siê uda³o id¼ dalej
-     JP        0x07d5           ; powtórz próbê wys³ania
+     JP        C,0x07f6         ; jeÅ›li siÄ™ udaÅ‚o idÅº dalej
+     JP        0x07d5           ; powtÃ³rz prÃ³bÄ™ wysÅ‚ania
 
-; rozkaz wys³any, wiêc teraz nalezy pobraæ wynik z fazy result
+; rozkaz wysÅ‚any, wiÄ™c teraz naleÅ¼y pobraÄ‡ wynik z fazy result
 L07F6:
      LD        HL,0x0000 	;    
      ADD       HL,SP     	; 
@@ -1918,22 +1918,22 @@ L07F6:
      CALL      0x075b        	; pobranie danych z fazy RESULT FDC
      RRA                   
      JP        C,0x0807         
-     JP        0x07d5           ; powtórz próbê wys³ania rozkazu do FDC
+     JP        0x07d5           ; powtÃ³rz prÃ³bÄ™ wysÅ‚ania rozkazu do FDC
 L0807: 
-     JP        0x07d5           ; powtórz próbê wys³ania rozkazu do FDC
+     JP        0x07d5           ; powtÃ³rz prÃ³bÄ™ wysÅ‚ania rozkazu do FDC
 
 L080A:
      POP       HL        
      RET                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Przekopiowanie 7 (?) bajtów z obszaru parm1+11 do parm2+11,
+;; Przekopiowanie 7 (?) bajtÃ³w z obszaru parm1+11 do parm2+11,
 ;;  ustawienie: parm2[0x12]=1;
 ;; 
-;; Wej¶cie:
+;; WejÅ›cie:
 ;; 	DE- parm1
 ;; 	BC- parm2
-;; Wyj¶cie:
+;; WyjÅ›cie:
 ;;	parm2[0x12] = 1
 ;;
 ;; for(tmp=0; tmp <= 6; tmp++ ) de[ 11 + tmp] = bc[ 11 + tmp]; bc[0x12] = 1;
@@ -1944,7 +1944,7 @@ L080C:
      PUSH      BC          	; (sp+0) = parm2
      LD        HL,0x0004     
      ADD       HL,SP     
-; skopiowanie 6 bajtów z obszaru parm1+11 do parm2+11
+; skopiowanie 6 bajtÃ³w z obszaru parm1+11 do parm2+11
      LD        (HL   ),0x00  	; tmp = 0
 L0815: 
      LD        A,0x06       
@@ -1972,11 +1972,11 @@ L0815:
      CALL      0x156a        	; HL = &parm2[0x0b + tmp]
      POP       BC		; BC = &parm1[0x0b + tmp]
      LD        A,(BC)      
-     LD        (HL  ),A 	; parm2[0x0b + tmp] = parm1[0x0b + tmp] ; kop poj bajtów
+     LD        (HL  ),A 	; parm2[0x0b + tmp] = parm1[0x0b + tmp] ; kop poj bajtÃ³w
      LD        HL,0x0004     
      ADD       HL,SP     
      INC       (HL  )   	; tmp++
-     JP        NZ,0x0815        ; if( tmp != 0) goto 815 - nastepny bajt do kopiowania
+     JP        NZ,0x0815        ; if( tmp != 0) goto 815 - nastÄ™pny bajt do kopiowania
 
 L0849:
      LD        DE,0x0012     
@@ -1994,7 +1994,7 @@ L0849:
 ;; Wykonanie SENSE INTERRUPT STATUS po operacji SEEK lub RECALL
 ;; BC - parm2 - bufor wynikowy
 ;; HL - parm1 - bufor odczytu
-;; >>  wykonuje siê gdy CB=0 << 
+;; >>  wykonuje siÄ™ gdy CB=0 << 
 ;;
 L0859:
      DEC       SP          	; (sp+4) - tymczasowa zmienna tmp_0
@@ -2009,13 +2009,13 @@ L0859:
      INC       HL        	;
      LD        (HL  ),E 	;
      INC       HL        	;
-     LD        (HL  ),D 	; param2[0x00] = &param2[0x13] - wska¼nik wyniku operacji
+     LD        (HL  ),D 	; param2[0x00] = &param2[0x13] - wskaÅºnik wyniku operacji
 
      IN        A,0xee       	; pobierz rejestr statusowy
      AND       0x10         	; testuj bit CB rejestru MSR
      CP        0x00         
-     JP        Z,L089F      	; jesli CB == 0, wykonuj dalej pod adresem L089F
-; FDC jest w trakcie operacji R/W - faza result, nale¿y odczytaæ dane z bufora danych FDC
+     JP        Z,L089F      	; jeÅ›li CB == 0, wykonuj dalej pod adresem L089F
+; FDC jest w trakcie operacji R/W - faza result, naleÅ¼y odczytaÄ‡ dane z bufora danych FDC
      LD        HL,0x0000     	
      ADD       HL,SP     
      LD        C,(HL  ) 	
@@ -2023,7 +2023,7 @@ L0859:
      LD        B,(HL  ) 	; BC = parm2
      CALL      L075B        	; pobranie danych z fazy RESULT
      RRA                   
-     JP        C,L0890      	; nie uda³o siê pobraæ wszystkich danych
+     JP        C,L0890      	; nie udaÅ‚o siÄ™ pobraÄ‡ wszystkich danych
 ; wszystkie dane pobrano z fazy result
      LD        DE,0x0012     	; 
      LD        HL,0x0000     
@@ -2039,10 +2039,10 @@ L0890:
      LD        (HL   ),0x01     ; parm2[0x12] = 0x01
 L089C:
      JP        0x0996           ; oczyszczenie stosu i return
-; FDC jest w stanie oczekiwania, mozna wyslac kolejna komendê
+; FDC jest w stanie oczekiwania, moÅ¼na wysÅ‚aÄ‡ kolejna komendÄ™
 L089F:
      LD        A,0x05       
-     CALL      0x1572        	; opó¼nienie
+     CALL      0x1572        	; opÃ³Åºnienie
      LD        HL,0x0004     
      ADD       HL,SP     
      LD        (HL   ),0x01     ; tmp_0 = 1
@@ -2051,12 +2051,12 @@ L08AA:
      ADD       HL,SP     
      LD        A,(HL  ) 	
      RRA                   
-     JP        NC,L094C        ; if tmp_0 & 1 == 0 goto 94c - wyj¶cie z pêtli
+     JP        NC,L094C        ; if tmp_0 & 1 == 0 goto 94c - wyjÅ›cie z pÄ™tli
      LD        C,0x08       
-     CALL      0x06b7          ; wysy³a komende SENSE IRQ STATUS FDC
+     CALL      0x06b7          ; wysyÅ‚a komendÄ™ SENSE IRQ STATUS FDC
      RRA                   
-     JP        C,0x08cc        ; udalo sie wyslac  id¼ do 8cc
-; nie udalo sie wyslac komendy SENSE IRQ STATUS
+     JP        C,0x08cc        ; udaÅ‚o siÄ™ wysÅ‚aÄ‡  idÅº do 8cc
+; nie udaÅ‚o siÄ™ wysÅ‚aÄ‡ komendy SENSE IRQ STATUS
      LD        DE,0x0012     
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2065,8 +2065,8 @@ L08AA:
      INC       SP          
      POP       HL        
      POP       HL        
-     RET                       ; wyjd¼
-; SENSE IRQ STATUS wys³ane, teraz nale¿y odczytaæ dane z fazy RESULT 
+     RET                       ; wyjdÅº
+; SENSE IRQ STATUS wysÅ‚ane, teraz naleÅ¼y odczytaÄ‡ dane z fazy RESULT 
 L08CC:
      LD        HL,0x0002     
      ADD       HL,SP     
@@ -2075,8 +2075,8 @@ L08CC:
      LD        B,(HL  )      ; BC = parm1 - bufor odczytu 
      CALL      L075B         ; pobranie danych z fazy result
      RRA                   
-     JP        C,0x08ea      ; jesli siê powiód³ odczyt danych to skocz do 8EA
-; jesli nie to zakoñcz z kodem b³êdu
+     JP        C,0x08ea      ; jeÅ›li siÄ™ powiÃ³dÅ‚ odczyt danych to skocz do 8EA
+; jeÅ›li nie to zakoÅ„cz z kodem bÅ‚Ä™du
      LD        DE,0x0012     
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2087,20 +2087,20 @@ L08CC:
      POP       HL        
      RET                    ; return
  
-; faza RESULT komendy SENSE IRQ zakoñczona sukcesem
+; faza RESULT komendy SENSE IRQ zakoÅ„czona sukcesem
 L08EA:
      LD        DE,0x000b     
      LD        HL,0x0002     
      ADD       HL,SP     
      CALL      0x1569        
-     LD        A,(HL  )     ; A = parm1[0x0b] -> zawarto¶æ rejestru ST0 FDC
+     LD        A,(HL  )     ; A = parm1[0x0b] -> zawartoÅ›Ä‡ rejestru ST0 FDC
      AND       0xe0         ; abc00000 CY=0
      RLA                    ; bc00000C CY=a
      RLA                    ; c00000Ca CY=b
      RLA                    ; 00000Cab CY=c
      LD        C,A          
      LD        B,0x00       ; BC = 00000000000000ab
-     LD        HL,0x0941    ; zawiera 4 wska¼niki do funkcji:
+     LD        HL,0x0941    ; zawiera 4 wskaÅºniki do funkcji:
      ADD       HL,BC        ;            L0949, L0907,L0921,L093B
      ADD       HL,BC        ; HL = 2*BC + 0x941
      LD        E,(HL  ) 
@@ -2124,7 +2124,7 @@ L0907:
      LD        HL,0x0004     
      ADD       HL,SP     
      LD        (HL   ),0x00  	; tmp_0 = 0
-     JP        0x0949        	; powtórz komendê SENSE IRQ STATUS FDC
+     JP        0x0949        	; powtÃ³rz komendÄ™ SENSE IRQ STATUS FDC
 
 ; skok dynamiczny z funkcji L0859 idx=2
 L0921: 
@@ -2138,24 +2138,24 @@ L0921:
      LD        E,(HL  ) 
      INC       HL        	; BC = parm2
      LD        D,(HL  ) 	; DE = parm1
-     CALL      L080c        	; przekopiowanienie 7 bajtów z de[11+i]=bc[11+i]; bc[0x12]=1
+     CALL      L080c        	; przekopiowanienie 7 bajtÃ³w z de[11+i]=bc[11+i]; bc[0x12]=1
      LD        HL,0x0004     
      ADD       HL,SP     
-     LD        (HL   ),0x00  	; tmp_0 = 0x00 -> koniec petli, skok pod 94C
-     JP        0x0949           ; powtórz komendê SENSE IRQ STATUS FDC i wyjdz z petli
+     LD        (HL   ),0x00  	; tmp_0 = 0x00 -> koniec pÄ™tli, skok pod 94C
+     JP        0x0949           ; powtÃ³rz komendÄ™ SENSE IRQ STATUS FDC i wyjdÅº z pÄ™tli
 ; skok dynamiczny z funkcji L0859 idx=3
 L093B: 
-     JP        0x0949        ; powtórz komendê SENSE IRQ STATUS FDC
+     JP        0x0949        ; powtÃ³rz komendÄ™ SENSE IRQ STATUS FDC
 L093E:
-     JP        0x0949        ; powtórz komendê SENSE IRQ STATUS FDC        
+     JP        0x0949        ; powtÃ³rz komendÄ™ SENSE IRQ STATUS FDC        
 
 T0941:
     DW L0907,L0921,L093B,L093E
 ; skok dynamiczny z funkcji L0859 idx=0
 L0949: 
- 949 JP        0x08aa        ; powtórz komendê SENSE IRQ STATUS FDC
+ 949 JP        0x08aa        ; powtÃ³rz komendÄ™ SENSE IRQ STATUS FDC
 
-; po wykonaniu instrukcji RECALL/SEEK i nastêpuj±cej po niej SENSE IRQ
+; po wykonaniu instrukcji RECALL/SEEK i nastÄ™pujÄ…cej po niej SENSE IRQ
 
 
 L094C:
@@ -2169,12 +2169,12 @@ L0952:
  957 RRA                   
  958 JP        C,L0996        ;if( tmp_0 & 1) goto 996
  95b LD        C,0x08          
- 95d CALL      L06B7          ; wyslij komendê SENSE IRQ STATUS FDC
+ 95d CALL      L06B7          ; wyÅ›lij komendÄ™ SENSE IRQ STATUS FDC
  960 RRA                   
- 961 JP        C,0x0967       ; jesli uda³o siê wys³aæ goto 967
- 964 JP        0x0996         ; inaczej wyjd¼ z funkcji CY = 0
+ 961 JP        C,0x0967       ; jeÅ›li udaÅ‚o siÄ™ wysÅ‚aÄ‡ goto 967
+ 964 JP        0x0996         ; inaczej wyjdÅº z funkcji CY = 0
 
-; uda³o siê wys³aæ komendê SENSE IRQ STATUS FDC
+; udaÅ‚o siÄ™ wysÅ‚aÄ‡ komendÄ™ SENSE IRQ STATUS FDC
 L0967:
  967 LD        HL,0x0002     
  96a ADD       HL,SP     
@@ -2183,8 +2183,8 @@ L0967:
  96d LD        B,(HL  )       ; BC = parm_1 - wynik
  96e CALL      L075B          ; pobranie danej z fazy result
  971 RRA                   
- 972 JP        C,0x0978       ; jesli ok to skok do 978
- 975 JP        0x0996         ; nie uda³o siê pobraæ danych, zakoñcz funkcjê
+ 972 JP        C,0x0978       ; jeÅ›li ok to skok do 978
+ 975 JP        0x0996         ; nie udaÅ‚o siÄ™ pobraÄ‡ danych, zakoÅ„cz funkcjÄ™
 
 ; dane pobrane z fazy  RESULT
 L0978:
@@ -2198,11 +2198,11 @@ L0978:
  986 RLA                   
  987 RLA                   
  988 CP        0x02            ; A == 0x80 ?
- 98a JP        NZ,0x0993       ; if( A!=0x80 ) goto 952 - powtórz wys³anie
+ 98a JP        NZ,0x0993       ; if( A!=0x80 ) goto 952 - powtÃ³rz wysÅ‚anie
  98d LD        HL,0x0004     
  990 ADD       HL,SP     
  991 LD        (HL   ),0x01    ; tmp = 1
- 993 JP        0x0952          ; goto 952 - wyjd¼ z funkcji
+ 993 JP        0x0952          ; goto 952 - wyjdÅº z funkcji
 
 L0996:
  996 INC       SP          
@@ -2213,12 +2213,12 @@ L0996:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Funkcja:
-;;  Wysy³a komendê do kontrolera FDC
+;;  WysyÅ‚a komendÄ™ do kontrolera FDC
 ;;  
-;; Wejscie:
+;; WejÅ›cie:
 ;;  BC - param1 - adres bazowy dla zmiennych 
 ;;
-;;  param1 + 2   - bufor komendy do wys³ania
+;;  param1 + 2   - bufor komendy do wysÅ‚ania
 ;;  param1 + 13h  - kod wyniku operacji
 ;;  [BC+00,01] - adres bufora odczytu/zapisu danych
 ;; 
@@ -2229,17 +2229,17 @@ L099A:
      LD        C,(HL  ) 	; 
      INC       HL        
      LD        B,(HL  ) 	; BC= param1 - bufor komendy
-     CALL      L0708        	; A = L0708() - wys³anie komendy do FDC
+     CALL      L0708        	; A = L0708() - wysÅ‚anie komendy do FDC
      RRA                   
-     JP        C,L09B7    	; jesli uda³o siê wys³aæ bez b³êdu to skocz pod L09B7 (?)
+     JP        C,L09B7    	; jeÅ›li udaÅ‚o siÄ™ wysÅ‚aÄ‡ bez bÅ‚Ä™du to skocz pod L09B7 (?)
      LD        DE,0x0013     	; 
      LD        HL,0x0000     	;
      ADD       HL,SP     	; 
      CALL      0x1569        	; 
-     LD        (HL   ),0x03  	; param1[0x13] = 3 - kod b³êdu
-     POP       HL        	; odtwórz parametr wej¶ciowy z BC w HL
+     LD        (HL   ),0x03  	; param1[0x13] = 3 - kod bÅ‚Ä™du
+     POP       HL        	; odtwÃ³rz parametr wejÅ›ciowy z BC w HL
      RET                   	; return
-; uda³o siê prawid³owo wys³aæ komendê
+; udaÅ‚o siÄ™ prawidÅ‚owo wysÅ‚aÄ‡ komendÄ™
 L09B7:
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2253,7 +2253,7 @@ L09B7:
      CP        0x03         
      JP        NZ,L09D6     	; if( param1[0x02] != FDC_SPECIFY) goto L09D6
 
-; wykonywana instrukcja by³a instrukcj± FDC SPECIFY
+; wykonywana instrukcja byÅ‚a instrukcjÄ… FDC SPECIFY
      LD        DE,0x0013     
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2261,7 +2261,7 @@ L09B7:
      LD        (HL   ),0x00  	; param1[0x13] = 0x00
      POP       HL        
      RET                   	; return
-; to nie by³a instrukcja FDC SPECIFY 
+; to nie byÅ‚a instrukcja FDC SPECIFY 
 L09D6:
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2300,7 +2300,7 @@ L09D6:
 ; A = (FORMAT | READ | WRITE)
      RRA                   	; tmp - kod innstrukcji
      JP        NC,L0A1E        
-; je¶li instrukcja to nie FORMAT | READ | WRITE goto L0A1E
+; jeÅ›li instrukcja to nie FORMAT | READ | WRITE goto L0A1E
      LD        HL,0x0000     
      ADD       HL,SP     
      LD        C,(HL  ) 
@@ -2320,7 +2320,7 @@ L09D6:
      INC       HL        
      LD        D,(HL  ) 	; DE = parm[0x00]
      LD        C,A         	; C - kod wykonanej instrukcji
-     CALL      L0200        	; pobranie/wys³anie danych do FDC w operacji zapisu/odczytu sektoru
+     CALL      L0200        	; pobranie/wysÅ‚anie danych do FDC w operacji zapisu/odczytu sektoru
 
 L0A1E:
      LD        HL,0x0000     
@@ -2328,7 +2328,7 @@ L0A1E:
      LD        C,(HL  ) 
      INC       HL        
      LD        B,(HL  ) 	; BC = parm1
-     CALL      L0859        	; próba wys³ania  ISENSE INTERRUPT STATUS
+     CALL      L0859        	; prÃ³ba wysÅ‚ania  ISENSE INTERRUPT STATUS
      LD        DE,0x0012       
      LD        HL,0x0000     
      ADD       HL,SP     
@@ -2396,9 +2396,9 @@ T0A8B:
 ;;
 ;; L0AA6
 ;;
-;; Funkcja wykonuje operacjê: HL = 0x2080 + 32 * (A & 0x3f); 
+;; Funkcja wykonuje operacjÄ™: HL = 0x2080 + 32 * (A & 0x3f); 
 ;;
-;; Wywo³ywana jest przy odczycie katalogu dyskowego.
+;; WywoÅ‚ywana jest przy odczycie katalogu dyskowego.
 ;;
 ;; A  - pozycja w katalogu
 ;; HL - adres w buforze
@@ -2422,9 +2422,9 @@ L0AA6:
 ;;
 ;; L0AB5
 ;;
-;; Mno¿enie HL przez 12 (d³ugo¶æ nazwy pliku)
+;; MnoÅ¼enie HL przez 12 (dÅ‚ugoÅ›Ä‡ nazwy pliku)
 ;; 
-;; Funkcja wykonuje funkcjê: HL = HL*12
+;; Funkcja wykonuje funkcjÄ™: HL = HL*12
 ;; 
 L0AB5:
      ADD       HL,HL       ;
@@ -2441,12 +2441,12 @@ L0AB5:
 ;;
 ;; 
 ;; 
-;; Funkcja wykonuje funkcjê: BC = 4 * A
+;; Funkcja wykonuje funkcjÄ™: BC = 4 * A
 ;; 
 L0ABC:
      RLCA                  ; A = A << 1
      RLCA                  ; A = A << 1
-     AND       0x03        ; A & = 0x03 /* wyzerowanie 'zawiniêtych' bitów */
+     AND       0x03        ; A & = 0x03 /* wyzerowanie 'zawiniÄ™tych' bitÃ³w */
      LD        C,A         ;
      LD        B,0x00      ; BC = A
      RET                   
@@ -2465,18 +2465,18 @@ L0ABC:
 ;;
 ;; Wykonanie operacji FDC na sektorze
 ;;
-;; Dane wej¶ciowe: 
+;; Dane wejÅ›ciowe: 
 ;;   DE - adres bufora danych (2kB)
-;;   BC - numer sektora logicznego (liczony od sektora 1 na ¶cie¿ce 1 )
+;;   BC - numer sektora logicznego (liczony od sektora 1 na Å›cieÅ¼ce 1 )
 ;;   stos - kod funkcji (patrz funkcja 04EB )
-;;   *(0x3209) - nr napêdu
-;; Dane wyj¶ciowe:
-;;   A -> kod b³êdu
+;;   *(0x3209) - nr napÄ™du
+;; Dane wyjÅ›ciowe:
+;;   A -> kod bÅ‚Ä™du
 ;; 
 ;; Funkcja odczytuje (/zapisuje ? ) klaster z FDD (4 sektory - 2048b).
-;; Je¶li podczas operacji wystapi³ b³±d, nastêpuje ustawienie g³owicy na ¶cie¿ce 0 i
-;; operacja zostaje powtórzona. Po 10 nieudanych próbach funkcja koñczy dzia³anie z kodem b³êdu
-;; A=0x00. W przypadku udanego odczytu klastra, w akumulatorze zostanie zwrócona warto¶æ 0xff.
+;; JeÅ›li podczas operacji wystÄ…piÅ‚ bÅ‚Ä…d, nastÄ™puje ustawienie gÅ‚owicy na Å›cieÅ¼ce 0 i
+;; operacja zostaje powtÃ³rzona. Po 10 nieudanych prÃ³bach funkcja koÅ„czy dziaÅ‚anie z kodem bÅ‚Ä™du
+;; A=0x00. W przypadku udanego odczytu klastra, w akumulatorze zostanie zwrÃ³cona wartoÅ›Ä‡ 0xff.
 ;;
 ;;
 L0ACD:
@@ -2495,13 +2495,13 @@ L0ACD:
      PUSH      DE          	; odtworzenie adresu powrotu
      LD        HL,0x3209        
      LD        C,(HL  )         ; C = (3209) nr dysku
-     CALL      0x01ed           ; za³±czenie silnika napêdu
+     CALL      0x01ed           ; zaÅ‚Ä…czenie silnika napÄ™du
      LD        A,(0x3209)    
-     LD        (0x2880),A       ; (2880) = nr napêdu
+     LD        (0x2880),A       ; (2880) = nr napÄ™du
      LD        A,(0x321c)    
      LD        (0x2881),A       ; (2881) = parametr /* kod operacji */
      LD        HL,0x2882     
-     LD        (HL   ),0x01  	; (2882) = 0x01     /* ilo¶æ sektorów */
+     LD        (HL   ),0x01  	; (2882) = 0x01     /* iloÅ›Ä‡ sektorÃ³w */
      LD        HL,(0x321d)   
      ADD       HL,HL       
      ADD       HL,HL       
@@ -2509,19 +2509,19 @@ L0ACD:
      LD        HL,(0x321f)      
      LD        (0x2885),HL      ; DW (2885) = (321f) /* adres bufora danych */
      LD        HL,0x3224        ; 
-     LD        (HL   ),0x00     ; (3224) = 0 pocz±tek pêtli odczytu sektorów
+     LD        (HL   ),0x00     ; (3224) = 0 poczÄ…tek pÄ™tli odczytu sektorÃ³w
 L0B07:
      LD        A,(0x3224)       ; A=(3224)
      CP        0x04         
      JP        NC,0x0bb3        ; if( (3224) >= 4) goto L0BB3
 ; 
-; ponizszy fragment realizuje funkcjê hl = (hl-1) / 9
+; poniÅ¼szy fragment realizuje funkcjÄ™ hl = (hl-1) / 9
 ;
      LD        HL,(0x3221)      ; HL=(3221)
      LD        BC,0x0000        ; BC=0
      PUSH      BC               ; BC na stos
      LD        DE,0x9000        ; DE = 0x9000
-     LD        C,0x0d       	; C=0x0d licznik pêtli
+     LD        C,0x0d       	; C=0x0d licznik pÄ™tli
 L0B1B:
      PUSH      HL        
      OR        A                ; 
@@ -2543,12 +2543,12 @@ L0B27:
      JP        NZ,0x0b1b     
      POP       HL        	; HL = INT( (*(0x3221) - 1) / 9 )
 ;
-; poni¿szy fragment realizuje funkcjê HL = (HL % 9) + 2
+; poniÅ¼szy fragment realizuje funkcjÄ™ HL = (HL % 9) + 2
 ;
      INC       HL        
      INC       HL        
      LD        A,L         
-     LD        (0x2883),A  	; (2883) = {HL +2 }  & 0xff /* numer ¶cie¿ki */
+     LD        (0x2883),A  	; (2883) = {HL +2 }  & 0xff /* numer Å›cieÅ¼ki */
      DEC       HL        
      DEC       HL        
      LD        B,H         
@@ -2565,7 +2565,7 @@ L0B27:
      LD        A,L         
      LD        (0x2884),A       ; (0x2884) = hl & 0xff  - pierwszy sektor
 
-; str.track = ((*(0x3221)-1) / 9 ) + 2;  /* poczatek katalogu to sciezka 01, wiêc +2 (pierwszy bit to g³owica )*/
+; str.track = ((*(0x3221)-1) / 9 ) + 2;  /* poczÄ…tek katalogu to Å›cieÅ¼ka 01, wiÄ™c +2 (pierwszy bit to gÅ‚owica )*/
 ; str.f_sec = ((*(0x3221)-1) % 9 ) + 1;
 ; i = 0;
 ; while( call_fdc(data_bf, str) && i <= 10 ){
@@ -2575,52 +2575,52 @@ L0B27:
 ;   i++;
 ; }
      LD        HL,0x3223     
-     LD        (HL   ),0x00     ; (3223)=0x00 ; licznik pêtli
+     LD        (HL   ),0x00     ; (3223)=0x00 ; licznik pÄ™tli
 L0B56:
      LD        DE,0x2000        ; DE = 2000 - adres bufora roboczego
-     LD        BC,0x2880        ; BC = 2880 - adres parametrów
+     LD        BC,0x2880        ; BC = 2880 - adres parametrÃ³w
      CALL      0x04eb           ; 
      OR        A           
-     JP        Z,L0B89          ; if(A==0) goto L0B89 ; je¶li operacja wykona³a siê z sukcesem wyjdz
+     JP        Z,L0B89          ; if(A==0) goto L0B89 ; jeÅ›li operacja wykonaÅ‚a siÄ™ z sukcesem wyjdÅº
      LD        A,(0x3223)       ; 
      CP        0x0a         
-     JP        NC,L0B89         ; if(*(0x3223) > 10) goto L0B89 ; jê¶li po 10 nieudanych próbach wyjdx
+     JP        NC,L0B89         ; if(*(0x3223) > 10) goto L0B89 ; jeÅ›li po 10 nieudanych prÃ³bach wyjdÅº
      LD        HL,0x2881     
      LD        (HL   ),0x03     ; (0x2881) = 3; RECALIBRATE
      LD        DE,0x2000     
      LD        BC,0x2880     
-     CALL      0x04eb        	; odczyt pierwszej ¶cie¿ki
-     LD        (0x3208),A       ; (0x3208) = kod b³êdu operacji
+     CALL      0x04eb        	; odczyt pierwszej Å›cieÅ¼ki
+     LD        (0x3208),A       ; (0x3208) = kod bÅ‚Ä™du operacji
      LD        A,(0x321c)       
      LD        (0x2881),A       ; *(0x2881) = *(0x321c);  kod operacji = parametr ze stosu
      LD        HL,0x3223     
-     INC       (HL  )   	; *(3223)++; zwieksz licznik pêtli
+     INC       (HL  )   	; *(3223)++; zwiÄ™ksz licznik pÄ™tli
      JP        0x0b56        
-; wyj¶cie z petli wykonania komendy
+; wyjÅ›cie z pÄ™tli wykonania komendy
 L0B89:
      LD        A,(0x3223)    
      CP        0x0a         
-     JP        NZ,0x0b9b     	; if( *(0x3223) == 0x0a ){ /* je¶li wykonanie komendy sie nie uda³o */
-     CALL      0x01f8        	; motor_off();  wy³±czenie silników napêdów dyskowych
+     JP        NZ,0x0b9b     	; if( *(0x3223) == 0x0a ){ /* jeÅ›li wykonanie komendy siÄ™ nie udaÅ‚o */
+     CALL      0x01f8        	; motor_off();  wyÅ‚Ä…czenie silnikÃ³w napÄ™dÃ³w dyskowych
      LD        HL,0x3208     	
      LD        (HL   ),0x02  	;  *(0x3208) = 0x02
-     XOR       A           	;  A = 0; return;          /* Wyjd¼ z funkcji */
+     XOR       A           	;  A = 0; return;          /* WyjdÅº z funkcji */
      RET                   	;}
-; komenda zosta³a wykonana 
+; komenda zostaÅ‚a wykonana 
 L0B9B:
      LD        HL,(0x3221)   
      INC       HL        
-     LD        (0x3221),HL   	; *(0x3221)++;   nastêpny sektor
+     LD        (0x3221),HL   	; *(0x3221)++;   nastÄ™pny sektor
      LD        DE,0x0200     
      LD        HL,(0x2885)   
      ADD       HL,DE     	; 
-     LD        (0x2885),HL   	; *(0x2885) += 0x200; przesuwa wska¼nik bufora danych na kolejne 512b
+     LD        (0x2885),HL   	; *(0x2885) += 0x200; przesuwa wskaÅºnik bufora danych na kolejne 512b
      LD        HL,0x3224     
      INC       (HL  )   	; *(0x3224)++
-     JP        NZ,0x0b07     	; if( *(0x3224) != 0 ) goto 0xb07;  nastêpny sektor
+     JP        NZ,0x0b07     	; if( *(0x3224) != 0 ) goto 0xb07;  nastÄ™pny sektor
 L0BB3:
-     CALL      0x01f8           ; wy³±cz silniki FDD
-     LD        A,0xff           ; A=0xff; kod b³êdu
+     CALL      0x01f8           ; wyÅ‚Ä…cz silniki FDD
+     LD        A,0xff           ; A=0xff; kod bÅ‚Ä™du
      RET                   	; return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3770,13 +3770,13 @@ L0BB3:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Funkcja obs³ugi komendy interpretera BASIC DIR [A|B]
+;; Funkcja obsÅ‚ugi komendy interpretera BASIC DIR [A|B]
 ;;
-;; Wej¶cie:
+;; WejÅ›cie:
 ;;
 ;; DE - bufor zmiennych operacji
-;; C  - numer napêdu (0 dla domyslnego,  1 dla 'A', lub 2 dla 'B' ) -> disk
-;; (3209) - numer domy¶lnego napedu,
+;; C  - numer napÄ™du (0 dla domyÅ›lnego,  1 dla 'A', lub 2 dla 'B' ) -> disk
+;; (3209) - numer domyÅ›lnego napÄ™du,
 
 L13F5:
      LD        HL,0x3219     
@@ -3786,7 +3786,7 @@ L13F5:
      LD        DE,0x0013     
      LD        HL,(0x3218)      ; 
      ADD       HL,DE     
-     LD        (0x321a),HL	; (0x321a) = DE + 0x13; bufor na nazwy plików
+     LD        (0x321a),HL	; (0x321a) = DE + 0x13; bufor na nazwy plikÃ³w
      LD        A,C         
      OR        A           
      JP        Z,0x140e    	; if(C != 0x00 ) (0x3209) = disk - 1
@@ -3797,7 +3797,7 @@ L140E:
      EX        DE,HL       
 ; utworzenie napisu "\nKatalog dysku C:\n\n", gdzie C - to litera A lub B
      LD        BC,0x000f     
-     LD        HL,0x0a8b        ; ³añcuch znaków: "\nKatalog dysku "
+     LD        HL,0x0a8b        ; Å‚aÅ„cuch znakÃ³w: "\nKatalog dysku "
      LDIR                  	; [ (DE + i) <- (0x0a8b + i) ], i=00..14 
      LD        A,(0x3209)       ; 
      ADD       A,0x41       
@@ -3813,25 +3813,25 @@ L140E:
      LD        (HL   ),0x0d     ; (DE + 0x12) = '\n'
      LD        HL,(0x3209)      ; 
      LD        C,L		; C = L = disk
-     CALL      0x01ed           ; za³±czenie silnika napêdu 
+     CALL      0x01ed           ; zaÅ‚Ä…czenie silnika napÄ™du 
 
-; opó¼nienie
+; opÃ³Åºnienie
      LD        A,0x0b       
 L1439:
      DEC       B           
      JP        NZ,0x1439     
      DEC       A           
-     JP        NZ,0x1439     ; pusta pêtla opó¼nienia
+     JP        NZ,0x1439     ; pusta pÄ™tla opÃ³Åºnienia
 
      LD        C,0x04        ; Czytaj kluster z FDD
      PUSH      BC            ; parametr dla funkcji L0ACD
      LD        DE,0x2080     ; bufor danych odczytanych ( 2kB )
-     LD        BC,0x0000     ; sektor 1 ¶cie¿ka 1
+     LD        BC,0x0000     ; sektor 1 Å›cieÅ¼ka 1
      CALL      0x0acd        ; odczyt klastra
      RRA                   
-     JP        C,0x1455      ; if(A == 0xff) goto 1455  /* pomy¶lny odczyt klustra */
-     LD        HL,0x0000     ; HL=00; - b³±d
-     RET                     ; wyjd¼ z funkcji
+     JP        C,0x1455      ; if(A == 0xff) goto 1455  /* pomyÅ›lny odczyt klustra */
+     LD        HL,0x0000     ; HL=00; - bÅ‚Ä…d
+     RET                     ; wyjdÅº z funkcji
 
 ; odczytano pierwszy kluster FDD
 L1455:
@@ -3841,38 +3841,38 @@ L1455:
      LD        (HL   ),0x00  ; *(0x3216) = 0; nr FCB w katalogu
 L145D:
      LD        A,(0x3216)    ; A = *(0x3216);
-     CALL      0x0aa6        ; HL = 0x2080 + 32 * (A & 0x3f); /* wskazanie na pozycjê katalogu */
-; test pól FCB
-     LD        A,(HL  )	     ; W³a¶ciciel pliku, je¶li #E5 tzn ¿e plik skasowano
+     CALL      0x0aa6        ; HL = 0x2080 + 32 * (A & 0x3f); /* wskazanie na pozycjÄ™ katalogu */
+; test pÃ³l FCB
+     LD        A,(HL  )	     ; WÅ‚aÅ›ciciel pliku, jeÅ›li #E5 tzn Å¼e plik skasowano
      OR        A           
-     JP        NZ,0x1494     ; if(*(HL+00) != 0 ) goto 0x1494; /* jesli pierwsze pole !=0 skocz */
+     JP        NZ,0x1494     ; if(*(HL+00) != 0 ) goto 0x1494; /* jeÅ›li pierwsze pole !=0 skocz */
      LD        BC,0x000c     
      ADD       HL,BC     
      LD        A,(HL  )      ; nr tablicy
      OR        A           
      JP        NZ,0x1494     ; if(*(HL+0c) != 0 ) goto 0x1494;     
      LD        A,(0x3216)    ; A = *(0x3216); pozycja w katalogu
-     CALL      0x0aa6        ; HL - wska¼nik na pozycjê w katalogu
-     INC       HL            ; poczatek nazwy pliku
+     CALL      0x0aa6        ; HL - wskaÅºnik na pozycjÄ™ w katalogu
+     INC       HL            ; poczÄ…tek nazwy pliku
 ; obliczenie pozycji w buforze wyniku
      PUSH      HL        
      LD        HL,(0x3217)   ; BYTE PTR HL = *(0x3217)
      LD        H,0x00       
      CALL      0x0ab5        ; HL = HL*12
      EX        DE,HL         ; DE = HL
-     LD        HL,(0x321a)   ; HL = *(0x321a); wska¼nik na bufor nazw wyniku do listingu
+     LD        HL,(0x321a)   ; HL = *(0x321a); wskaÅºnik na bufor nazw wyniku do listingu
      ADD       HL,DE
      EX        DE,HL         ; DE = *(0x321a) + *(0x3217) * 12;
-     LD        BC,0x000b     ; 11 bajtów do skopiowania
+     LD        BC,0x000b     ; 11 bajtÃ³w do skopiowania
      POP       HL        
-     LDIR                    ; *(DE++) <- *(HL++) ; przekopiowanie ³añcucha 11 znaków nazwy pliku
+     LDIR                    ; *(DE++) <- *(HL++) ; przekopiowanie Å‚aÅ„cucha 11 znakÃ³w nazwy pliku
      LD        A,0x0d       
      LD        (DE),A        ; *(DE+11) = 0x0d
      LD        HL,0x3217     
      INC       (HL  )        ; *(0x3217)++; licznik pozycji katalogu
 
 ; nazwa pliku skopiowana
-;l±duje tutaj tak¿e gdy w³a¶ciciel pliku ma ID inny ni¿ 0, lub nr tablicy FCB nie jest 0
+;lÄ…duje tutaj takÅ¼e gdy wÅ‚aÅ›ciciel pliku ma ID inny niÅ¼ 0, lub nr tablicy FCB nie jest 0
 L1494:
      LD        HL,0x3216     
      INC       (HL  )   	; *(0x3216)++; licznik tablic FCB++
@@ -3888,21 +3888,21 @@ L1494:
      CALL      0x0acd        	; odczyt klastra
      RRA                   
      JP        C,0x14b8         ; if(A == 0xff) goto L14B8
-     LD        HL,0x0000        ; HL <- kod b³êdu
-     RET                        ; wyjd¼
+     LD        HL,0x0000        ; HL <- kod bÅ‚Ä™du
+     RET                        ; wyjdÅº
 L14B8:
      LD        A,(0x3216)    
      OR        A           
      JP        NZ,0x145d        ; if(*(3216) != 0) goto L145d ;odczyt kolejnej pozycji katalogu
 
-; koniec odczytu katalogu, wszystkie pozycje zosta³y odczytane
+; koniec odczytu katalogu, wszystkie pozycje zostaÅ‚y odczytane
      LD        HL,(0x3217)   	
      LD        H,0x00       
      CALL      0x0ab5
      EX        DE,HL           	; DE = *(0x3217) * 12
      LD        HL,(0x321a)   
      ADD       HL,DE     
-     LD        (HL   ),0x0d     ; *( *(0x3217) * 12 + *(0x321a)) = 0x0d; wstawienie '\n' na koñcu listy
+     LD        (HL   ),0x0d     ; *( *(0x3217) * 12 + *(0x321a)) = 0x0d; wstawienie '\n' na koÅ„cu listy
      LD        HL,0x3208     
      LD        (HL   ),0x00     ; *(0x3208) = 0
      LD        HL,(0x3217)   
@@ -3994,7 +3994,7 @@ L14B8:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Dzia³anie: 
+;; DziaÅ‚anie: 
 ;;
 ;;   Funkcja realizuje obliczanie adresu elementu tablicy jednowymiarowej:
 ;;   	HL = &tablica[A]
@@ -4006,12 +4006,12 @@ L1566:
      LD        D,0x00       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Dzia³anie: 
+;; DziaÅ‚anie: 
 ;;
 ;;   Funkcja realizuje obliczanie adresu elementu tablicy jednowymiarowej:
 ;;   HL = &tablica[DE]
 ;;   
-;;  Szczegó³y dzia³ania:
+;;  SzczegÃ³Å‚y dziaÅ‚ania:
 ;; 	HL = DE + (HL)
 ;; 	DE = HL + 1
 ;; 	A  = H (wyniku)
@@ -4021,12 +4021,12 @@ L1569:
      EX        DE,HL        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Dzia³anie: 
+;; DziaÅ‚anie: 
 ;;
 ;;   Funkcja realizuje obliczanie adresu elementu tablicy jednowymiarowej:
 ;;   HL = &tablica[HL] - tablica = DE
 ;;   
-;;  Szczegó³y dzia³ania:
+;;  SzczegÃ³Å‚y dziaÅ‚ania:
 ;; 	HL = HL + (DE)
 ;; 	DE = DE + 1
 ;; 	A  = H (wyniku)
@@ -4044,10 +4044,10 @@ L156A:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Pêtla opó¼niaj±ca
+;; PÄ™tla opÃ³ÅºniajÄ…ca
 ;;
-;; Parametry wej¶ciowe 
-;; A - czas opó¼nienia
+;; Parametry wejÅ›ciowe 
+;; A - czas opÃ³Åºnienia
 ;;
 ;; Modyfikuje AF, BC
 ;;
@@ -4257,7 +4257,7 @@ L1575:
 ;; .....@@@@@@@@@......@@@@@.....@@@@@....@@@@@.......@@..........@@@@@@@..........
 ;;
 
-T1660:	; górna po³owa loga
+T1660:	; gÃ³rna poÅ‚owa loga
     DB 0x03,0x1f,0x3f,0x7f,0x7c,0xf8,0xff
     DB 0xfc,0xfe,0xfe,0xfc,0x00,0x00,0xfe
     DB 0x18,0x3c,0x3c,0x3c,0x3c,0x3c,0x3c
@@ -4268,7 +4268,7 @@ T1660:	; górna po³owa loga
     DB 0x81,0xc3,0xcf,0x9f,0x1e,0x3c,0x3c
     DB 0xfc,0xff,0xff,0x8f,0x03,0x01,0x01
     DB 0x00,0x00,0x80,0xc0,0xc0,0xe0,0xe0
-T16A6:  ; dolna po³owa loga
+T16A6:  ; dolna poÅ‚owa loga
     DB 0xff,0xf8,0x7c,0x7f,0x3f,0x1f,0x07
     DB 0xfe,0x00,0x00,0xfc,0xfe,0xfe,0xfc
     DB 0x3c,0x3c,0x3c,0x3f,0x3f,0x1f,0x0f
@@ -4380,37 +4380,37 @@ L1771:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Dalszy ci±g procedury RST #00
+;; Dalszy ciÄ…g procedury RST #00
 ;;
 
 L1794:
-; poniewa¿ banki ROM podczas obliczania sumy kontrolnej ulegaj± prze³±czeniu, musi nast±piæ 
-; relokacja procedury testu pamiêci ROM, do RAM
+; poniewaÅ¼ banki ROM podczas obliczania sumy kontrolnej ulegajÄ… przeÅ‚Ä…czeniu, musi nastÄ…piÄ‡ 
+; relokacja procedury testu pamiÄ™ci ROM, do RAM
      LD        DE,0x5b00        ; adres w RAM
      LD        HL,T17E7         ; adres kodu relokowanego
      LD        BC,0x002d        ; rozmiar procedury
      LDIR                  	; relokacja
-; logo oraz test pamiêci
+; logo oraz test pamiÄ™ci
      LD        HL,0x5800        ; wiersz 0
-     CALL      0x1829           ; ustawia atrybut dla 11 znaków (logo ELWRO - pap:bia³y, ink: cyan)
+     CALL      0x1829           ; ustawia atrybut dla 11 znakÃ³w (logo ELWRO - pap:biaÅ‚y, ink: cyan)
      LD        L,0x20           ; wiersz 1
-     CALL      0x1829           ; ustawia atrybut dla 11 znaków (logo ELWRO - atrybuty jw )
-     LD        BC,0x0639        ; 6 znaków o atrybucie: pap: bia³y, ink:niebieski
+     CALL      0x1829           ; ustawia atrybut dla 11 znakÃ³w (logo ELWRO - atrybuty jw )
+     LD        BC,0x0639        ; 6 znakÃ³w o atrybucie: pap: biaÅ‚y, ink:niebieski
      CALL      0x182c           ; atrybut dla "64kB RAM"
-     LD        BC,0x053b        ; 5 znaków o atrybucie: pap: bia³y, ink: fioletowy
+     LD        BC,0x053b        ; 5 znakÃ³w o atrybucie: pap: biaÅ‚y, ink: fioletowy
      CALL      0x182c        	; atrybut dla "24kB ROM"
-     LD        BC,0x0a3c        ; 10 znaków atrybut o atrybucie: pap:bia³y, ink:zielony
+     LD        BC,0x0a3c        ; 10 znakÃ³w atrybut o atrybucie: pap:biaÅ‚y, ink:zielony
      CALL      0x182c        	; atrybut dla "wersja dyskowa" lub "wersja bezdyskowa"
-     LD        HL,T1660     	; tablica z bitmap± logo "ELWRO"
-     LD        DE,0x4001        ; wspó³rzêdne ekranu (8,0) pixela
-     CALL      0x00b8           ; wy¶wietlenie górnej po³owy loga 
-     LD        DE,0x4021        ; wspó³rzêdne ekranu (8,8) pixela
-     CALL      0x00b8           ; wy¶wietlenie dolnej po³owy loga 
-     CALL      0x1813           ; test pamiêci RAM od adresu 0x2000...0xffff
-     LD        DE,0x402c        ; wspó³rzêdne ekranu (8,96) pixela
-     CALL      0x00a7           ; wy¶wietla komunikat: "64kB RAM"
-     CALL      0x5b00           ; test pamiêci ROM 24kB
-     CALL      0x00a7           ; wy¶wietla komunikat: "24kB ROM"
+     LD        HL,T1660     	; tablica z bitmapÄ… logo "ELWRO"
+     LD        DE,0x4001        ; wspÃ³Å‚rzÄ™dne ekranu (8,0) pixela
+     CALL      0x00b8           ; wyÅ›wietlenie gÃ³rnej poÅ‚owy loga 
+     LD        DE,0x4021        ; wspÃ³Å‚rzÄ™dne ekranu (8,8) pixela
+     CALL      0x00b8           ; wyÅ›wietlenie dolnej poÅ‚owy loga 
+     CALL      0x1813           ; test pamiÄ™ci RAM od adresu 0x2000...0xffff
+     LD        DE,0x402c        ; wspÃ³Å‚rzÄ™dne ekranu (8,96) pixela
+     CALL      0x00a7           ; wyÅ›wietla komunikat: "64kB RAM"
+     CALL      0x5b00           ; test pamiÄ™ci ROM 24kB
+     CALL      0x00a7           ; wyÅ›wietla komunikat: "24kB ROM"
 ; wyzerowanie obszaru RAM po procedurze testu ROM
      LD        HL,0x5b00        
      LD        B,0x7f       
@@ -4418,55 +4418,55 @@ L17DF:
      LD        (HL   ),0x00  
      INC       HL        
      DJNZ      L17DF         
-     JP        0x0040           ; dalsza czê¶æ procedury pod adresem #40
+     JP        0x0040           ; dalsza czÄ™Å›Ä‡ procedury pod adresem #40
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;; Funkcja:
-;;  Test pamiêci ROM. Funkcja oblicza sumê modulo 256 z ca³ego obszaru 24kB ROM, a nastêpnie porównuje
-;;  wynik z bajtem pamiêci # 1fff ROM BOOT, gdzie jest zapisana suma kontrolna.
-;;  Je¶li bajt sumy kontrolnej jest 0xff, to wynik testu jest ignorowany.
+;;  Test pamiÄ™ci ROM. Funkcja oblicza sumÄ™ modulo 256 z caÅ‚ego obszaru 24kB ROM, a nastÄ™pnie porÃ³wnuje
+;;  wynik z bajtem pamiÄ™ci # 1fff ROM BOOT, gdzie jest zapisana suma kontrolna.
+;;  JeÅ›li bajt sumy kontrolnej jest 0xff, to wynik testu jest ignorowany.
 ;;
-;; Je¶li wynik testu jest pozytywny, funkcja wykonuje ret i wraca do kodu z którego zosta³a wywo³ana.
-;; Je¶li wynik testu jest negatywny to wykonywana jest instrukcja HALT i nastêpuje zawieszenie CPU
+;; JeÅ›li wynik testu jest pozytywny, funkcja wykonuje ret i wraca do kodu z ktÃ³rego zostaÅ‚a wywoÅ‚ana.
+;; JeÅ›li wynik testu jest negatywny to wykonywana jest instrukcja HALT i nastÄ™puje zawieszenie CPU
 ;;
-;; Wej¶cie: brak
-;; Wyj¶cie: brak
+;; WejÅ›cie: brak
+;; WyjÅ›cie: brak
 ;; Modyfikuje: AF, AF', HL'
 ;;
 
 T17E7:
 L5B00:
-     EXX                    ; zachowaj rejestry biezace
+     EXX                    ; zachowaj rejestry bieÅ¼Ä…ce
      XOR       A            ; suma = 0
      LD        HL,0x1ffe    ; HL= 1ffe - koniec ROM-1 (ostatni bajt to suma kontrolna)
      EX        AF,AF        ; zachowanie rejestru AF
-; oblicz sumê kontroln± w BOOT ROM
+; oblicz sumÄ™ kontrolnÄ… w BOOT ROM
      CALL      L5b23        ; testuj ROM
      LD        A,0x08       ; 
-     OUT       0xf7,A       ; przelaczenie na ROM ZX BAS 16k
-; dodaj do niej sumê kontroln± w BAS ROM
-     LD        HL,0x3fff    ; koniec pamieci ROM ZX BAS 16k
+     OUT       0xf7,A       ; przeÅ‚Ä…czenie na ROM ZX BAS 16k
+; dodaj do niej sumÄ™ kontrolnÄ… w BAS ROM
+     LD        HL,0x3fff    ; koniec pamiÄ™ci ROM ZX BAS 16k
      CALL      L5b23        ; testuj ROM
      LD        A,0x48      
-     OUT       0xf7,A       ; prze³aczenie sie z powrotem na BOOT ROM
-     LD        HL,T1fff     ; adres ostatniej komórki BOOT ROM (suma kontrolna modulo 256 )
-     EX        AF,AF        ; przywrócenie obliczonej sumy kontrolnej w A
-     CP        (HL  )       ; porównaj z bajtem sumy kontrolnej
+     OUT       0xf7,A       ; przeÅ‚Ä…czenie siÄ™ z powrotem na BOOT ROM
+     LD        HL,T1fff     ; adres ostatniej komÃ³rki BOOT ROM (suma kontrolna modulo 256 )
+     EX        AF,AF        ; przywrÃ³cenie obliczonej sumy kontrolnej w A
+     CP        (HL  )       ; porÃ³wnaj z bajtem sumy kontrolnej
      LD        A,(HL  )     ; pobierz bajt sumy kontrolnej
-     EXX                    ; odtwórz rejestry
-     RET       Z            ; jesli suma obliczona zgadza siê z sum± zapisan± w ROM - ROM OK, wyjd¼
-     CP        0xff         ; jesli suma kontrolna jest równa 0xFF 
-     RET       Z            ; (brak sumy kontrolnej w ROM) - OK, wyjd¼ 
-     HALT                   ; wprowad¼ CPU w stan HALT - b³±d w pamiêci ROM
+     EXX                    ; odtwÃ³rz rejestry
+     RET       Z            ; jeÅ›li suma obliczona zgadza siÄ™ z sumÄ… zapisanÄ… w ROM - ROM OK, wyjdÅº
+     CP        0xff         ; jeÅ›li suma kontrolna jest rÃ³wna 0xFF 
+     RET       Z            ; (brak sumy kontrolnej w ROM) - OK, wyjdÅº 
+     HALT                   ; wprowadÅº CPU w stan HALT - bÅ‚Ä…d w pamiÄ™ci ROM
 
 ; liczenie sumy kontrolnej modulo 256 
 L5B23:
      EX        AF,AF      ; zachowaj znaczniki i rejestr A
      ADD       A,(HL  )   ; suma += *HL
      DEC       HL         ; HL--
-     EX        AF,AF      ; odtwórz znaczniki
+     EX        AF,AF      ; odtwÃ³rz znaczniki
      LD        A,H        ;  
      INC       A          ; 
      JR        NZ,L5B23   ; if H != 0xff goto l5b23
@@ -4476,45 +4476,45 @@ L5B23:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Funkcja:
-;;  Test pamiêci RAM, w przypadku b³êdu w RAM CPU wprowadzany jest w stan HALT,
-;;  Je¶li test przejdzie pomy¶lnie nastêpuje powrót z funkcji
-;;  Testowana jest pamiêæ o adresie 0x2000...0xffff
+;;  Test pamiÄ™ci RAM, w przypadku bÅ‚Ä™du w RAM CPU wprowadzany jest w stan HALT,
+;;  JeÅ›li test przejdzie pomyÅ›lnie nastÄ™puje powrÃ³t z funkcji
+;;  Testowana jest pamiÄ™Ä‡ o adresie 0x2000...0xffff
 ;;
-;; Wej¶cie: brak
-;; Wyj¶cie: brak
+;; WejÅ›cie: brak
+;; WyjÅ›cie: brak
 ;;
 
 L1813:
-     EXX                   ; zachowuje bie¿±ce rejestry
+     EXX                   ; zachowuje bieÅ¼Ä…ce rejestry
      LD        HL,0x2000   ; HL=0x2000 - pierwszy adres RAM
      LD        C,L         ; C=0;
 L1818:
-     LD        B,(HL  )    ; B = (HL)	zapamiêtaj warto¶æ komórki
-     LD        (HL  ),C    ; (HL) = C   wyzeruj komórkê pamiêci
-     LD        A,(HL  )    ; A = (HL)   pobierz jej warto¶æ
+     LD        B,(HL  )    ; B = (HL)	zapamiÄ™taj wartoÅ›Ä‡ komÃ³rki
+     LD        (HL  ),C    ; (HL) = C   wyzeruj komÃ³rkÄ™ pamiÄ™ci
+     LD        A,(HL  )    ; A = (HL)   pobierz jej wartoÅ›Ä‡
      CPL                   ; A = ~A    
      LD        (HL  ),A    ; (HL) = A   zaneguj i zapisz z powrotem
-     LD        C,(HL  )    ; C = (HL)   pobierz warto¶æ komórki
-     LD        (HL  ),B    ; (HL) = B   odtwórz warto¶æ komórki
+     LD        C,(HL  )    ; C = (HL)   pobierz wartoÅ›Ä‡ komÃ³rki
+     LD        (HL  ),B    ; (HL) = B   odtwÃ³rz wartoÅ›Ä‡ komÃ³rki
      INC       HL          ; HL++
      LD        A,H         ; A=H
      OR        L           ; A |=L
-     JR        NZ,0x1818   ; if (HL != 0) goto L1818 - id¿ a¿ do koñca ram
-     LD        A,C         ; przy sprawnej pamiêci i parzystej ilo¶ci komórek, bêdzie warto¶æ 0
-     AND       A           ; w przypadku uszkodzenia którejkolwiek komórki warto¶æ A != 0
-     EXX                   ; odtwórz biezace rejestry
-     RET       Z           ; wyjd¼ jesli A==0  - RAM OK
-     HALT                  ; wej¶cie CPU w stan HALT
+     JR        NZ,0x1818   ; if (HL != 0) goto L1818 - idÅ¼ aÅ¼ do koÅ„ca ram
+     LD        A,C         ; przy sprawnej pamiÄ™ci i parzystej iloÅ›ci komÃ³rek, bÄ™dzie wartoÅ›Ä‡ 0
+     AND       A           ; w przypadku uszkodzenia ktÃ³rejkolwiek komÃ³rki wartoÅ›Ä‡ A != 0
+     EXX                   ; odtwÃ³rz bieÅ¼Ä…ce rejestry
+     RET       Z           ; wyjdÅº jeÅ›li A==0  - RAM OK
+     HALT                  ; wejÅ›cie CPU w stan HALT
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Funkcja:
-;;    Wype³nia obszar 11 bajtowy <HL+0, HL+10> warto¶ci± #3E
-;;    s³u¿y do  wype³niania pola atrybutów ekranu
+;;    WypeÅ‚nia obszar 11 bajtowy <HL+0, HL+10> wartoÅ›ciÄ… #3E
+;;    sÅ‚uÅ¼y do  wypeÅ‚niania pola atrybutÃ³w ekranu
 ;;    #3E - paper 7 (White), INK 6 (Cyan)
-;; Parametry wej¶ciowe
-;;  HL - adres obszaru atrybutów
-;; Wyj¶cie: brak
+;; Parametry wejÅ›ciowe
+;;  HL - adres obszaru atrybutÃ³w
+;; WyjÅ›cie: brak
 ;;
 L1829:
      LD        BC,0x0b3e     
@@ -5753,7 +5753,7 @@ L182C:
 1ffd RST       56         
 1ffe RST       56         
 
-; suma kontrolna modulo 256 z zawarto¶ci ca³ej (24kB) pamiêci ROM, jesli 0xff tzn ¿e nie ustawiono
+; suma kontrolna modulo 256 z zawartoÅ›ci caÅ‚ej (24kB) pamiÄ™ci ROM, jeÅ›li 0xff tzn Å¼e nie ustawiono
 T1fff:
     DB 0xff
 

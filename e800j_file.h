@@ -24,29 +24,29 @@
 #include "z80_cpu.h"
 #include "e800j.h"
 /* 
- Czyta parametry wej¶ciowe programu poszukuj±c opcji -f, po jej znalezieniu jako 
-  nazwê snapshotu uznaje nastêpny parametr, a nastêpnie wczytuje snapshot
+ Czyta parametry wejÅ›ciowe programu poszukujÄ…c opcji -f, po jej znalezieniu jako 
+  nazwÄ™ snapshotu uznaje nastÄ™pny parametr, a nastÄ™pnie wczytuje snapshot
 */
 extern void file_get_cline(int argc, char **argv, z80 *c, char *ram, char *reg373, char rest);
 /*
  Wczytuje snapshot:
  c - struktura CPU Z80,
- ram - bufor pamiêci ZX SPECTRUM/ JUNIOR
+ ram - bufor pamiÄ™ci ZX SPECTRUM/ JUNIOR
  reg373 - kolor ramki
- rest - jesli TRUE, to niezgodnosæ sprzêtu emulowanego przerwie spowoduje wyj¶cie z funkcji,
-        warto¶æ FALSE wygeneruje jedynie ostrze¿enie na konsoli
+ rest - jeÅ›li TRUE, to niezgodnosÄ‡ sprzÄ™tu emulowanego przerwie spowoduje wyjÅ›cie z funkcji,
+        wartoÅ›Ä‡ FALSE wygeneruje jedynie ostrzeÅ¼enie na konsoli
 */
 extern int file_snap_load(const char *fname, z80 *c, char *ram, char *reg373, char rest);
 //extern int file_snap_save(const char *fname, z80 *c, char *ram, char *reg373);
-// xx - jesli 1 to brak opcji nie generuje b³êdu
+// xx - jeÅ›li 1 to brak opcji nie generuje bÅ‚Ä™du
 extern char *file_find_cfg_option(const char *cfg,const char *name,const char *str,const char *err, int lvl, int xx);
 extern char *file_find_cfg_section(const char *cfg,const char *name,const char *str,const char *err, int lvl);
 
 extern char *file_get_profile(const char *cfg, char *str);
 extern int file_bios_load(const char *cfg, char *rom, char *profile, int romsize);
 extern char file_init(elwro*, char *cpath, int argc, char **argv);
-/*  przeszukuje parametry wej¶ciowe wywo³ania w poszukiwaniu opcji, 
-    jesli znajdzie zwraca jej numer, inaczej zwraca 0
+/*  przeszukuje parametry wejÅ›ciowe wywoÅ‚ania w poszukiwaniu opcji, 
+    jeÅ›li znajdzie zwraca jej numer, inaczej zwraca 0
 */
 extern int  file_lookup_option(int argc, char **argv, const char *name);
 extern void file_option_param(int argc, char **argv, int pos, int min, int max, int *val);

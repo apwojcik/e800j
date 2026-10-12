@@ -26,7 +26,7 @@
 
 #include "i8272_fdc.h"
 
-/* tablica dekoduj±ca instrukcje */
+/* tablica dekodujÄ…ca instrukcje */
 static const i8272opc opcodes_tabl[32] = i8272_CMD_TABLE;
 
 void i8272_command(i8272 *fdc,  char plc);
@@ -108,7 +108,7 @@ void i8272_reset(i8272 *fdc, uchar reset)
     msg_printf(MSG_MSG,"FDC i8272A reset\n");
 }
 
-/* reakcja na stan linii TC, zakoñczenie bie¿±cej komendy jesli tc=1 */
+/* reakcja na stan linii TC, zakoÅ„czenie bieÅ¼Ä…cej komendy jeÅ›li tc=1 */
 void i8272_tc(i8272 *fdc, uchar tc)
 {
     if(!tc) return;
@@ -184,7 +184,7 @@ void i8272_int(i8272 *fdc, uchar icode)
     fdc->st0 |= (icode & 0x03) << 6;
 }
 
-/* zakoñczenie komendy */
+/* zakoÅ„czenie komendy */
 void i8272_end_cmd(i8272 *fdc)
 {
     msg_printf(MSG_NVERB_MSG, "FDC end command\n");
@@ -263,18 +263,18 @@ void i8272_rdata(i8272 *fdc, char mode)
         fdc->st2 = 0;
         fdc->st3 = 0;
     }
-/* ustawienie flag gotowo¶ci danej do odbioru przez CPU */
+/* ustawienie flag gotowoÅ›ci danej do odbioru przez CPU */
     fdc->msr |= FDC_RQM;
     fdc->msr |= FDC_DIO;
 /* kolejny bajt do odczytu w sektorze */
     fdc->sbyte++; 
-/* jesli odczyt kolejnego sektora zeruj licznik bajtów i zwiêksz nr sektora o 1 */
+/* jeÅ›li odczyt kolejnego sektora zeruj licznik bajtÃ³w i zwiÄ™ksz nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
 	fdc->sbyte = 0;
 	fdc->rec++;
     }
 /* 
-  Przypuszczam, ¿e po EOT zerowany jest licznik sektorów, ale s³owa brak o tym w dokumentacji i8272.
+  Przypuszczam, Å¼e po EOT zerowany jest licznik sektorÃ³w, ale sÅ‚owa brak o tym w dokumentacji i8272.
 */
     if(fdc->rec > fdc->eot) fdc->rec = 1;
 }
@@ -315,15 +315,15 @@ void i8272_read_data(i8272 *fdc, char mode)
     fdc->gpl = fdc->buffer[7];
     fdc->dtl = fdc->buffer[8];
     fdc->rw  = 1;
-/* wyzerowanie licznika bajtów w sektorze */
+/* wyzerowanie licznika bajtÃ³w w sektorze */
     fdc->sbyte = 0;
-/* obliczenie d³ugo¶ci sektora w bajtach */
+/* obliczenie dÅ‚ugoÅ›ci sektora w bajtach */
     fdc->slen = 0x80 << fdc->nb;
     if(!fdc->nb) fdc->slen = fdc->dtl;
-/* obliczenie d³ugo¶ci ¶cie¿ki */
+/* obliczenie dÅ‚ugoÅ›ci Å›cieÅ¼ki */
     fdc->trlen = fdc->eot * fdc->slen;
-/* ustawienie flag odbioru danej, dana bêdzie wstawiona dopiero po wywo³aniu in(),
-   ale inaczej by do niej nie wesz³a 
+/* ustawienie flag odbioru danej, dana bÄ™dzie wstawiona dopiero po wywoÅ‚aniu in(),
+   ale inaczej by do niej nie weszÅ‚a 
  */
     fdc->msr |= FDC_RQM | FDC_DIO;
     fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
@@ -429,7 +429,7 @@ void i8272_wdata(i8272 *fdc, char mode)
     fdc->st3 = FDC_RDY;
     if(!fdc->err)
 	fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_WRITE_TRACK, fdc->data);
-/* reakcja na blokadê zapisu */
+/* reakcja na blokadÄ™ zapisu */
     if(fdc->err == FDD_ERR_WPROT){
         fdc->st0 = FDC_NR | (fdc->ds & 0x03) | 0x40;
         fdc->st1 = FDC_NW;
@@ -444,12 +444,12 @@ void i8272_wdata(i8272 *fdc, char mode)
         fdc->st3 = 0;
     }
 
-/* ustawienie flag gotowo¶ci danej do zapisu przez CPU */
+/* ustawienie flag gotowoÅ›ci danej do zapisu przez CPU */
     fdc->msr |= FDC_RQM;
     fdc->msr &= ~FDC_DIO;
 /* kolejny bajt do odczytu w sektorze */
     fdc->sbyte++; 
-/* jesli odczyt kolejnego sektora zeruj licznik bajtów i zwiêksz nr sektora o 1 */
+/* jeÅ›li odczyt kolejnego sektora zeruj licznik bajtÃ³w i zwiÄ™ksz nr sektora o 1 */
     if(fdc->sbyte >= fdc->slen ){
 	fdc->sbyte = 0;
 	fdc->rec++;
@@ -494,14 +494,14 @@ void i8272_write_data(i8272 *fdc, char mode)
     fdc->gpl = fdc->buffer[7];
     fdc->dtl = fdc->buffer[8];
     fdc->rw  = 1;
-/* wyzerowanie licznika bajtów w sektorze */
+/* wyzerowanie licznika bajtÃ³w w sektorze */
     fdc->sbyte = 0;
-/* obliczenie d³ugo¶ci sektora w bajtach */
+/* obliczenie dÅ‚ugoÅ›ci sektora w bajtach */
     fdc->slen = 0x80 << fdc->nb;
     if(!fdc->nb) fdc->slen = fdc->dtl;
-/* obliczenie d³ugo¶ci ¶cie¿ki */
+/* obliczenie dÅ‚ugoÅ›ci Å›cieÅ¼ki */
     fdc->trlen = fdc->eot * fdc->slen;
-/* ustawienie flag mo¿liwo¶ci zapisu danej  */
+/* ustawienie flag moÅ¼liwoÅ›ci zapisu danej  */
     fdc->msr |= FDC_RQM;
     fdc->msr &= ~FDC_DIO;
     fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
