@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,18 +42,18 @@ unsigned char key_matrix(kbrd *kb, unsigned short int addr)
 
     /* skanowanie klawiatury dla linii KA0..KA8 */
     i= 0x8000; kbr=0xff;
-    for(j = 0; j < 9; i >>= 1, j++) 
+    for(j = 0; j < 9; i >>= 1, j++)
 	if( !(addr & i) )
 	    kbr &= kb->matrix[j];
 
     /* test linii E800J dla KA2 */
     if( (addr & 0xff)== 0xfb) kbr &= kb->matrix[9];
 
-    return kbr;    
+    return kbr;
 }
 
-/* 
-  Ustawia stan klawisza w matrycy na współrzędnych row,col 
+/*
+  Ustawia stan klawisza w matrycy na współrzędnych row,col
 
 coord:
     06 05 04 03 02 01 00
@@ -67,17 +67,17 @@ state:
 void key_matrix_update(kbrd *kb, unsigned char coord, unsigned char  state)
 {
     unsigned char col,row;
-    
+
     row = (coord >> 4) & 0xf;
-    col = coord & 0x7;    
-    
+    col = coord & 0x7;
+
     col = 0x01 << col;
 
     if( row >= KB_ROWS ) return;
 
-    if(state) 
+    if(state)
 	kb->matrix[row] &= ~col;
-    else 
+    else
 	kb->matrix[row] |= col;
 }
 
@@ -108,7 +108,7 @@ void key_update(kbrd *kb, int key_code, char state)
 	if(kb->alt_r){
 		switch(key_code){
 		    case 'a' : key_code = 0xff; key_idx = KB_A_; break;
-		    case 'c' : key_code = 0xff; key_idx = KB_C_; break;	    
+		    case 'c' : key_code = 0xff; key_idx = KB_C_; break;
 		    case 'e' : key_code = 0xff; key_idx = KB_E_; break;
 		    case 'l' : key_code = 0xff; key_idx = KB_L_; break;
 		    case 'n' : key_code = 0xff; key_idx = KB_N_; break;
@@ -131,20 +131,20 @@ unsigned int key_joymap(kbrd *kb,  unsigned int key, unsigned int nkey, char sta
     unsigned char nk=0;
     if(kb->joy_mode & JOY_KEM){
 
-	if(nkey == 32 ) nk = 0x10; 
-	if(nkey == 273) nk = 0x08; 
-	if(nkey == 274) nk = 0x04; 
-	if(nkey == 276) nk = 0x02; 
-	if(nkey == 275) nk = 0x01; 
+	if(nkey == 32 ) nk = 0x10;
+	if(nkey == 273) nk = 0x08;
+	if(nkey == 274) nk = 0x04;
+	if(nkey == 276) nk = 0x02;
+	if(nkey == 275) nk = 0x01;
 
 	kb->in1f &= ~nk;
 	if(state) kb->in1f |= nk;
-	if(nk) return -1;	
+	if(nk) return -1;
 	return key;
-    }    
+    }
 
     return key;
-}	
+}
 */
 
 void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
@@ -154,8 +154,8 @@ void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
     /* mapowanie klawiszy specjalnych */
     switch(key){
 	case E8K_ENTER    : key = KB_ENTER; break;
-	case E8K_SHIFT_L  : 
-	case E8K_SHIFT_R  : key = KB_SHIFT; break;	
+	case E8K_SHIFT_L  :
+	case E8K_SHIFT_R  : key = KB_SHIFT; break;
 	case E8K_CAPS     : key = KB_CAPS;  break;
 	case E8K_SPC      : key = KB_SPACE; break;
 	case E8K_ALT_L    : key = KB_ALT_L; break;
@@ -176,7 +176,7 @@ void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
 	case E8K_ESC	  : key = KB_ESC; break;
 	case E8K_TAB	  : key = KB_TAB; break;
     }
-    
+
 //    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
     if(key < 0) return;
 

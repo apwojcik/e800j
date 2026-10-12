@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -37,8 +37,8 @@ int vfdd_open_image(vfdd_disk *dsk, char *path, char wmode)
 }
 
 void vfdd_close_image(vfdd_disk *dsk)
-{ 
-    fclose(dsk->f); 
+{
+    fclose(dsk->f);
     dsk->f = NULL;
     dsk->stat = VFDD_DOPEN;
 }
@@ -46,13 +46,13 @@ void vfdd_close_image(vfdd_disk *dsk)
 int vfdd_seek_track(vfdd_disk *dsk, int trk, char hd)
 {
     long fsize;
-    
+
     if(fseek(dsk->f, 0x0L, SEEK_END)) return 1;
     fsize = ftell(dsk->f);
-    
+
     /* ustawienie na ścieżkę 00 */
     if(fseek(dsk->f, 0x100, SEEK_SET)) return 1;
-    dsk->sbyte = 0;    
+    dsk->sbyte = 0;
     dsk->seek = 0x100;
     while(!feof(dsk->f)){
     /* odczyt nagłówka ścieżki */
@@ -93,7 +93,7 @@ int vfdd_read_sector(vfdd_disk *dsk)
     int data;
     if(dsk->stat & VFDD_DOPEN || !dsk->f) return FDD_ERR_NODISK;
     data = fgetc(dsk->f);
-    if(++dsk->sbyte > (0x80 << dsk->th.bps)) return FDD_ERR_OVER;    
+    if(++dsk->sbyte > (0x80 << dsk->th.bps)) return FDD_ERR_OVER;
     return data;
 }
 
@@ -103,7 +103,7 @@ int vfdd_write_sector(vfdd_disk *dsk, unsigned char data)
     if(dsk->stat & VFDD_WPROT) return FDD_ERR_WPROT;
     if(feof(dsk->f)) return FDD_ERR_OVER;
     fputc(data,dsk->f);
-    if(++dsk->sbyte > (0x80 << dsk->th.bps)) return FDD_ERR_OVER;    
+    if(++dsk->sbyte > (0x80 << dsk->th.bps)) return FDD_ERR_OVER;
     return FDD_OK;
 }
 

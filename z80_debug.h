@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -49,7 +49,7 @@ typedef struct
     char line[LINE_LEN]; 	/* bufor wyniku zdeasemblowanej linii */
     int  len;  			/* długość łańcucha kodu maszynowego */
     int  icnt; 			/* licznik instrukcji */
-    char console;   		/* włączenie konsoli */    
+    char console;   		/* włączenie konsoli */
     char deasm;			/* włączenie wyświetlania dekodowanej instr */
     char noregs;		/* jeśli ustawiony, nie wyświetla stanu rejestrów */
     char trace;			/* flaga trybu śledzenia */
@@ -66,7 +66,7 @@ typedef struct
 /* adres przy wyświetlaniu mapy pamięci */
     int daddr;
     int dline;
-/* adres deasemblacji */    
+/* adres deasemblacji */
     int zaddr;
     int zline;
 } dbg;

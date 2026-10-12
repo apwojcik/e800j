@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,12 +22,12 @@
 #define __E800_SOUND_H__
 #include "z80_cpu.h"
 
-typedef struct 
+typedef struct
 {
     unsigned char *rbuffer;	/* bufor kołowy dźwięku */
     unsigned char *lbuffer;	/* bufor liniowy        */
     char *sin;		/* tablica sinus do antyaliasingu   */
-    
+
     int  head;		/* początek bufora kołowego  */
     int  tail;		/* koniec bufora kołowego    */
     int  volume;	/* głośność               */

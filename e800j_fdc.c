@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -39,7 +39,7 @@ void fdc_init(e800j_fdc *fdc)
 #endif
     fdc->i8272 = &fdc->i8272str;
     fdc->drive_mtime = 50 * 60;
-    i8272_init(fdc->i8272);        
+    i8272_init(fdc->i8272);
     fdc_reset(fdc);
 }
 
@@ -47,7 +47,7 @@ void fdc_reset(e800j_fdc *fdc)
 {
     msg_printf(MSG_VERB_MSG,"FDC reset\n");
     fdc_wr_r175(fdc,0x00);
-    
+
 }
 
 void fdc_wr_r175(e800j_fdc *fdc, unsigned char data)
@@ -56,7 +56,7 @@ void fdc_wr_r175(e800j_fdc *fdc, unsigned char data)
 //    printf("|--> fdc write 74LS175 out[0xf1] = 0x%x\n", data);
 #endif
     if(data & FDC_R175_DRIVE_A) fdc->drive_a = fdc->drive_mtime;
-    if(data & FDC_R175_DRIVE_A) fdc->drive_a = fdc->drive_mtime;    
+    if(data & FDC_R175_DRIVE_A) fdc->drive_a = fdc->drive_mtime;
 #ifdef DEBUG_FDC
 //    if(data & FDC_R175_DRIVE_A)
 //	printf("   |-> Drive A motor on\n");
@@ -77,7 +77,7 @@ void fdc_wr_i8272(e800j_fdc *fdc, unsigned char a0, unsigned char data)
 }
 
 unsigned char fdc_rd_i8272(e800j_fdc *fdc, unsigned char a0)
-{ 
+{
     unsigned char dout = 0xff;
 
     dout = i8272_in(fdc->i8272, a0);

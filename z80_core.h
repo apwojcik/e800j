@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,7 +20,7 @@
 
 /*
     z80_core.h
-    
+
     Definicje wartości parametrów tablicy dekodera rozkazów, oraz jej struktury.
     Reazalizacja emulacji rozkazów.
 
@@ -36,7 +36,7 @@
 
 
 /* struktura tablicy dekodera rozkazów */
-typedef struct 
+typedef struct
 {
     void (*code)(z80*);   /* kod operacji              - OC */
     /* reg2 = reg0 OPERATOR reg2  */
@@ -56,25 +56,25 @@ typedef struct
 
 enum
 {
-    RA = 0, 
-    RF = 1, 
-    RB = 2, 
-    RC = 3, 
-    RD = 4, 
-    RE = 5, 
-    RH = 6, 
+    RA = 0,
+    RF = 1,
+    RB = 2,
+    RC = 3,
+    RD = 4,
+    RE = 5,
+    RH = 6,
     RL = 7,
     RXH = 8,
-    RXL = 9, 
+    RXL = 9,
     RYH = 10,
     RYL = 11,
-    R_I = 12, 
+    R_I = 12,
     R_R = 13,
-    MHL = 14, 
-    MIX = 15, 
+    MHL = 14,
+    MIX = 15,
     MIY = 16,
-    MSP = 17, 
-    MBC = 18, 
+    MSP = 17,
+    MBC = 18,
     MDE = 19,
 /* specjalne */
     MCDW = 32,	/* zmienna adresowana stałą */
@@ -82,16 +82,16 @@ enum
     CDW  = 34,  /* stała słowo   */
     RNR  = 35,  /* bez rejestru  */
 /* rejestry bezwzgl 16 bitowe */
-    RAF = 0, 
-    RBC = 1, 
-    RDE = 2, 
+    RAF = 0,
+    RBC = 1,
+    RDE = 2,
     RHL = 3,
-    RIX = 4, 
+    RIX = 4,
     RIY = 5,
-    RSP = 6, 
-    RPC = 7, 
-    R0AF= 8, 
-    R1AF= 9, 
+    RSP = 6,
+    RPC = 7,
+    R0AF= 8,
+    R1AF= 9,
 };
 
 /*

@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,7 +21,7 @@
 /*
     z80_cpu.h
     Interfejs biblioteki emulacji Z80
-    
+
     Autor: Krzysztof Komarnicki
     Ver: 0.1
     Data: 19.08.2006
@@ -41,12 +41,12 @@
 #define Z80_STRUCT	z80 *z
 #define Z80_STRUCTC	z80 *z,
 #define Z80_STRUCT_NAME z80
-#define Z80_CLASS_NAME  typedef struct 
+#define Z80_CLASS_NAME  typedef struct
 #else
-#define Z80_CPU(z)	
+#define Z80_CPU(z)
 #define Z80_PTR		this
 #define Z80_CLASS	z80::
-#define Z80_STRUCT	
+#define Z80_STRUCT
 #define Z80_STRUCTC
 #define Z80_STRUCT_NAME
 #define Z80_CLASS_NAME  class z80
@@ -98,16 +98,16 @@ public:
     	    uchar  MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
 /* rejestry niejawne CPU */
 	    uchar  iff1;
-	    uchar  iff2;    
+	    uchar  iff2;
 /* stany CPU */
-	    uchar  imode;   /* tryb przerwań                                       */    
+	    uchar  imode;   /* tryb przerwań                                       */
 	    uchar  intr;    /* wywołanie przerwania maskowalnego                   */
 	    uchar  inmi;    /* wywołanie przerwania niemaskowalnego                */
 	    uchar  halt;    /* CPU jest w stanie HALT                              */
 /* flagi dodatkowe, pomocnicze */
 	    uchar  alt_rg;  /* flaga określająca który bank rejestrów jest aktywny */
 	    uchar  alt_af;  /* flaga określająca który bank AF jest aktywny  */
-	    uchar  ipend;   /* jeśli ustawiona to instrukcja w toku */ 
+	    uchar  ipend;   /* jeśli ustawiona to instrukcja w toku */
 	    uchar  irupt;   /* wykonuje przerwanie */
 /* zmienne sterowania CPU */
 	    int    pref_cb_ed;
@@ -123,21 +123,21 @@ public:
 	    uchar p0,p1,p2;
 	    uchar b, c, t;
 	    uchar a, o, x;
-/* zmienne tymczasowe */    
+/* zmienne tymczasowe */
 	    uchar dd0, dd1, dd3;
 	    ushort dd2;
 /* dodatkowe informacje dla debuggera i flagi sterujące */
 	    uchar  int_off;	 	/* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
 	    uchar  jmp_off;	 	/* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
-	    uchar  dbg_on;	 	/* załączenie debuggera */    
+	    uchar  dbg_on;	 	/* załączenie debuggera */
 	    uchar  cpu_off;	 	/* ustawienie ignoruje wywołanie funkcji CPU */
 	    uchar  djnz;       		/* cpu wykonuje instrukcję DJNZ */
 	    ushort adrs;         	/* wartość PC pod którą zaczyna się instrukcja */
 	    uchar cmd_type;	 	/* typ instrukcji */
 	    uchar reg80;	 	/* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
-	    uchar reg81;	 	/* rejestr 8 bit   drugi parametr */    
+	    uchar reg81;	 	/* rejestr 8 bit   drugi parametr */
     	    uchar regx0;	 	/* rejestr 16 bit  pierwszy parametr */
-	    uchar regx1;	 	/* rejestr 16 bit  drugi parametr */    
+	    uchar regx1;	 	/* rejestr 16 bit  drugi parametr */
 	    uchar exit;			/* powoduje wyjście z pętli */
 	    char  dd;		 	/* stała 8 bitowa  */
 	    ushort nn;		 	/* stała 16 bitowa */
@@ -238,8 +238,8 @@ extern void z80_init(
 extern void z80_reset(z80*);
 
 extern void z80_step(z80*);
-/* wykonuje pętlę zadaną ilością taktów, w trakcie wywołuje funkcję 
-   callback z parametrem callback_param (jeśli nie NULL) 
+/* wykonuje pętlę zadaną ilością taktów, w trakcie wywołuje funkcję
+   callback z parametrem callback_param (jeśli nie NULL)
    icall ilość obiegów pętli, po których zostanie wywołany callback
    zwraca ilość nadmiarowych taktów, nie mieszczacych się w zadanych ilościach taktów do wykonania
    funkcja callback przyjmuje dwa parametry, pierwszym z nich jest przepisywany wskaźnik

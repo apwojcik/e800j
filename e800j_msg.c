@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -45,11 +45,11 @@ void msg_printf(char lvl, const char *fmt, ...)
     char *p, *sval;
     int ival;
     char tabl[16]="";
-    
+
     if(lvl > msg_level) return;
     if(lvl > 6) lvl = 6;
     msg_putstr((char*)msg[(int)lvl]);
-    
+
     va_start(ap, fmt);
 
     for(p = (char *)fmt; *p; p++){
@@ -62,7 +62,7 @@ void msg_printf(char lvl, const char *fmt, ...)
 	    case 'c': ival = va_arg(ap, int); msg_putchar(ival); break;
 	    case 'i': ival = va_arg(ap, int); sprintf(tabl,"%i",ival); msg_putstr(tabl); break;
 	    case 'x': ival = va_arg(ap, int); sprintf(tabl,"0x%x",ival); msg_putstr(tabl); break;
-	}	
+	}
     }
     va_end(ap);
 }

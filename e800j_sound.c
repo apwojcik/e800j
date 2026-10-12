@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,10 +26,10 @@
 #include "e800j_sound.h"
 #include "e800j.h"
 
-void snd_free_buffers(sound *w)  
-{ 
+void snd_free_buffers(sound *w)
+{
     if(w->nosound) return;
-    free(((sound*)w)->lbuffer); free(((sound*)w)->rbuffer); 
+    free(((sound*)w)->lbuffer); free(((sound*)w)->rbuffer);
 }
 
 void snd_init_rbuffer(sound *w, int lbsize)
@@ -77,7 +77,7 @@ void snd_beeper_callback(void *ud, Uint8 *stream, int len)
     int i;
     /* kopiowanie len bajtów z bufora kołowego do liniowego */
     for(i=0; i < len; i++) ((sound*)ud)->lbuffer[i] = snd_rbuffer_pop(ud);
-    /* skopiowanie bufora liniowego do bufora karty */    
+    /* skopiowanie bufora liniowego do bufora karty */
     SDL_MixAudio(stream, ((sound*)ud)->lbuffer, len, ((sound*)ud)->volume);
 }
 
@@ -103,7 +103,7 @@ void snd_init(void *elw)
     }
 
     printf("(II)Using audio driver: %s\n", SDL_AudioDriverName(name,32));
-    atexit(SDL_CloseAudio);    
+    atexit(SDL_CloseAudio);
     snd_init_rbuffer(ww, spc.samples);
     SDL_PauseAudio(0);
 }
@@ -114,7 +114,7 @@ void snd_beeper(char r373, z80 *z)
     int i, smpls;
     double period, data;
 
-    if(ww->nosound) return;    
+    if(ww->nosound) return;
     if(!((r373 ^ ww->old_r373) & 0x10)) return; /* jeśli nie nastąpiła zmiana bitu 4 portu wyjdź */
     ww->old_r373 = r373;
     period = (z->ticks - ww->old_ticks) / (float)ww->scale; /* ile upłynęło przedziałów 20ms od zmiany */

@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version. See the file COPYING. 
+ * (at your option) any later version. See the file COPYING.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,8 +23,8 @@
 
 #include "z80_cpu.h"
 #include "e800j.h"
-/* 
- Czyta parametry wejściowe programu poszukując opcji -f, po jej znalezieniu jako 
+/*
+ Czyta parametry wejściowe programu poszukując opcji -f, po jej znalezieniu jako
   nazwę snapshotu uznaje następny parametr, a następnie wczytuje snapshot
 */
 extern void file_get_cline(int argc, char **argv, z80 *c, char *ram, char *reg373, char rest);
@@ -45,7 +45,7 @@ extern char *file_find_cfg_section(const char *cfg,const char *name,const char *
 extern char *file_get_profile(const char *cfg, char *str);
 extern int file_bios_load(const char *cfg, char *rom, char *profile, int romsize);
 extern char file_init(elwro*, char *cpath, int argc, char **argv);
-/*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji, 
+/*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji,
     jeśli znajdzie zwraca jej numer, inaczej zwraca 0
 */
 extern int  file_lookup_option(int argc, char **argv, const char *name);
