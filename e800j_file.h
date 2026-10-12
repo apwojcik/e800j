@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef __e800j_file_h__
-#define __e800j_file_h__
+#pragma once
 
 #include "z80_cpu.h"
 #include "e800j.h"
@@ -59,4 +58,3 @@ extern int file_lookup_option(int argc, char** argv, const char* name);
 extern void file_option_param(int argc, char** argv, int pos, int min, int max, int* val);
 
 extern void file_help();
-#endif

@@ -66,8 +66,7 @@
 
 */
 
-#ifndef __Z80DECTABL_H__
-#define __Z80DECTABL_H__
+#pragma once
 
 /****************************** Przeslania 8-bit ******************************************/
 /*         		   OC,     D,  R0,  R1,    LC,   CC,     TC,   AM,   OM,   CM */
@@ -1481,8 +1480,6 @@
 #define Z80_COND_MASK { 0xff, FZ,  FZ, FC, FC, FP, FP, FS, FS }
 /* maska negacji warunku */
 #define Z80_COND_PLRT { 0x00, FZ, 0x00, FC, 0x00, FP, 0x00, FS, 0x00 }
-
-#endif
 
 /*
         /\

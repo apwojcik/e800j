@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __E800J_H__
-#define __E800J_H__
+#pragma once
+
 #include "z80_cpu.h"
 #include "zx_scrn.h"
 #include "e800j_sound.h"
@@ -56,5 +56,3 @@ typedef struct {
 } elwro;
 
 extern void zx_main(elwro*);
-
-#endif

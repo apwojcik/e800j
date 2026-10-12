@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef _virt_fdd_h_
-#define _virt_fdd_h_
+#pragma once
 
 #ifndef uchar
 #define uchar unsigned char
@@ -123,5 +122,3 @@ extern int vfdd_drive(
     uchar action, /* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
     uchar wdata /* dana dla operacji zapisu */
 );
-
-#endif

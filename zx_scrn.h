@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef __ZX_SCRN_H__
-#define __ZX_SCRN_H__
+#pragma once
 
 typedef struct {
     unsigned char ri;
@@ -79,5 +78,3 @@ extern void zx_border(zx_scrn* zx, unsigned int color);
 extern void (*zx_kbrd)(int key, int state, void* kbptr);
 
 extern void zx_quit();
-
-#endif

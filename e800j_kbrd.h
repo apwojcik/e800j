@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef __e800j_kbrd_h__
-#define __e800j_kbrd_h__
+#pragma once
 
 #define KB_MODE_ZX	0	/* Mapowanie ZX_SPECTRUM 			   */
 #define KB_MODE_E800J	1	/* Mapowanie Elwro 800 Junior 			   */
@@ -323,7 +322,5 @@ public:
     void e800j_kbd(unsigned char mode = KB_MODE_PC);
     void ~e800j_kbd();
 };
-
-#endif
 
 #endif
