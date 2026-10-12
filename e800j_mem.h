@@ -21,14 +21,17 @@
 #ifndef __e800j_mem_h__
 #define __e800j_mem_h__
 
-extern unsigned char mem_zx48_read(void *z, unsigned short int addr);
-extern void mem_zx48_write(void *z, unsigned short int addr, unsigned char data);
+extern unsigned char mem_zx48_read(void* z, unsigned short int addr);
 
-extern unsigned char mem_zx128_read(void *z, unsigned short int addr);
-extern void mem_zx128_write(void *z, unsigned short int addr, unsigned char data);
+extern void mem_zx48_write(void* z, unsigned short int addr, unsigned char data);
 
-extern unsigned char mem_e800j_read(void *z, unsigned short int addr);
-extern void mem_e800j_write(void *z, unsigned short int addr, unsigned char data);
+extern unsigned char mem_zx128_read(void* z, unsigned short int addr);
+
+extern void mem_zx128_write(void* z, unsigned short int addr, unsigned char data);
+
+extern unsigned char mem_e800j_read(void* z, unsigned short int addr);
+
+extern void mem_e800j_write(void* z, unsigned short int addr, unsigned char data);
 
 /* 512 bajtów pamięci PROM 'MEM' KR556RT5 */
 #define PROM_MEM { 0xfe,0xfe,0xfe,0xfe,0xfe,0xfe,0xfe,0xfe,0xfd,0xfd,0xfd,0xfd,0xfd,0xfd,0xfd,0xfd,\

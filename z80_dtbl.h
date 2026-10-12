@@ -1230,7 +1230,6 @@
 #define _OR_RY	_Y_RY(_OR)
 #define _CP_RY	_Y_RY(_CP)
 
-
 #define PRE_00  \
         _NOP,      _LDBC_NN, _LDMBC_A, _INCBC,   _INCB, _DECB, _LDB_N, _RLCA, \
         _EXAF_AF, _ADDHL_BC, _LDA_MBC, _DECBC, _INCC, _DECC, _LDC_N, _RRCA,  _DJNZ, _LDDE_NN,\
@@ -1418,7 +1417,6 @@
         TMPL_3(_RLC), TMPL_3(_RRC), TMPL_3(_RL), TMPL_3(_RR), TMPL_3(_SLA), TMPL_3(_SRA),\
         TMPL_3(_SLI), TMPL_3(_SRL), TMPL_6(_BIT), TMPL_6(_RES), TMPL_6(_SET)
 
-
 /************************************************************************************************/
 
 /* główna tabela dekodowania instrukcji */
@@ -1427,7 +1425,6 @@
                 PRE_CB, PRE_CB_DD, PRE_CB_FD,\
                 PRE_ED, PRE_ED_DD, PRE_ED_FD \
              }
-
 
 #define Z80_PARITY_TABLE {\
                1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,\
@@ -1498,4 +1495,3 @@
     | | ||/
     ------
 */
-

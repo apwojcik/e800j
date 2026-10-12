@@ -22,32 +22,33 @@
 
 #include "e800j_kbrd.h"
 
-
 unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na współrzędne w matrycy */
 
-void key_init(kbrd *kb)
-{
+void key_init(kbrd* kb) {
     int i;
     /* zerowanie całej struktury */
-    for(i=0; i < sizeof(kbrd); i++) *((char *)kb + i) = 0;
+    for (i = 0; i < sizeof(kbrd); i++)
+        *((char*)kb + i) = 0;
     kb->mode = KB_MODE_PC;
     /* wypełnienie matrycy klawiatury wartościami 0xff - nie naciśnięty żaden klawisz */
-    for(i=0; i < sizeof(kb->matrix); i++) *(kb->matrix + i) = 0xff;
+    for (i = 0; i < sizeof(kb->matrix); i++)
+        *(kb->matrix + i) = 0xff;
 }
 
-unsigned char key_matrix(kbrd *kb, unsigned short int addr)
-{
+unsigned char key_matrix(kbrd* kb, unsigned short int addr) {
     unsigned char kbr;
-    int i,j;
+    int i, j;
 
     /* skanowanie klawiatury dla linii KA0..KA8 */
-    i= 0x8000; kbr=0xff;
-    for(j = 0; j < 9; i >>= 1, j++)
-    if( !(addr & i) )
-        kbr &= kb->matrix[j];
+    i = 0x8000;
+    kbr = 0xff;
+    for (j = 0; j < 9; i >>= 1, j++)
+        if (!(addr & i))
+            kbr &= kb->matrix[j];
 
     /* test linii E800J dla KA2 */
-    if( (addr & 0xff)== 0xfb) kbr &= kb->matrix[9];
+    if ((addr & 0xff) == 0xfb)
+        kbr &= kb->matrix[9];
 
     return kbr;
 }
@@ -64,65 +65,113 @@ state:
     1 - wciśnięto
     0 - zwolniono
 */
-void key_matrix_update(kbrd *kb, unsigned char coord, unsigned char  state)
-{
-    unsigned char col,row;
+void key_matrix_update(kbrd* kb, unsigned char coord, unsigned char state) {
+    unsigned char col, row;
 
     row = (coord >> 4) & 0xf;
     col = coord & 0x7;
 
     col = 0x01 << col;
 
-    if( row >= KB_ROWS ) return;
+    if (row >= KB_ROWS)
+        return;
 
-    if(state)
-    kb->matrix[row] &= ~col;
+    if (state)
+        kb->matrix[row] &= ~col;
     else
-    kb->matrix[row] |= col;
+        kb->matrix[row] |= col;
 }
 
+void key_update(kbrd* kb, int key_code, char state) {
+    int key_idx = 0xff;
 
-void key_update(kbrd *kb, int key_code, char state)
-{
-    int key_idx=0xff;
-
-        if(kb->mode == KB_MODE_PC)
-    {
-    if(key_code < KEY_CONTROL_CNT) key_idx = key_code;
-    switch(key_code){
-        case '~' : key_idx = KB_ROOF; break;
-        case '[' : key_idx = KB_BRL; break;
-        case ']' : key_idx = KB_BRR; break;
-        case '/' : key_idx = KB_SLASH; break;
-        case '\\' : key_idx = KB_BSLASH; break;
-        case '.' : key_idx = KB_DOT; break;
-        case ';' : key_idx = KB_SEMIC; break;
-        case ',' : key_idx = KB_COM; break;
-        case '-' : key_idx = KB_MINUS; break;
-        case '=' : key_idx = KB_PLUS; break;
-    }
-    if(key_code == KB_ALT_R){
-        kb->alt_r = state;
-        return;
-    }
-    if(kb->alt_r){
-        switch(key_code){
-            case 'a' : key_code = 0xff; key_idx = KB_A_; break;
-            case 'c' : key_code = 0xff; key_idx = KB_C_; break;
-            case 'e' : key_code = 0xff; key_idx = KB_E_; break;
-            case 'l' : key_code = 0xff; key_idx = KB_L_; break;
-            case 'n' : key_code = 0xff; key_idx = KB_N_; break;
-            case 'o' : key_code = 0xff; key_idx = KB_O_; break;
-            case 's' : key_code = 0xff; key_idx = KB_S_; break;
-            case 'z' : key_code = 0xff; key_idx = KB_Z_; break;
-            case 'x' : key_code = 0xff; key_idx = KB_Z__; break;
+    if (kb->mode == KB_MODE_PC) {
+        if (key_code < KEY_CONTROL_CNT)
+            key_idx = key_code;
+        switch (key_code) {
+        case '~':
+            key_idx = KB_ROOF;
+            break;
+        case '[':
+            key_idx = KB_BRL;
+            break;
+        case ']':
+            key_idx = KB_BRR;
+            break;
+        case '/':
+            key_idx = KB_SLASH;
+            break;
+        case '\\':
+            key_idx = KB_BSLASH;
+            break;
+        case '.':
+            key_idx = KB_DOT;
+            break;
+        case ';':
+            key_idx = KB_SEMIC;
+            break;
+        case ',':
+            key_idx = KB_COM;
+            break;
+        case '-':
+            key_idx = KB_MINUS;
+            break;
+        case '=':
+            key_idx = KB_PLUS;
+            break;
+        }
+        if (key_code == KB_ALT_R) {
+            kb->alt_r = state;
+            return;
+        }
+        if (kb->alt_r) {
+            switch (key_code) {
+            case 'a':
+                key_code = 0xff;
+                key_idx = KB_A_;
+                break;
+            case 'c':
+                key_code = 0xff;
+                key_idx = KB_C_;
+                break;
+            case 'e':
+                key_code = 0xff;
+                key_idx = KB_E_;
+                break;
+            case 'l':
+                key_code = 0xff;
+                key_idx = KB_L_;
+                break;
+            case 'n':
+                key_code = 0xff;
+                key_idx = KB_N_;
+                break;
+            case 'o':
+                key_code = 0xff;
+                key_idx = KB_O_;
+                break;
+            case 's':
+                key_code = 0xff;
+                key_idx = KB_S_;
+                break;
+            case 'z':
+                key_code = 0xff;
+                key_idx = KB_Z_;
+                break;
+            case 'x':
+                key_code = 0xff;
+                key_idx = KB_Z__;
+                break;
+            }
         }
     }
-    }
-    if((key_code >= 'a') && (key_code <= 'z')) key_idx = key_code - 'a' + KB_LET_START;
-    if((key_code >= '0') && (key_code <= '9')) key_idx = key_code - '0' + KB_DIG_START;
-    if(key_idx >= KB_ALL_CNT ) return;
-    key_matrix_update(kb, keymap_table[key_idx],state);
+    if ((key_code >= 'a') && (key_code <= 'z'))
+        key_idx = key_code - 'a' + KB_LET_START;
+    if ((key_code >= '0') && (key_code <= '9'))
+        key_idx = key_code - '0' + KB_DIG_START;
+    if (key_idx >= KB_ALL_CNT)
+        return;
+    key_matrix_update(kb, keymap_table[key_idx], state);
 }
 
 /*
@@ -147,41 +196,80 @@ unsigned int key_joymap(kbrd *kb,  unsigned int key, unsigned int nkey, char sta
 }
 */
 
-void key_set(kbrd *kb, unsigned int key, unsigned char kb_state)
-{
-//    int nkey=key;
-//kb->joy_mode = JOY_KEM;
+void key_set(kbrd* kb, unsigned int key, unsigned char kb_state) {
+    //    int nkey=key;
+    //kb->joy_mode = JOY_KEM;
     /* mapowanie klawiszy specjalnych */
-    switch(key){
-    case E8K_ENTER    : key = KB_ENTER; break;
-    case E8K_SHIFT_L  :
-    case E8K_SHIFT_R  : key = KB_SHIFT; break;
-    case E8K_CAPS     : key = KB_CAPS;  break;
-    case E8K_SPC      : key = KB_SPACE; break;
-    case E8K_ALT_L    : key = KB_ALT_L; break;
-    case E8K_ALT_R	  : key = KB_ALT_R; break;
-    case E8K_CTRL_L   :
-    case E8K_CTRL_R   : key = KB_CTRL ; break;
-    case E8K_DEL      : key = KB_DEL  ; break;
-    case E8K_BS       : key = KB_BS   ; break;
-    case E8K_F1	  : key = KB_CPJ  ; break;
-    case E8K_F2	  : key = KB_DIR  ; break;
-    case E8K_F3	  : key = KB_LOAD ; break;
-    case E8K_F4	  : key = KB_SAVE ; break;
-    case E8K_F5	  : key = KB_ERASE; break;
-    case E8K_ARROW_L  : key = KB_CUR_L; break;
-    case E8K_ARROW_R  : key = KB_CUR_R; break;
-    case E8K_ARROW_U  : key = KB_CUR_U; break;
-    case E8K_ARROW_D  : key = KB_CUR_D; break;
-    case E8K_ESC	  : key = KB_ESC; break;
-    case E8K_TAB	  : key = KB_TAB; break;
+    switch (key) {
+    case E8K_ENTER:
+        key = KB_ENTER;
+        break;
+    case E8K_SHIFT_L:
+    case E8K_SHIFT_R:
+        key = KB_SHIFT;
+        break;
+    case E8K_CAPS:
+        key = KB_CAPS;
+        break;
+    case E8K_SPC:
+        key = KB_SPACE;
+        break;
+    case E8K_ALT_L:
+        key = KB_ALT_L;
+        break;
+    case E8K_ALT_R:
+        key = KB_ALT_R;
+        break;
+    case E8K_CTRL_L:
+    case E8K_CTRL_R:
+        key = KB_CTRL;
+        break;
+    case E8K_DEL:
+        key = KB_DEL;
+        break;
+    case E8K_BS:
+        key = KB_BS;
+        break;
+    case E8K_F1:
+        key = KB_CPJ;
+        break;
+    case E8K_F2:
+        key = KB_DIR;
+        break;
+    case E8K_F3:
+        key = KB_LOAD;
+        break;
+    case E8K_F4:
+        key = KB_SAVE;
+        break;
+    case E8K_F5:
+        key = KB_ERASE;
+        break;
+    case E8K_ARROW_L:
+        key = KB_CUR_L;
+        break;
+    case E8K_ARROW_R:
+        key = KB_CUR_R;
+        break;
+    case E8K_ARROW_U:
+        key = KB_CUR_U;
+        break;
+    case E8K_ARROW_D:
+        key = KB_CUR_D;
+        break;
+    case E8K_ESC:
+        key = KB_ESC;
+        break;
+    case E8K_TAB:
+        key = KB_TAB;
+        break;
     }
 
-//    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
-    if(key < 0) return;
+    //    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
+    if (key < 0)
+        return;
 
-    key_update(kb, key,kb_state);
+    key_update(kb, key, kb_state);
 }
 
 //unsigned char key_kempston(kbrd *kb){ return kb->in1f & 0x1f; }
-

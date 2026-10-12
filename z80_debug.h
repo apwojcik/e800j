@@ -27,53 +27,52 @@
 
 #define DBG_VERSION "0.1"
 
-enum{
-    C_PCEQ=1,
+enum {
+    C_PCEQ = 1,
     C_PCGT,
     C_PCLT,
     C_CNTR
 };
 
-typedef struct
-{
-    char cond_type;	/* typ warunku    */
-    int  address;	/* wartość adresu */
-    int  life;		/* ilość warunków  'czas życia warunku' */
-    void *next;		/* następny warunek */
+typedef struct {
+    char cond_type; /* typ warunku    */
+    int address; /* wartość adresu */
+    int life; /* ilość warunków  'czas życia warunku' */
+    void* next; /* następny warunek */
 } dbg_bp;
 
-typedef struct
-{
-    char mach[MAX_BYTES]; 	/* kod maszynowy instrukcji */
+typedef struct {
+    char mach[MAX_BYTES]; /* kod maszynowy instrukcji */
     char cmdline[MAX_CMDCHR];
-    char line[LINE_LEN]; 	/* bufor wyniku zdeasemblowanej linii */
-    int  len;  			/* długość łańcucha kodu maszynowego */
-    int  icnt; 			/* licznik instrukcji */
-    char console;   		/* włączenie konsoli */
-    char deasm;			/* włączenie wyświetlania dekodowanej instr */
-    char noregs;		/* jeśli ustawiony, nie wyświetla stanu rejestrów */
-    char trace;			/* flaga trybu śledzenia */
-    void (*out)(char *);    	/* funkcja zwrotna do wyrzucania tekstu */
+    char line[LINE_LEN]; /* bufor wyniku zdeasemblowanej linii */
+    int len; /* długość łańcucha kodu maszynowego */
+    int icnt; /* licznik instrukcji */
+    char console; /* włączenie konsoli */
+    char deasm; /* włączenie wyświetlania dekodowanej instr */
+    char noregs; /* jeśli ustawiony, nie wyświetla stanu rejestrów */
+    char trace; /* flaga trybu śledzenia */
+    void (*out)(char*); /* funkcja zwrotna do wyrzucania tekstu */
     char (*in)();
-    z80  *z;
-/* warunek załączenia */
+
+    z80* z;
+/* warunek załaczenia */
     char cond;
-/* wartość załączenia */
+/* wartosc załaczenia */
     int addr;
-/* ilość instrukcji do wykonania */
+    /* ilość instrukcji do wykonania */
     int cntr;
-    dbg_bp *bp; /* break pointy */
-/* adres przy wyświetlaniu mapy pamięci */
+    dbg_bp* bp; /* break pointy */
+    /* adres przy wyświetlaniu mapy pamięci */
     int daddr;
     int dline;
-/* adres deasemblacji */
+    /* adres deasemblacji */
     int zaddr;
     int zline;
 } dbg;
 
-enum{
-    DBG_OFF=0,
-    DBG_ON =1
+enum {
+    DBG_OFF = 0,
+    DBG_ON = 1
 };
 
 /*
@@ -81,20 +80,20 @@ enum{
     komunikaty konsolowe I/O są wyprowadzane domyślnie na stdin/stdout, chyba
     że zostanie użyta funkcja dbg_set_stream.
 */
-extern void dbg_init(dbg *d, z80 *z, char debugg_on, char console_on);
+extern void dbg_init(dbg* d, z80* z, char debugg_on, char console_on);
 
 /*
     przekierowanie strumienia komunikatów I/O
 */
-extern void dbg_set_stream(dbg *d, char (*s_in)(void), void (*s_out)(char *));
+extern void dbg_set_stream(dbg* d, char (*s_in)(void), void (*s_out)(char*));
 
 /*
     włączenie/wyłączenie debuggera
 */
-extern void dbg_don(dbg *d, char flag);
+extern void dbg_don(dbg* d, char flag);
 
 /*
     włączenie/wyłączenie konsoli
 */
-extern void dbg_con(dbg *d, char flag);
+extern void dbg_con(dbg* d, char flag);
 #endif

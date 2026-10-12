@@ -21,47 +21,59 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-
 char msg_stream = 0;
 char msg_level = 0;
 
-void msg_putchar(char chr)
-{
-    if(msg_stream == 0 ) putchar(chr);
-
-
+void msg_putchar(char chr) {
+    if (msg_stream == 0)
+        putchar(chr);
 }
 
-void msg_putstr(char *str)
-{
-    for(;*str;str++) msg_putchar(*str);
+void msg_putstr(char* str) {
+    for (; *str; str++)
+        msg_putchar(*str);
 }
 
-static const char *msg[]={"(E!)","(EE)","(WW)","(II)","(VI)","(NI)","(UI)"};
+static const char* msg[] = {"(E!)", "(EE)", "(WW)", "(II)", "(VI)", "(NI)", "(UI)"};
 
-void msg_printf(char lvl, const char *fmt, ...)
-{
+void msg_printf(char lvl, const char* fmt, ...) {
     va_list ap;
     char *p, *sval;
     int ival;
-    char tabl[16]="";
+    char tabl[16] = "";
 
-    if(lvl > msg_level) return;
-    if(lvl > 6) lvl = 6;
+    if (lvl > msg_level)
+        return;
+    if (lvl > 6)
+        lvl = 6;
     msg_putstr((char*)msg[(int)lvl]);
 
     va_start(ap, fmt);
 
-    for(p = (char *)fmt; *p; p++){
-        if(*p!='%'){
+    for (p = (char*)fmt; *p; p++) {
+        if (*p != '%') {
             msg_putchar(*p);
             continue;
         }
-        switch(*(++p)){
-            case 's': for(sval = va_arg(ap, char *); *sval; sval++) msg_putchar(*sval); break;
-            case 'c': ival = va_arg(ap, int); msg_putchar(ival); break;
-            case 'i': ival = va_arg(ap, int); sprintf(tabl,"%i",ival); msg_putstr(tabl); break;
-            case 'x': ival = va_arg(ap, int); sprintf(tabl,"0x%x",ival); msg_putstr(tabl); break;
+        switch (*(++p)) {
+        case 's':
+            for (sval = va_arg(ap, char *); *sval; sval++)
+                msg_putchar(*sval);
+            break;
+        case 'c':
+            ival = va_arg(ap, int);
+            msg_putchar(ival);
+            break;
+        case 'i':
+            ival = va_arg(ap, int);
+            sprintf(tabl, "%i", ival);
+            msg_putstr(tabl);
+            break;
+        case 'x':
+            ival = va_arg(ap, int);
+            sprintf(tabl, "0x%x", ival);
+            msg_putstr(tabl);
+            break;
         }
     }
     va_end(ap);

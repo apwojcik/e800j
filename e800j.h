@@ -26,37 +26,35 @@
 #include "e800j_kbrd.h"
 #include "e800j_fdc.h"
 
-typedef struct
-{
-/* elementy komputera */
-    z80     *cpu;
-    zx_scrn *zx;
-    kbrd    *kb;
-    sound   *snd;
-    e800j_fdc *fdc;
-/* pamięć */
-    char    *ram;
-    char    *rom;
-    int     ram_size;
-    int	    rom_size;
+typedef struct {
+    /* elementy komputera */
+    z80* cpu;
+    zx_scrn* zx;
+    kbrd* kb;
+    sound* snd;
+    e800j_fdc* fdc;
+    /* pamięć */
+    char* ram;
+    char* rom;
+    int ram_size;
+    int rom_size;
 
-    char    tcpu;
-    void    *t1;
-    int     cpu_rfsh;
-    int     ifreq;	/* co ile taktów CPU ma zostać wywołane przerwanie */
-    int     tr;         /* ilość taktów/wywołanie   */
-/* porty I/O */
-    uchar   port_f7;    /* port sterowania pamięcią */
-    uchar   port_fe;    /* port głośniczka, koloru ramki, wyj magnetofonu */
-/* inne */
-    ushort  mem_mask;   /* maska ostatnich 3 bitów adresu PROM 'MEM' - A6,A7,A8 */
-/* JUNET */
-    ushort  junet_addr; /* adres komputera w sieci junet */
+    char tcpu;
+    void* t1;
+    int cpu_rfsh;
+    int ifreq; /* co ile taktów CPU ma zostać wywołane przerwanie */
+    int tr; /* ilość taktów/wywołanie   */
+    /* porty I/O */
+    uchar port_f7; /* port sterowania pamięcią */
+    uchar port_fe; /* port głośniczka, koloru ramki, wyj magnetofonu */
+    /* inne */
+    ushort mem_mask; /* maska ostatnich 3 bitów adresu PROM 'MEM' - A6,A7,A8 */
+    /* JUNET */
+    ushort junet_addr; /* adres komputera w sieci junet */
 
-    char debug;		/* true -> uruchamia w trybie komend */
+    char debug; /* true -> uruchamia w trybie komend */
 } elwro;
 
-extern void zx_main(elwro *);
+extern void zx_main(elwro*);
 
 #endif
-
