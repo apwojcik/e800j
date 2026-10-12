@@ -34,7 +34,7 @@ typedef struct
     kbrd    *kb;
     sound   *snd;
     e800j_fdc *fdc;
-/* pamiêæ */
+/* pamiÄ™Ä‡ */
     char    *ram;
     char    *rom;
     int     ram_size;
@@ -43,13 +43,13 @@ typedef struct
     char    tcpu;
     void    *t1;
     int     cpu_rfsh;
-    int     ifreq;	/* co ile taktów CPU ma zostaæ wywo³ane przerwanie */
-    int     tr;         /* ilo¶æ taktów/wywo³anie   */    
+    int     ifreq;	/* co ile taktÃ³w CPU ma zostaÄ‡ wywoÅ‚ane przerwanie */
+    int     tr;         /* iloÅ›Ä‡ taktÃ³w/wywoÅ‚anie   */    
 /* porty I/O */
-    uchar   port_f7;    /* port sterowania pamiêci± */
-    uchar   port_fe;    /* port g³o¶niczka, koloru ramki, wyj magnetofonu */
+    uchar   port_f7;    /* port sterowania pamiÄ™ciÄ… */
+    uchar   port_fe;    /* port gÅ‚oÅ›niczka, koloru ramki, wyj magnetofonu */
 /* inne */
-    ushort  mem_mask;   /* maska ostatnich 3 bitów adresu PROM 'MEM' - A6,A7,A8 */
+    ushort  mem_mask;   /* maska ostatnich 3 bitÃ³w adresu PROM 'MEM' - A6,A7,A8 */
 /* JUNET */
     ushort  junet_addr; /* adres komputera w sieci junet */
 

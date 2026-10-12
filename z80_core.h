@@ -21,8 +21,8 @@
 /*
     z80_core.h
     
-    Definicje warto禼i parametr體 tablicy dekodera rozkaz體, oraz jej struktury.
-    Reazalizacja emulacji rozkaz體.
+    Definicje warto艣ci parametr贸w tablicy dekodera rozkaz贸w, oraz jej struktury.
+    Reazalizacja emulacji rozkaz贸w.
 
     Autor: Krzysztof Komarnicki
     Ver: 0.1
@@ -35,7 +35,7 @@
 #include "z80_cpu.h"
 
 
-/* struktura tablicy dekodera rozkaz體 */
+/* struktura tablicy dekodera rozkaz贸w */
 typedef struct 
 {
     void (*code)(z80*);   /* kod operacji              - OC */
@@ -44,13 +44,13 @@ typedef struct
     unsigned char reg1;	/* rejest param 0 - R0 */
     unsigned char reg2;	/* rejest param 1 - R1 */
 
-    unsigned char bytes;  /* dlugosc rozkazu w bajtach - LC */
-    unsigned char cycles; /* ilosc cykli maszynowych   - CC */
-    unsigned char ticks;  /* ilosc taktow              - TC */
+    unsigned char bytes;  /* d艂ugo艣膰 rozkazu w bajtach - LC */
+    unsigned char cycles; /* ilo艣膰 cykli maszynowych   - CC */
+    unsigned char ticks;  /* ilo艣膰 takt贸w              - TC */
 
-    unsigned char f_mask_and; /* maska zerowanych znacznikow     - AM */
-    unsigned char f_mask_or;  /* maska ustawianych znacznikow    - OM */
-    unsigned char f_mask_chg; /* maska modyfikowanych znacznikow - CM */
+    unsigned char f_mask_and; /* maska zerowanych znacznik贸w     - AM */
+    unsigned char f_mask_or;  /* maska ustawianych znacznik贸w    - OM */
+    unsigned char f_mask_chg; /* maska modyfikowanych znacznik贸w - CM */
 
 } z80dt;
 
@@ -77,9 +77,9 @@ enum
     MBC = 18, 
     MDE = 19,
 /* specjalne */
-    MCDW = 32,	/* zmienna adresowana sta潮 */
-    CDB  = 33,  /* sta砤 bajtowa */
-    CDW  = 34,  /* sta砤 s硂wo   */
+    MCDW = 32,	/* zmienna adresowana sta艂膮 */
+    CDB  = 33,  /* sta艂a bajtowa */
+    CDW  = 34,  /* sta艂a s艂owo   */
     RNR  = 35,  /* bez rejestru  */
 /* rejestry bezwzgl 16 bitowe */
     RAF = 0, 
@@ -95,7 +95,7 @@ enum
 };
 
 /*
-    Kodowanie znacznik體
+    Kodowanie znacznik贸w
 */
 enum
 {

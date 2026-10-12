@@ -39,7 +39,7 @@ typedef struct
 typedef struct
 {
     char msg[256];
-    char scr_buffer[192*256*3+1]; /* +1 aby mo¿na by³o zrobiæ szybkie kopiowanie 32 bitowe */
+    char scr_buffer[192*256*3+1]; /* +1 aby moÅ¼na byÅ‚o zrobiÄ‡ szybkie kopiowanie 32 bitowe */
     rgbi palettei[16];
     rgbf palettef[16];
     int width;
@@ -64,10 +64,10 @@ typedef struct
     long parent; /* ID okna GTK */
     float bsize;
     float scrh;
-    int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/    
+    int yresv; /* yrsv - rozmiar zarezerwowanego gÃ³rnego pasa na menu GTK, bsize - rozmiar ramki*/    
 } zx_scrn;
 
-extern char sdl_init; /* jesli =1 tzn, ¿e ju¿ by³a inicjowana SDL */
+extern char sdl_init; /* jeÅ›li =1 tzn, Å¼e juÅ¼ byÅ‚a inicjowana SDL */
 extern void zx_make_palette(zx_scrn *zx, int nrm, int brt, int wht);
 extern void zx_scr_rfsh(zx_scrn *zx);
 /* argv -> -fullscreen, -noframe */

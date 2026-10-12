@@ -62,7 +62,7 @@ void dbg_sregs(dbg *d);
 void dbg_deasembly(dbg *d);
 
 /********************************************************************************************/
-/* zwraca 1 je¶li ³añcuch t nie jest liczb± */
+/* zwraca 1 jeÅ›li Å‚aÅ„cuch t nie jest liczbÄ… */
 char dbg_dcheck(char *t)
 {
     return 0;
@@ -136,7 +136,7 @@ void dbg_resolver(z80 *z, char *code, char *str)
 
 void dbg_addmach(dbg *deb, uchar n)
 {
-    /* je¶li wiêcej ni¿ MAX_BYTES zawijaj */
+    /* jeÅ›li wiÄ™cej niÅ¼ MAX_BYTES zawijaj */
     if(deb->len >= MAX_BYTES-1) deb->len = 0;
     dbg_oc2hexstr(n, deb->mach + deb->len);
     deb->len += 2;
@@ -150,7 +150,7 @@ void dbg_call(dbg *deb, uchar mode, uchar data)
 	dbg_addmach(deb, data);
 	return;
     }
-    /* jesli instrukcja w toku wyjd¼ */
+    /* jeÅ›li instrukcja w toku wyjdÅº */
     if(deb->z->ipend) return;
 
     if(mode == D_PRE){
@@ -164,7 +164,7 @@ void dbg_call(dbg *deb, uchar mode, uchar data)
 	if(deb->out) deb->out(deb->line);
     }
 
-    /* zakoñczenie deasemblacji instrukcji */
+    /* zakoÅ„czenie deasemblacji instrukcji */
     deb->len=0;
     deb->mach[0]=0;
     deb->line[0]=0;
@@ -229,7 +229,7 @@ void dbg_test(dbg *d, unsigned char mode)
 {
     if(d->console) return;
     if(d->trace){
-	if(mode != D_PRE) return; /* je¶li nie na poczatku */
+	if(mode != D_PRE) return; /* jeÅ›li nie na poczÄ…tku */
 	if(d->icnt <= 1) d->deasm=1;
 	if(!d->icnt) { 
 	    d->console=1; d->trace=0; d->deasm=0; 
@@ -261,21 +261,21 @@ void dbg_getcmd(dbg *d, char *cmd)
     char *n=d->cmdline;
     int i,j,k = strlen(n);
 
-    /* znajd¼ pocz±tek wyrazu */
+    /* znajdÅº poczÄ…tek wyrazu */
     for(i=0; i < k && n[i] < '!'; i++);
 
-    /* znajd¼ koniec wyrazu */
+    /* znajdÅº koniec wyrazu */
     for(j=i; j < k && n[j] > ' '; j++);
 
     strncpy(cmd,n+i,j-i);
 }
 
-/* analiza sk³adni wprowadzonej linii */
+/* analiza skÅ‚adni wprowadzonej linii */
 void dbg_cmd(dbg *d)
 {
     char cmd[256]="";
 
-    /* pobranie rozkazu debuggera z linii poleceñ */
+    /* pobranie rozkazu debuggera z linii poleceÅ„ */
     dbg_getcmd(d,cmd);
     if(!strcmp(cmd,"quit")){ dbg_quit(d); return; }
     if(!strcmp(cmd,"q"))   { dbg_quit(d); return; }
@@ -346,7 +346,7 @@ void dbg_trap(dbg *d)
     int  life=1;
     dbg_bp  *tmp,*n;
     
-    /* pobranie argumentów komendy */
+    /* pobranie argumentÃ³w komendy */
     sscanf(d->cmdline,"b %6s %2s %8s", addrs, cnd, slife);
 
     /* test czy podano drugi parametr */
@@ -389,7 +389,7 @@ void dbg_trap(dbg *d)
 	life = strtol(slife,NULL,0);
     }
     
-/* argumenty pobrane czas dodaæ pu³apkê do listy */
+/* argumenty pobrane czas dodaÄ‡ puÅ‚apkÄ™ do listy */
     tmp = (dbg_bp*) malloc(sizeof(dbg_bp));
     tmp->next = NULL;
     tmp->cond_type = cond;
@@ -852,10 +852,10 @@ void dbg_proc(dbg *d)
     d->deasm = d->icnt ? outs : 1;
     d->trace = 1;
     d->console = 0;
-/************** dodaæ ******************/
+/************** dodaÄ‡ ******************/
 }
 
-/* zapis przy deasemblacji ma i¶æ w pustkê */
+/* zapis przy deasemblacji ma iÅ›Ä‡ w pustkÄ™ */
 void dbg_dummy_wr(void *z, ushort addr, uchar data){}
 void dbg_dummy_output(void *z, ushort addr, uchar data){}
 uchar dbg_dummy_input(void *z, ushort addr){ return 0; }

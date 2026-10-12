@@ -24,21 +24,21 @@
 
 typedef struct 
 {
-    unsigned char *rbuffer;	/* bufor ko³owy d¼wiêku */
+    unsigned char *rbuffer;	/* bufor koÅ‚owy dÅºwiÄ™ku */
     unsigned char *lbuffer;	/* bufor liniowy        */
     char *sin;		/* tablica sinus do antyaliasingu   */
     
-    int  head;		/* poczatek bufora ko³owego  */
-    int  tail;		/* koniec bufora ko³owego    */
-    int  volume;	/* g³o¶no¶æ               */
+    int  head;		/* poczÄ…tek bufora koÅ‚owego  */
+    int  tail;		/* koniec bufora koÅ‚owego    */
+    int  volume;	/* gÅ‚oÅ›noÅ›Ä‡               */
     int  size;		/* rozmiar bufora         */
-    int  freq;		/* ilo¶æ sampli / sekunde */
-    int  len;		/* d³ugo¶æ bufora na karcie, warto¶æ musi byæ pot 2 i mo¿e byæ skorygowana */
-    char chn;           /* ilo¶æ kana³ów */
-    char nosound:1;     /* czy w³± obs³ d¼wiêku */
-    char alias:1;	/* czy ma byæ w³aczony antyaliasing */
-    char ovr:1;		/* wyst±pi³o przepe³nienie bufora   */
-    int  scale;		/* skalowanie d³ugo¶ci okresów      */
+    int  freq;		/* iloÅ›Ä‡ sampli / sekundÄ™ */
+    int  len;		/* dÅ‚ugoÅ›Ä‡ bufora na karcie, wartoÅ›Ä‡ musi byÄ‡ pot 2 i moÅ¼e byÄ‡ skorygowana */
+    char chn;           /* iloÅ›Ä‡ kanaÅ‚Ã³w */
+    char nosound:1;     /* czy wÅ‚Ä… obsÅ‚ dÅºwiÄ™ku */
+    char alias:1;	/* czy ma byÄ‡ wÅ‚Ä…czony antyaliasing */
+    char ovr:1;		/* wystÄ…piÅ‚o przepeÅ‚nienie bufora   */
+    int  scale;		/* skalowanie dÅ‚ugoÅ›ci okresÃ³w      */
     long old_ticks;
     char old_r373;
 } sound;

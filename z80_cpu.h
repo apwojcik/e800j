@@ -100,55 +100,55 @@ public:
 	    uchar  iff1;
 	    uchar  iff2;    
 /* stany CPU */
-	    uchar  imode;   /* tryb przerwañ                                       */    
-	    uchar  intr;    /* wywo³anie przerwania maskowalnego                   */
-	    uchar  inmi;    /* wywo³anie przerwania niemaskowalnego                */
+	    uchar  imode;   /* tryb przerwaÅ„                                       */    
+	    uchar  intr;    /* wywoÅ‚anie przerwania maskowalnego                   */
+	    uchar  inmi;    /* wywoÅ‚anie przerwania niemaskowalnego                */
 	    uchar  halt;    /* CPU jest w stanie HALT                              */
 /* flagi dodatkowe, pomocnicze */
-	    uchar  alt_rg;  /* flaga okre¶laj±ca który bank rejestrów jest aktywny */
-	    uchar  alt_af;  /* flaga okre¶laj±ca który bank AF jest aktywny  */
-	    uchar  ipend;   /* je¶li ustawiona to instrukcja w toku */ 
+	    uchar  alt_rg;  /* flaga okreÅ›lajÄ…ca ktÃ³ry bank rejestrÃ³w jest aktywny */
+	    uchar  alt_af;  /* flaga okreÅ›lajÄ…ca ktÃ³ry bank AF jest aktywny  */
+	    uchar  ipend;   /* jeÅ›li ustawiona to instrukcja w toku */ 
 	    uchar  irupt;   /* wykonuje przerwanie */
 /* zmienne sterowania CPU */
 	    int    pref_cb_ed;
 	    int    pref_dd_fd;
 	    int    ibus;
 	    char   bus[8];    /* bajty wystawione na magistrale w trybie IM 0 */
-	    int    call_cnt;   /* licznik co ile ma byæ wywo³ana procedura w petli */
+	    int    call_cnt;   /* licznik co ile ma byÄ‡ wywoÅ‚ana procedura w pÄ™tli */
 /* liczniki */
-	    long int cycles;  /* przechowuje ilo¶æ cykli  */
-	    long int ticks;   /* przechowuje ilo¶æ taktów */
-	    int	 _tic;	      /* ilo¶æ taktów na wykonan± instrukcjê */
-/* parametry wywo³ania instrukcji */
+	    long int cycles;  /* przechowuje iloÅ›Ä‡ cykli  */
+	    long int ticks;   /* przechowuje iloÅ›Ä‡ taktÃ³w */
+	    int	 _tic;	      /* iloÅ›Ä‡ taktÃ³w na wykonanÄ… instrukcjÄ™ */
+/* parametry wywoÅ‚ania instrukcji */
 	    uchar p0,p1,p2;
 	    uchar b, c, t;
 	    uchar a, o, x;
 /* zmienne tymczasowe */    
 	    uchar dd0, dd1, dd3;
 	    ushort dd2;
-/* dodatkowe informacje dla debuggera i flagi steruj±ce */
-	    uchar  int_off;	 	/* je¶li ustawiona ignorowane s± przerwania i instrukcja HALT */
-	    uchar  jmp_off;	 	/* je¶li ustawione nie wykonywane s± skoki przez jp, djnz, jr, call, ret */
-	    uchar  dbg_on;	 	/* za³±czenie debuggera */    
-	    uchar  cpu_off;	 	/* ustawienie ignoruje wywo³anie funkcji CPU */
-	    uchar  djnz;       		/* cpu wykonuje instrukcjê DJNZ */
-	    ushort adrs;         	/* warto¶æ PC pod któr± zaczyna siê instrukcja */
+/* dodatkowe informacje dla debuggera i flagi sterujÄ…ce */
+	    uchar  int_off;	 	/* jeÅ›li ustawiona ignorowane sÄ… przerwania i instrukcja HALT */
+	    uchar  jmp_off;	 	/* jeÅ›li ustawione nie wykonywane sÄ… skoki przez jp, djnz, jr, call, ret */
+	    uchar  dbg_on;	 	/* zaÅ‚Ä…czenie debuggera */    
+	    uchar  cpu_off;	 	/* ustawienie ignoruje wywoÅ‚anie funkcji CPU */
+	    uchar  djnz;       		/* cpu wykonuje instrukcjÄ™ DJNZ */
+	    ushort adrs;         	/* wartoÅ›Ä‡ PC pod ktÃ³rÄ… zaczyna siÄ™ instrukcja */
 	    uchar cmd_type;	 	/* typ instrukcji */
 	    uchar reg80;	 	/* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
 	    uchar reg81;	 	/* rejestr 8 bit   drugi parametr */    
     	    uchar regx0;	 	/* rejestr 16 bit  pierwszy parametr */
 	    uchar regx1;	 	/* rejestr 16 bit  drugi parametr */    
-	    uchar exit;			/* powoduje wyj¶cie z pêtli */
-	    char  dd;		 	/* sta³a 8 bitowa  */
-	    ushort nn;		 	/* sta³a 16 bitowa */
+	    uchar exit;			/* powoduje wyjÅ›cie z pÄ™tli */
+	    char  dd;		 	/* staÅ‚a 8 bitowa  */
+	    ushort nn;		 	/* staÅ‚a 16 bitowa */
 	    uchar  last_in_data;	/* ostatnio pobrana dana z portu */
 	    ushort last_in_addr;	/* ostatni adres pobierania danych z portu */
 	    uchar  last_out_data;	/* ostatnio wpisana dana do portu */
-	    ushort last_out_addr;	/* ostatni adres odwo³ania do portu wyj¶ciowego */
-	    ushort last_mem_rd;		/* ostatnio odczytana dana z pamiêci */
-	    ushort last_mem_wr;		/* ostatnio zapisana dana do pamiêci */
-	    unsigned int nested;	/* wskazuje zag³êbienie podprogramów */
-	    int    force_in;		/* jesli > 0 warto¶c bêdzie odczytana przez IN */
+	    ushort last_out_addr;	/* ostatni adres odwoÅ‚ania do portu wyjÅ›ciowego */
+	    ushort last_mem_rd;		/* ostatnio odczytana dana z pamiÄ™ci */
+	    ushort last_mem_wr;		/* ostatnio zapisana dana do pamiÄ™ci */
+	    unsigned int nested;	/* wskazuje zagÅ‚Ä™bienie podprogramÃ³w */
+	    int    force_in;		/* jeÅ›li > 0 wartoÅ›Ä‡ bÄ™dzie odczytana przez IN */
 	}; /*koniec struktury */
 	char z80_data[Z80_DATA_SIZE];   /* maksymalny dopuszczalny rozmiar pola danych */
     }; /* koniec unii */
@@ -160,21 +160,21 @@ public:
     void z80_loop(int cnt, int call, void *param);
 
     virtual void   callback(void *param);
-    virtual uchar  mem_rd(void *ptr, ushort addr);		/* funkcja odczytu z pamiêci */
-    virtual void   mem_wr(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiêci */
+    virtual uchar  mem_rd(void *ptr, ushort addr);		/* funkcja odczytu z pamiÄ™ci */
+    virtual void   mem_wr(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiÄ™ci */
     virtual uchar  input(void *ptr, ushort addr);		/* funkcja odczytu IO        */
     virtual void   output(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do IO      */
     virtual void   debug(void *ptr, int mode, uchar data);	/* funkcja debuggera         */
 #else
-/* funkcje zewnêtrzne */
-    uchar  (*mem_rd)(void *ptr, ushort addr);			/* funkcja odczytu z pamiêci */
-    void   (*mem_wr)(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiêci */
+/* funkcje zewnÄ™trzne */
+    uchar  (*mem_rd)(void *ptr, ushort addr);			/* funkcja odczytu z pamiÄ™ci */
+    void   (*mem_wr)(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do pamiÄ™ci */
     uchar  (*input) (void *ptr, ushort addr);			/* funkcja odczytu IO        */
     void   (*output)(void *ptr, ushort addr, uchar data);	/* funkcja zapisu do IO      */
     void   (*debug) (void *ptr, int mode, uchar data);		/* funkcja debuggera         */
 #endif
-    void   *ptr;      						/* dowolny wska¼nik          */
-    void   *ptx;      						/* dowolny wska¼nik          */
+    void   *ptr;      						/* dowolny wskaÅºnik          */
+    void   *ptx;      						/* dowolny wskaÅºnik          */
 } Z80_STRUCT_NAME;
 
 /* ID instrukcji i index w tabeli DEB_DEC_TABL */
@@ -226,24 +226,24 @@ enum
 /* reset CPU */
 
 extern void z80_init(
-    z80 *, 						/* wska¼nik na objekt z80  */
-    uchar (*mem_rd)(void *z, ushort addr), 		/* funkcja odczytu pamiêci */
-    void  (*mem_wr)(void *z, ushort addr, uchar data),	/* funkcja zapisu pamiêci  */
+    z80 *, 						/* wskaÅºnik na objekt z80  */
+    uchar (*mem_rd)(void *z, ushort addr), 		/* funkcja odczytu pamiÄ™ci */
+    void  (*mem_wr)(void *z, ushort addr, uchar data),	/* funkcja zapisu pamiÄ™ci  */
     uchar (*io_rd)(void *z, ushort addr), 		/* funkcja odczytu I/O     */
     void  (*io_wr)(void *z, ushort addr, uchar data),	/* funkcja zapisu I/O      */
-    void *ptr,						/* wska¼nik do w³asnego u¿ytku 1 */
-    void *ptx						/* wska¼nik do w³asnego u¿ytku 1 */
+    void *ptr,						/* wskaÅºnik do wÅ‚asnego uÅ¼ytku 1 */
+    void *ptx						/* wskaÅºnik do wÅ‚asnego uÅ¼ytku 1 */
     );
 
 extern void z80_reset(z80*);
 
 extern void z80_step(z80*);
-/* wykonuje petlê zadan± ilo¶ci± taktów, w trakcie wywo³uje funkcjê 
-   callback z parametrem callback_param (jesli nie NULL) 
-   icall ilo¶æ obiegów pêtli, po których zostanie wywo³any callback
-   zwraca ilo¶æ nadmiarowych taktów, nie mieszczacych siê w zadanych ilo¶ciach taktów do wykonania
-   funkcja callback przyjmuje dwa parametry, pierwszym z nich jest przepisywany wska¼nik
-   callback_param, za¶ drugim liczba taktów CPU.
+/* wykonuje pÄ™tlÄ™ zadanÄ… iloÅ›ciÄ… taktÃ³w, w trakcie wywoÅ‚uje funkcjÄ™ 
+   callback z parametrem callback_param (jeÅ›li nie NULL) 
+   icall iloÅ›Ä‡ obiegÃ³w pÄ™tli, po ktÃ³rych zostanie wywoÅ‚any callback
+   zwraca iloÅ›Ä‡ nadmiarowych taktÃ³w, nie mieszczacych siÄ™ w zadanych iloÅ›ciach taktÃ³w do wykonania
+   funkcja callback przyjmuje dwa parametry, pierwszym z nich jest przepisywany wskaÅºnik
+   callback_param, zaÅ› drugim liczba taktÃ³w CPU.
 */
 extern void z80_loop(z80*, int cnt, int icall, void (*callback)(z80*,void *), void *callback_param);
 extern void z80_nmi(z80*);

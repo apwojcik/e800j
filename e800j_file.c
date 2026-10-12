@@ -45,11 +45,11 @@ char file_snap_cpy(libspectrum_snap *snap, z80 *z, char *ram, char *reg373, char
     machine = libspectrum_snap_machine(snap);
 
     if((machine != LIBSPECTRUM_MACHINE_48) && (machine != LIBSPECTRUM_MACHINE_16)){
-	    msg_printf(MSG_WARN, "Nie obs³ugiwany typ komputera: %s\n",libspectrum_machine_name(machine));
+	    msg_printf(MSG_WARN, "Nie obsÅ‚ugiwany typ komputera: %s\n",libspectrum_machine_name(machine));
 	    if(rest) return 0;
     }	
 
-/* ustawienie rejestrów */
+/* ustawienie rejestrÃ³w */
     z80_reset(z);
 
     z->As0 = libspectrum_snap_a(snap);		z->Fs0 = libspectrum_snap_f(snap);
@@ -70,7 +70,7 @@ char file_snap_cpy(libspectrum_snap *snap, z80 *z, char *ram, char *reg373, char
 /* kolor ramki */
     *reg373 = libspectrum_snap_out_ula(snap);
     
-/* kopiowanie pamiêci */
+/* kopiowanie pamiÄ™ci */
     for(i=0; i < 16; i++)
     if(libspectrum_snap_pages(snap,i)){
 	switch(i){
@@ -169,12 +169,12 @@ char *file_find_cfg_name(const char *cfg, const char *name, int lvl, int *line)
 	    if( a == '\n') cmd=0, (*line)++;
 	    if( a == '\\') chr=1;
 	} else chr=0;
-	if( cmd ) continue; /* jesli komentarz to pomiñ nastêpne sprawdzanie */	
+	if( cmd ) continue; /* jeÅ›li komentarz to pomiÅ„ nastÄ™pne sprawdzanie */	
 	if(found && file_is_letter(a)) found=0;
 	if(found) return (char *)cfg + i;
 	if( a == '{') nest++;
 	if( a == '}') nest--;
-	if( nest == lvl){ /* szukamy na w³a¶ciwym poziomie zagnie¿dzenia */
+	if( nest == lvl){ /* szukamy na wÅ‚aÅ›ciwym poziomie zagnieÅ¼dzenia */
 	    if(file_is_letter(a) && !file_is_letter(prevch)){ 
 		for(k=0; k < u && i < z && file_is_letter(cfg[i]) && cfg[i] == name[k]; k++, i++);
 		i--;
@@ -625,7 +625,7 @@ char file_init(elwro *el, char *cpath, int argc, char **argv)
     if(file_set_screen(cfg, el, profile)) return 1;
     if(file_set_video(cfg, el, profile)) return 1;
     if(file_set_sound(cfg, el, profile)) return 1;
-/* dojda dodatkowe*/
+/* dojdÄ… dodatkowe*/
     free(profile);
     free(cfg);
     return 0;

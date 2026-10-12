@@ -27,16 +27,16 @@
 
 typedef struct
 {
-    void (*command)(void *);	/* funkcja obs³ugi          */
-    uchar cmd_len;		/* ilo¶æ bajtów rozkazu     */
+    void (*command)(void *);	/* funkcja obsÅ‚ugi          */
+    uchar cmd_len;		/* iloÅ›Ä‡ bajtÃ³w rozkazu     */
     uchar exe_len;		/* faza execute ?           */
-    uchar res_len;		/* ilo¶æ bajtów fazy result */
+    uchar res_len;		/* iloÅ›Ä‡ bajtÃ³w fazy result */
     char *name;
 } i8272opc;
 
 typedef struct 
 {
-/* rejestry uk³adu i8272A */
+/* rejestry ukÅ‚adu i8272A */
     uchar msr;		/* main status register */
     uchar st0;		/* rejestr statusowy 0  */
     uchar st1;		/* rejestr statusowy 1  */
@@ -52,40 +52,40 @@ typedef struct
     uchar ds;		/* "Drive Select"        */
     
 /* zmienne interpretacji rozkazu */
-    uchar call;		/* miejsce wywo³ania opcode               */
-    uchar icntr;	/* licznik odczytów rejestru msr          */
+    uchar call;		/* miejsce wywoÅ‚ania opcode               */
+    uchar icntr;	/* licznik odczytÃ³w rejestru msr          */
     uchar phase;	/* faza wykonywania rozkazu               */
     uchar data;		/* dana do zapisu / odczytu portu         */    
     uchar buffer[16];	/* bufor operacji                         */
     uchar idx_0, idx_1; /* zmienne licznikowe operacji na buforze */
-    i8272opc *opcode;	/* wska¼nik na instrukcjê                 */
+    i8272opc *opcode;	/* wskaÅºnik na instrukcjÄ™                 */
 
-/* sprzêgniêcie z emulacj± napêdu */
-    void  *parameter[4];/* parametr wywo³ania funkcji napêdu  */
-    int (*drive)( /* funkcja obs³ugi napêdu */
+/* sprzÄ™gniÄ™cie z emulacjÄ… napÄ™du */
+    void  *parameter[4];/* parametr wywoÅ‚ania funkcji napÄ™du  */
+    int (*drive)( /* funkcja obsÅ‚ugi napÄ™du */
 		void *i8272, 	/* struktura FDC   */
-		void *fdd, 	/* parametr napêdu (struktura opisu dyskietki )*/
+		void *fdd, 	/* parametr napÄ™du (struktura opisu dyskietki )*/
 		uchar action, 	/* kod operacji   */
 		uchar wdata	/* dane do zapisu */
-	    ); /* zwracana warto¶æ to dana odczytu lub kod b³êdu */
+	    ); /* zwracana wartoÅ›Ä‡ to dana odczytu lub kod bÅ‚Ä™du */
 
-/* sprzêg z CPU */
+/* sprzÄ™g z CPU */
     uchar int_line;
     
 /* parametry dla operacji read/write */
-    uchar rw;		/* flaga wskazuj±ca na fazê exec komendy read lub write */
+    uchar rw;		/* flaga wskazujÄ…ca na fazÄ™ exec komendy read lub write */
     uchar cn;		/* numer cylindra      */
-    uchar ha;		/* numer g³owicy       */
+    uchar ha;		/* numer gÅ‚owicy       */
     uchar rec;		/* numer sektora       */
-    uchar nb;		/* ilo¶æ bajtów/sektor */
-    uchar eot;		/* koniec scie¿ki      */
-    uchar gpl;		/* d³ugo¶æ GAP3        */
-    uchar dtl;		/* ilo¶æ danych do zapisu/odczytu sektora, je¶li nb=0 */
+    uchar nb;		/* iloÅ›Ä‡ bajtÃ³w/sektor */
+    uchar eot;		/* koniec Å›cieÅ¼ki      */
+    uchar gpl;		/* dÅ‚ugoÅ›Ä‡ GAP3        */
+    uchar dtl;		/* iloÅ›Ä‡ danych do zapisu/odczytu sektora, jeÅ›li nb=0 */
 /* zmieene odczytu/zapisu sektora */
     unsigned int sbyte;  /* nr bajtu w sektorze, licznik   */
     unsigned int slen;   /* rozmiar sektora w bajtach      */
-    unsigned int trlen;  /* rozmiar ¶cie¿ki w bajtach      */
-    int err;	/* b³±d napêdu */
+    unsigned int trlen;  /* rozmiar Å›cieÅ¼ki w bajtach      */
+    int err;	/* bÅ‚Ä…d napÄ™du */
 } i8272;
 
 /* Bity rejestru MSR */
@@ -110,7 +110,7 @@ enum
 };
 
 /* 
-  Sprzêg z emulatorem 
+  SprzÄ™g z emulatorem 
 */
 /* zainicjowanie struktury */
 extern void i8272_init(i8272 *fdc);
@@ -118,24 +118,24 @@ extern void i8272_init(i8272 *fdc);
 extern void i8272_tc(i8272 *fdc, unsigned char tc);
 /* ustawienie linii 'reset' */
 extern void i8272_reset(i8272 *fdc, unsigned char reset);
-/* zapis do rejestrów i8272, address_bit - A0  */
+/* zapis do rejestrÃ³w i8272, address_bit - A0  */
 extern void i8272_out(i8272 *fdc, unsigned char address_bit, unsigned char data);
-/* odczyt z rejestrów i8272, address_bit - A0  */
+/* odczyt z rejestrÃ³w i8272, address_bit - A0  */
 extern unsigned char i8272_in(i8272 *fdc, unsigned char address_bit);
 
 /*
-  Sprzêg z napêdem wirtualnym, nale¿y wowo³aæ po i8272_init()
+  SprzÄ™g z napÄ™dem wirtualnym, naleÅ¼y wowoÅ‚aÄ‡ po i8272_init()
 */
 extern void i8272_fdd_connect(
     i8272 *fdc, 				/* struktura FDC */
-    int (*drive)(void *, void *, uchar, uchar), /* funkcja napêdu wirtualnego */
-    void *, void *, void *, void*               /* struktury napêdów 0,1,2,3 */
+    int (*drive)(void *, void *, uchar, uchar), /* funkcja napÄ™du wirtualnego */
+    void *, void *, void *, void*               /* struktury napÄ™dÃ³w 0,1,2,3 */
 );
 
 
 
 
-/* funkcje odpowiadaj±ce komendom i8272 */
+/* funkcje odpowiadajÄ…ce komendom i8272 */
 #define i8272_CMD_R_DATA	(void (*)(void*))i8272_rd_cmd 
 #define i8272_CMD_R_DEL_DATA	(void (*)(void*))i8272_rdd_cmd 
 #define i8272_CMD_W_DATA	(void (*)(void*))i8272_wd_cmd 
@@ -266,7 +266,7 @@ enum{
     FDD_READ_TRACK,
     FDD_WRITE_TRACK,
     FDD_SEEK_SECTOR,
-/* Warto¶ci zwracane przez FDD */
+/* WartoÅ›ci zwracane przez FDD */
     FDD_ERR_WPROT  = -1,
     FDD_ERR_NODISK = -2,
     FDD_ERR_OVER = -3,
@@ -275,10 +275,10 @@ enum{
 
 /* kody przerwania dla rejestru ST0 */
 enum{
-    FDC_IC_NT  = 0,	/* Normalne zakoñczenie. Rozkaz kompletny i poprawnie wykonany. */
-    FDC_IC_AT0 = 1,	/* B³±d wykonania rozkazu. Wykonanie rozkazu rozpoczête, ale nie zakoñczone */
-    FDC_IC_IC  = 2,	/* B³êdny rozkaz. */
-    FDC_IC_AT1 = 3	/* B³±d wykonania rozkazu poniewa¿, w czasie jego wykonania zmianie uleg³a linia ready */
+    FDC_IC_NT  = 0,	/* Normalne zakoÅ„czenie. Rozkaz kompletny i poprawnie wykonany. */
+    FDC_IC_AT0 = 1,	/* BÅ‚Ä…d wykonania rozkazu. Wykonanie rozkazu rozpoczÄ™te, ale nie zakoÅ„czone */
+    FDC_IC_IC  = 2,	/* BÅ‚Ä™dny rozkaz. */
+    FDC_IC_AT1 = 3	/* BÅ‚Ä…d wykonania rozkazu poniewaÅ¼, w czasie jego wykonania zmianie ulegÅ‚a linia ready */
 };
 
 #endif

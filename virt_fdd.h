@@ -29,10 +29,10 @@ typedef struct
 {
     char format_name[0x22];	/* 00-21 */
     char creator[14];		/* 22-2F */
-    uchar tps;			/* ilosÊ ∂cieøek */
-    uchar hpd;			/* ilo∂Ê g≥owic  */
+    uchar tps;			/* ilo≈õƒá ≈õcie≈ºek */
+    uchar hpd;			/* ilo≈õƒá g≈Çowic  */
     uchar size_1;
-    uchar size_2;		/* rozmiar ∂cieøki */
+    uchar size_2;		/* rozmiar ≈õcie≈ºki */
     uchar unused_2[0xff-0x34+1];
 } vfdd_hdr;
 
@@ -40,14 +40,14 @@ typedef struct
 {
     char info[13];	/* Track-Info\r\n */
     char unused_0[3];
-    uchar tr_nb;	/* numer ∂ciezki */
-    uchar hd_nb;	/* numer g≥owicy */
+    uchar tr_nb;	/* numer ≈õcie≈ºki */
+    uchar hd_nb;	/* numer g≈Çowicy */
     char unused_1[2];
-/* parametry formatowania ∂ciezki */
+/* parametry formatowania ≈õcie≈ºki */
     uchar bps;		/* bytes per sector */
     uchar spt;		/* sectors per track */
     uchar gap3;		/* gap#3 format */
-    uchar fill;		/* bajt wype≥nienia */
+    uchar fill;		/* bajt wype≈Çnienia */
 } vfdd_trk_hdr;
 
 typedef struct
@@ -65,7 +65,7 @@ typedef struct
 typedef struct
 {
     FILE *f;	       /* uchwyt czytanego pliku obrazu */
-    vfdd_hdr     hdr;  /* nag≥Ûwek obrazu dysku */
+    vfdd_hdr     hdr;  /* nag≈Ç√≥wek obrazu dysku */
     vfdd_trk_hdr th;
     vfdd_sec_hdr sh;
     int   sbyte; 
@@ -97,12 +97,12 @@ enum{
 };
 
 enum{
-    VFDD_EMUL_DSK,	/* emulacja zawarto∂ci dyskietki w pliku CPCEmu formatu DSK */
-    VFDD_EMUL_DIR,	/* emulacja zawarto∂ci dyskietki katalogiem na HDD */
-    VFDD_EMUL_REAL	/* emulacja rzeczywistego napÍdu przez stacjÍ FDD  */
+    VFDD_EMUL_DSK,	/* emulacja zawarto≈õci dyskietki w pliku CPCEmu formatu DSK */
+    VFDD_EMUL_DIR,	/* emulacja zawarto≈õci dyskietki katalogiem na HDD */
+    VFDD_EMUL_REAL	/* emulacja rzeczywistego napƒôdu przez stacjƒô FDD  */
 };
 
-/* puki nie ma innych emulacji napÍdu niø pliki *.dsk */
+/* p√≥ki nie ma innych emulacji napƒôdu ni≈º pliki *.dsk */
 #define vfdd_floppy vfdd_dsk_floppy
 
 /* 
@@ -113,17 +113,17 @@ enum{
 extern int vfdd_dsk_floppy(
 	vfdd_disk*,
 	char action,
-	char parm0,	/* ∂cieøka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
+	char parm0,	/* ≈õcie≈ºka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
 	char parm1,	/* sektor  | 2-typ emulacji */
-	char parm2,	/* g≥owica */
-        char *path	/* ∂cieøka do pliku/katalogu */
+	char parm2,	/* g≈Çowica */
+        char *path	/* ≈õcie≈ºka do pliku/katalogu */
     );
 
 /*
-    Emulacja napÍdu
+    Emulacja napƒôdu
 */
 extern int vfdd_drive(
-	void *ptr, 	/* wskaºnik nadrzÍdnej struktury danych */
+	void *ptr, 	/* wska≈∫nik nadrzƒôdnej struktury danych */
 	void *dsk, 	/* vfdd_disk */
 	uchar action, 	/* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
 	uchar wdata	/* dana dla operacji zapisu */

@@ -219,13 +219,13 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
 	 sdl_init_=1;
     }
 
-    /* automatyczne ustawienie g³êbi kolorów */
+    /* automatyczne ustawienie gÅ‚Ä™bi kolorÃ³w */
     if(bpp==0) { if(SDL_GetVideoInfo()->vfmt->BitsPerPixel <= 8) zx->bpp=8; else zx->bpp = 16; }
 
     if(file_lookup_option(argc, argv, "-fs")) video_flags |= SDL_FULLSCREEN;
     if(file_lookup_option(argc, argv, "-nf")) video_flags |= SDL_NOFRAME;
 
-    /* rozmiar bitowy sk³adowych koloru */	
+    /* rozmiar bitowy skÅ‚adowych koloru */	
     switch(zx->bpp){
 	case 8: zx->rgb_size[0] = 3; zx->rgb_size[0] = 3; zx->rgb_size[0] = 2; break;
 	case 15: 
@@ -251,7 +251,7 @@ char zx_initvideo(zx_scrn *zx, int width, int height, int bpp,int argc, char **a
     msg_printf(MSG_MSG, "Renderer   : %s\n", glGetString( GL_RENDERER ) );
     msg_printf(MSG_MSG, "Version    : %s\n", glGetString( GL_VERSION ) );
 
-    /* pobranie informacji o bie¿±cym trybie graficznym */
+    /* pobranie informacji o bieÅ¼Ä…cym trybie graficznym */
     SDL_GL_GetAttribute( SDL_GL_RED_SIZE,&zx->rgb_size[0]);
     SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE,&zx->rgb_size[1]);
     SDL_GL_GetAttribute( SDL_GL_BLUE_SIZE,&zx->rgb_size[2]);
