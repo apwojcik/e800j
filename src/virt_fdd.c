@@ -160,7 +160,7 @@ int vfdd_dsk_floppy(vfdd_disk* dsk, char action, char parm0, char parm1, char pa
 
 int vfdd_drive(void* parent, void* dsk, unsigned char action, unsigned char wdata) {
     int ret = FDD_OK;
-    i8272* fdc = (i8272*)parent;
+    struct i8272* fdc = (struct i8272*)parent;
     switch (action) {
     case FDD_SEEK:
         ret = vfdd_floppy(dsk, VFDD_SEEK_TRK, fdc->cn, 0, fdc->ha, 0);

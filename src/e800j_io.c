@@ -18,10 +18,15 @@
  *
  */
 
-#include "z80_cpu.h"
 #include "e800j.h"
 #include "e800j_io.h"
+
+#include "e800j_fdc.h"
+#include "e800j_kbrd.h"
 #include "e800j_msg.h"
+#include "e800j_sound.h"
+#include "z80_cpu.h"
+#include "zx_scrn.h"
 
 enum {
     PORT_CFE = 0x01,
@@ -70,7 +75,7 @@ static unsigned char prom_io[512] = {
 };
 
 uchar io_read(void* z, ushort addr) {
-    elwro* el = (elwro*)((z80*)z)->ptr;
+    struct elwro* el = ((z80*)z)->ptr;
     uchar adec = ~prom_io[addr & 0x1ff];
     uchar dout = 0xff;
 
@@ -90,7 +95,7 @@ uchar io_read(void* z, ushort addr) {
 }
 
 void io_write(void* z, ushort addr, uchar data) {
-    elwro* el = (elwro*)((z80*)z)->ptr;
+    struct elwro* el = ((z80*)z)->ptr;
     uchar adec = ~prom_io[addr & 0x1ff];
 
     if (adec & PORT_CF7) {

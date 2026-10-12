@@ -18,24 +18,17 @@
  *
  */
 
-#define DEBUG_MODE
-
-#ifdef DEBUG_MODE
 #include "e800j_msg.h"
-#endif
-
 #include "i8272_fdc.h"
 
 /* tablica dekodująca instrukcje */
-static const i8272opc opcodes_tabl[32] = i8272_CMD_TABLE;
+static const struct i8272opc opcodes_tabl[32] = i8272_CMD_TABLE;
 
-void i8272_command(i8272* fdc, char plc);
+void i8272_command(struct i8272* fdc, char plc);
+void i8272_result(struct i8272* fdc, char plc);
+void i8272_write_data(struct i8272* fdc, char mode);
 
-void i8272_result(i8272* fdc, char plc);
-
-void i8272_write_data(i8272* fdc, char mode);
-
-int i8272_dummy_drive(void* f, void* param, uchar action, uchar wdata) {
+int i8272_dummy_drive(void* f, void* param, unsigned char action, unsigned char wdata) {
     (void)f;
     (void)param;
     (void)action;
@@ -46,7 +39,7 @@ int i8272_dummy_drive(void* f, void* param, uchar action, uchar wdata) {
 /**************************************************************************************************/
 
 void i8272_fdd_connect
-(i8272* fdc, int (*drive)(void*, void*,uchar,uchar), void* f0, void* f1, void* f2, void* f3) {
+(struct i8272* fdc, int (*drive)(void*, void*, unsigned char, unsigned char), void* f0, void* f1, void* f2, void* f3) {
     fdc->drive = drive;
     fdc->parameter[0] = f0;
     fdc->parameter[1] = f1;
@@ -54,7 +47,7 @@ void i8272_fdd_connect
     fdc->parameter[3] = f3;
 }
 
-void i8272_init(i8272* fdc) {
+void i8272_init(struct i8272* fdc) {
     int i;
 
     fdc->msr = 0x80;
@@ -88,7 +81,7 @@ void i8272_init(i8272* fdc) {
 }
 
 /* reakcja na stan linii RESET */
-void i8272_reset(i8272* fdc, uchar reset) {
+void i8272_reset(struct i8272* fdc, unsigned char reset) {
     int i;
 
     if (!reset)
@@ -118,7 +111,7 @@ void i8272_reset(i8272* fdc, uchar reset) {
 }
 
 /* reakcja na stan linii TC, zakończenie bieżącej komendy jeśli tc=1 */
-void i8272_tc(i8272* fdc, uchar tc) {
+void i8272_tc(struct i8272* fdc, unsigned char tc) {
     if (!tc)
         return;
     if (!fdc->rw) {
@@ -136,14 +129,14 @@ void i8272_tc(i8272* fdc, uchar tc) {
     msg_printf(MSG_NVERB_MSG, "FDC i8272A TC received\n");
 }
 
-void i8272_call(i8272* fdc, char plc) {
+void i8272_call(struct i8272* fdc, char plc) {
     fdc->call = plc;
     if (fdc->opcode)
         fdc->opcode->command(fdc);
 }
 
 /* odczyt rejestru */
-uchar i8272_in(i8272* fdc, uchar a0) {
+unsigned char i8272_in(struct i8272* fdc, unsigned char a0) {
     unsigned char tmp = 0xff;
 
     fdc->int_line = 0;
@@ -167,7 +160,7 @@ uchar i8272_in(i8272* fdc, uchar a0) {
 }
 
 /* zapis bajtu do rejestru */
-void i8272_out(i8272* fdc, unsigned char address_bit, unsigned char data) {
+void i8272_out(struct i8272* fdc, unsigned char address_bit, unsigned char data) {
     fdc->int_line = 0;
     if (!(address_bit & 1)) {
         msg_printf(MSG_ERROR, "FDC Illegal port operation! \n");
@@ -187,7 +180,7 @@ void i8272_out(i8272* fdc, unsigned char address_bit, unsigned char data) {
 }
 
 /* wystawienie przerwania */
-void i8272_int(i8272* fdc, uchar icode) {
+void i8272_int(struct i8272* fdc, unsigned char icode) {
     fdc->int_line = 1;
     fdc->msr |= FDC_RQM;
     fdc->st0 &= ~FDC_IC;
@@ -195,7 +188,7 @@ void i8272_int(i8272* fdc, uchar icode) {
 }
 
 /* zakończenie komendy */
-void i8272_end_cmd(i8272* fdc) {
+void i8272_end_cmd(struct i8272* fdc) {
     msg_printf(MSG_NVERB_MSG, "FDC end command\n");
     fdc->opcode = 0;
     fdc->phase = FDC_COMMAND;
@@ -204,13 +197,13 @@ void i8272_end_cmd(i8272* fdc) {
     fdc->msr &= ~FDC_CB;
 }
 
-void i8272_command(i8272* fdc, char plc) {
+void i8272_command(struct i8272* fdc, char plc) {
     if (fdc->phase != FDC_COMMAND)
         return;
     if (plc == FDC_OUT_DATA_1) {
         if (!fdc->opcode) {
             /* pobranie pierwszego bajtu rozkazu */
-            fdc->opcode = (i8272opc*)&opcodes_tabl[fdc->data & 0x1f];
+            fdc->opcode = (struct i8272opc*)&opcodes_tabl[fdc->data & 0x1f];
             fdc->idx_0 = 0;
             fdc->rw = 0;
             fdc->err = 0;
@@ -234,7 +227,7 @@ void i8272_command(i8272* fdc, char plc) {
 }
 
 /* wystawienie danych w fazie result */
-void i8272_result(i8272* fdc, char plc) {
+void i8272_result(struct i8272* fdc, char plc) {
     if (fdc->rw && fdc->opcode && fdc->phase == FDC_EXEC) {
         fdc->opcode->command(fdc);
         return;
@@ -253,7 +246,7 @@ void i8272_result(i8272* fdc, char plc) {
 /**************************************************************************************************/
 /**************************************************************************************************/
 
-void i8272_rdata(i8272* fdc, char mode) {
+void i8272_rdata(struct i8272* fdc, char mode) {
     (void)mode;
     int tmp = 0;
 
@@ -291,7 +284,7 @@ void i8272_rdata(i8272* fdc, char mode) {
         fdc->rec = 1;
 }
 
-void i8272_read_data(i8272* fdc, char mode) {
+void i8272_read_data(struct i8272* fdc, char mode) {
     if (fdc->rw == 1) {
         i8272_rdata(fdc, mode);
         return;
@@ -345,27 +338,27 @@ void i8272_read_data(i8272* fdc, char mode) {
                fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
 }
 
-void i8272_rd_cmd(i8272* fdc) {
+void i8272_rd_cmd(struct i8272* fdc) {
     i8272_read_data(fdc, 0);
 }
 
-void i8272_rdd_cmd(i8272* fdc) {
+void i8272_rdd_cmd(struct i8272* fdc) {
     i8272_read_data(fdc, 1);
 }
 
-void i8272_wd_cmd(i8272* fdc) {
+void i8272_wd_cmd(struct i8272* fdc) {
     i8272_write_data(fdc, 0);
 }
 
-void i8272_wdd_cmd(i8272* fdc) {
+void i8272_wdd_cmd(struct i8272* fdc) {
     i8272_write_data(fdc, 1);
 }
 
-void i8272_rt_cmd(i8272* fdc) {
+void i8272_rt_cmd(struct i8272* fdc) {
     i8272_read_data(fdc, 2);
 }
 
-void i8272_sis_cmd(i8272* fdc) {
+void i8272_sis_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
 
@@ -380,7 +373,7 @@ void i8272_sis_cmd(i8272* fdc) {
     i8272_int(fdc, FDC_IC_IC);
 }
 
-void i8272_specify_cmd(i8272* fdc) {
+void i8272_specify_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
     fdc->srt = fdc->buffer[1];
@@ -395,7 +388,7 @@ void i8272_specify_cmd(i8272* fdc) {
     i8272_int(fdc, FDC_IC_NT);
 }
 
-void i8272_seek_cmd(i8272* fdc) {
+void i8272_seek_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
     fdc->ds = fdc->buffer[1] & 0x03;
@@ -407,7 +400,7 @@ void i8272_seek_cmd(i8272* fdc) {
     i8272_int(fdc, FDC_IC_NT);
 }
 
-void i8272_rec_cmd(i8272* fdc) {
+void i8272_rec_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
     fdc->ds = fdc->buffer[1] & 0x03;
@@ -418,7 +411,7 @@ void i8272_rec_cmd(i8272* fdc) {
     i8272_int(fdc, FDC_IC_NT);
 }
 
-void i8272_sds_cmd(i8272* fdc) {
+void i8272_sds_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
     fdc->ds = fdc->buffer[1] & 0x03;
@@ -432,7 +425,7 @@ void i8272_sds_cmd(i8272* fdc) {
     i8272_int(fdc, FDC_IC_NT);
 }
 
-void i8272_invalid_cmd(i8272* fdc) {
+void i8272_invalid_cmd(struct i8272* fdc) {
     if (fdc->phase == FDC_COMMAND)
         return;
     fdc->idx_0 = 0;
@@ -445,7 +438,7 @@ void i8272_invalid_cmd(i8272* fdc) {
     fdc->st0 = 0x80;
 }
 
-void i8272_wdata(i8272* fdc, char mode) {
+void i8272_wdata(struct i8272* fdc, char mode) {
     (void)mode;
     /* odczyt bajtu z FDD */
     fdc->st0 = 0;
@@ -484,7 +477,7 @@ void i8272_wdata(i8272* fdc, char mode) {
         fdc->rec = 1;
 }
 
-void i8272_write_data(i8272* fdc, char mode) {
+void i8272_write_data(struct i8272* fdc, char mode) {
     if (fdc->rw == 1) {
         i8272_wdata(fdc, mode);
         return;
@@ -522,7 +515,7 @@ void i8272_write_data(i8272* fdc, char mode) {
     fdc->rw = 1;
     /* wyzerowanie licznika bajtów w sektorze */
     fdc->sbyte = 0;
-    /* obliczenie długości sektora w bajtach */
+    /* obliczenie długosci sektora w bajtach */
     fdc->slen = 0x80 << fdc->nb;
     if (!fdc->nb)
         fdc->slen = fdc->dtl;
@@ -540,27 +533,27 @@ void i8272_write_data(i8272* fdc, char mode) {
 /************************************************************************************************/
 
 /* nie wspierane */
-void i8272_rid_cmd(i8272* fdc) {
+void i8272_rid_cmd(struct i8272* fdc) {
     msg_printf(MSG_ERROR, "Unsupported command\n");
     i8272_invalid_cmd(fdc);
 }
 
-void i8272_ft_cmd(i8272* fdc) {
+void i8272_ft_cmd(struct i8272* fdc) {
     msg_printf(MSG_ERROR, "Unsupported command\n");
     i8272_invalid_cmd(fdc);
 }
 
-void i8272_seq_cmd(i8272* fdc) {
+void i8272_seq_cmd(struct i8272* fdc) {
     msg_printf(MSG_ERROR, "Unsupported command\n");
     i8272_invalid_cmd(fdc);
 }
 
-void i8272_sleq_cmd(i8272* fdc) {
+void i8272_sleq_cmd(struct i8272* fdc) {
     msg_printf(MSG_ERROR, "Unsupported command\n");
     i8272_invalid_cmd(fdc);
 }
 
-void i8272_sheq_cmd(i8272* fdc) {
+void i8272_sheq_cmd(struct i8272* fdc) {
     msg_printf(MSG_ERROR, "Unsupported command\n");
     i8272_invalid_cmd(fdc);
 }

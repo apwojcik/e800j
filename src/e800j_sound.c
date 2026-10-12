@@ -25,6 +25,7 @@
 #include <string.h>
 #include "e800j_sound.h"
 #include "e800j.h"
+#include "z80_cpu.h"
 
 #define SND_CHUNK 1024 /* maksymalny rozmiar porcji danych przekazywanej do SDL */
 
@@ -34,14 +35,14 @@ static void snd_close_audio(void) {
     SDL_DestroyAudioStream(snd_stream);
 }
 
-void snd_free_buffers(sound* w) {
+void snd_free_buffers(struct sound* w) {
     if (w->nosound)
         return;
-    free(((sound*)w)->lbuffer);
-    free(((sound*)w)->rbuffer);
+    free(w->lbuffer);
+    free(w->rbuffer);
 }
 
-void snd_init_rbuffer(sound* w, int lbsize) {
+static void snd_init_rbuffer(struct sound* w, int lbsize) {
     w->head = w->tail = 0;
     if (!(w->lbuffer = (unsigned char*)malloc(lbsize))) {
         printf("(EE) Error memory allocation i sound buffer init\n");
@@ -58,7 +59,7 @@ void snd_init_rbuffer(sound* w, int lbsize) {
 }
 
 /* kopiuje len bajtów z bufora rbuffer i zwraca ilość skopiowanych bajtów */
-char snd_rbuffer_pop(sound* w) {
+static char snd_rbuffer_pop(struct sound* w) {
     char a;
     if (w->tail == w->head)
         return w->rbuffer[w->tail];
@@ -68,7 +69,7 @@ char snd_rbuffer_pop(sound* w) {
     return a;
 }
 
-void snd_rbuffer_push(sound* w, char data) {
+static void snd_rbuffer_push(struct sound* w, char data) {
     /* detekcja przepełnienia bufora */
     if (((w->head == w->size) && (w->tail == 0)) || (w->head + 1 == w->tail)) {
         if (!w->ovr)
@@ -85,7 +86,7 @@ void snd_rbuffer_push(sound* w, char data) {
 
 void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amount, int total_amount) {
     (void) total_amount;
-    sound* w = (sound*)ud;
+    struct sound* w = (struct sound*)ud;
     Uint8 mix[SND_CHUNK];
     int i, n;
 
@@ -102,18 +103,18 @@ void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amoun
     }
 }
 
-void snd_init(void* elw) {
+void snd_init(const struct elwro* e) {
     SDL_AudioSpec spec;
     char samples[16];
-    sound* ww = ((elwro*)elw)->snd;
+    struct sound* ww = e->snd;
 
     if (ww->nosound)
         return;
     printf("(II)Sound init\n");
 
-    spec.freq = ww->freq; /* ilość sampli/sec */
+    spec.freq = ww->freq; // ilość sampli/sec
     spec.format = SDL_AUDIO_U8; /* format danych    */
-    spec.channels = ww->chn; /* ilość kanałów    */
+    spec.channels = ww->chn; // ilość kanałów
 
     snprintf(samples, sizeof(samples), "%d", ww->len);
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
@@ -130,15 +131,15 @@ void snd_init(void* elw) {
     SDL_ResumeAudioStreamDevice(snd_stream);
 }
 
-void snd_beeper(char r373, z80* z) {
-    sound* ww = ((elwro*)(z->ptr))->snd;
+void snd_beeper(char r373, struct z80* z) {
+    struct sound* ww = ((struct elwro*)(z->ptr))->snd;
     int i, smpls;
     double period, data;
 
     if (ww->nosound)
         return;
     if (!((r373 ^ ww->old_r373) & 0x10))
-        return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdź */
+        return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdą */
     ww->old_r373 = r373;
     period = (z->ticks - ww->old_ticks) / (float)ww->scale; /* ile upłynęło przedziałów 20ms od zmiany */
     smpls = period * 256;

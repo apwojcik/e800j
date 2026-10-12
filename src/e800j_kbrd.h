@@ -20,15 +20,14 @@
 
 #pragma once
 
-#define KB_MODE_ZX	0	/* Mapowanie ZX_SPECTRUM 			   */
-#define KB_MODE_E800J	1	/* Mapowanie Elwro 800 Junior 			   */
-#define KB_MODE_PC	2	/* Mapowanie klawiatury PC (programisty ) na E800J */
-
+#define KB_MODE_ZX	    0 // Mapowanie ZX_SPECTRUM
+#define KB_MODE_E800J	1 // Mapowanie Elwro 800 Junior
+#define KB_MODE_PC	    2 // Mapowanie klawiatury PC (programisty) na E800J
 #define KB_ROWS		10	/* ilość rzędów matrycy klawiatury */
 #define KB_ZX_ROW_MASK	0x0
 #define KB_ZX_COL_MASK	0x0
 
-typedef struct {
+struct e800j_kbrd {
     /* klawiatura */
     int key_code; /* ostatni kod klawisza  */
     char state; /* ostatni stan klawisza */
@@ -36,8 +35,8 @@ typedef struct {
     char alt_r; /* wciśnięty prawy ALT	 */
     unsigned char matrix[KB_ROWS]; /* matryca klawiszy      */
     char* matrix_map1; /* pierwszy stopień mapowania klawiszy */
-    unsigned short int row_mask; /* maska adresu (odcina część linii adresowych ) */
-    unsigned char col_mask; /* maska danych (odcina część linii kolumn     ) */
+    unsigned short int row_mask; /* maska adresu (odcina część linii adresowych) */
+    unsigned char col_mask; /* maska danych (odcina czść linii kolumn) */
 
     /* Joystick */
     char joy_mode; /* tryb emulacji joysticka */
@@ -60,7 +59,7 @@ typedef struct {
     int joy_map_uk; /* mapowanie klawisza klawiatury na joystick góra   */
     int joy_map_dk; /* mapowanie klawisza klawiatury na joystick dół    */
     int joy_map_fk; /* mapowanie klawisza klawiatury na joystick strzał */
-} kbrd;
+};
 
 enum {
     JOY_NON = 0,
@@ -70,22 +69,21 @@ enum {
 };
 
 /*******************************************************************/
-extern void key_init(kbrd*);
+extern void key_init(struct e800j_kbrd*);
 
 /*	..:: Inicjuje klawiaturę w trybie 'mode' ::..
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-extern void key_set(kbrd*, unsigned int key, unsigned char state);
-
+extern void key_set(struct e800j_kbrd*, unsigned int key, unsigned char state);
 /*
-    ..:: podobniem jak key_update, ale dodatkowo mapuje klawisze ::..
+    ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
     state - 1 wciśnięty, 0- wyciśnięty
 
 */
 /*******************************************************************/
-extern unsigned char key_matrix(kbrd*, unsigned short int addr);
+extern unsigned char key_matrix(struct e800j_kbrd*, unsigned short int addr);
 
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15
@@ -93,14 +91,14 @@ extern unsigned char key_matrix(kbrd*, unsigned short int addr);
 */
 
 /*******************************************************************/
-extern void key_update(kbrd*, int key, char state);
+extern void key_update(struct e800j_kbrd*, int key, char state);
 
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
     state - =1 wciśnięto, =0 puszczono
 */
 
-extern unsigned char key_kempston(kbrd*);
+extern unsigned char key_kempston(struct e800j_kbrd*);
 
 /*
     zwraca wartość dla portu 31 - symulacja wejścia joysticka KEMPSTON
@@ -194,7 +192,7 @@ extern unsigned char key_kempston(kbrd*);
             KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,\
             KEY_Y,KEY_Z
 #define KEY_LETTERS_CNT	26
-/* pliterki: ą,ć,ę,ł,ń,ó,ś,ź,ż */
+/* pliterki: ą,c,ę,ł,ń,ó,ś,ź,ż */
 #define KEY_PLETTERS	KEY_A_,KEY_C_,KEY_E_,KEY_L_,KEY_N_,\
             KEY_O_,KEY_S_,KEY_Z__,KEY_Z_
 #define KEY_PLETTERS_CNT 9
@@ -256,7 +254,6 @@ extern unsigned char key_kempston(kbrd*);
 #define KB_ERASE	'7' //- '0' + KB_DIG_START
 #define KB_CPJ		'6' //- '0' + KB_DIG_START
 
-#ifdef _USE_SDL
 #include <SDL3/SDL_keycode.h>
 
 #define E8K_ENTER	SDLK_RETURN
@@ -281,46 +278,3 @@ extern unsigned char key_kempston(kbrd*);
 #define E8K_ARROW_D	SDLK_DOWN
 #define E8K_ESC		SDLK_ESCAPE
 #define E8K_TAB		SDLK_TAB
-
-#else
-
-/* tu można dodać definicje dla innych bibliotek, na razie atrapa */
-#define E8K_ENTER	0
-#define E8K_SHIFT_L	1
-#define E8K_SHIFT_R	2
-#define E8K_CAPS	3
-#define E8K_SPC		4
-#define E8K_ALT_L	5
-#define E8K_ALT_R	6
-#define E8K_CTRL_L	7
-#define E8K_CTRL_R	8
-#define E8K_DEL		9
-#define E8K_BS		10
-#define E8K_F1		11
-#define E8K_F2		12
-#define E8K_F3		13
-#define E8K_F4		14
-#define E8K_F5		15
-#define E8K_ARROW_L	16
-#define E8K_ARROW_R	17
-#define E8K_ARROW_U	18
-#define E8K_ARROW_D	19
-#define E8K_ESC		20
-#define E8K_TAB		21
-
-#endif
-
-#ifdef __cplusplus
-
-class e800j_kbd {
-    kbrd* keyboard;
-public:
-    void key_set(unsigned int key, unsigned char state);
-    void key_update(int key, char state);
-    unsigned char key_matrix(unsigned short int addr);
-
-    void e800j_kbd(unsigned char mode = KB_MODE_PC);
-    void ~e800j_kbd();
-};
-
-#endif

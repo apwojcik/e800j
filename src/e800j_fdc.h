@@ -24,15 +24,14 @@
 
 #include "i8272_fdc.h"
 
-#define DEBUG_FDC
 
-typedef struct {
-    i8272 i8272str;
-    i8272* i8272;
+struct e800j_fdc {
+    struct i8272 i8272str;
+    struct i8272* i8272;
     unsigned int drive_mtime;
     unsigned int drive_a;
     unsigned int drive_b;
-} e800j_fdc;
+};
 
 enum {
     FDC_R175_DRIVE_A = 0x01,
@@ -41,14 +40,14 @@ enum {
     FDC_R175_RESET = 0x08
 };
 
-extern void fdc_init(e800j_fdc* fdc);
+extern void fdc_init(struct e800j_fdc* fdc);
 
-extern void fdc_wr_r175(e800j_fdc* fdc, unsigned char data);
+extern void fdc_wr_r175(struct e800j_fdc* fdc, unsigned char data);
 
-extern void fdc_wr_i8272(e800j_fdc* fdc, unsigned char a0, unsigned char data);
+extern void fdc_wr_i8272(struct e800j_fdc* fdc, unsigned char a0, unsigned char data);
 
-extern unsigned char fdc_rd_i8272(e800j_fdc* fdc, unsigned char a0);
+extern unsigned char fdc_rd_i8272(struct e800j_fdc* fdc, unsigned char a0);
 
-extern void fdc_reset(e800j_fdc* fdc);
+extern void fdc_reset(struct e800j_fdc* fdc);
 
-extern void fdc_clk(e800j_fdc* fdc);
+extern void fdc_clk(struct e800j_fdc* fdc);

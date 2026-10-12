@@ -20,70 +20,67 @@
 
 #pragma once
 
-#ifndef uchar
-#define uchar unsigned char
-#endif
-
-typedef struct {
-    void (*command)(void*); /* funkcja obsługi          */
-    uchar cmd_len; /* ilość bajtów rozkazu     */
-    uchar exe_len; /* faza execute ?           */
-    uchar res_len; /* ilość bajtów fazy result */
+struct i8272opc {
+    void (*command)(void*); // funkcja obsługi
+    unsigned char cmd_len; // ilość bajtów rozkazu
+    unsigned char exe_len; // faza execute ?
+    unsigned char res_len; // ilość bajtów fazy result
     char* name;
-} i8272opc;
+};
 
-typedef struct {
+struct i8272 {
     /* rejestry układu i8272A */
-    uchar msr; /* main status register */
-    uchar st0; /* rejestr statusowy 0  */
-    uchar st1; /* rejestr statusowy 1  */
-    uchar st2; /* rejestr statusowy 2  */
-    uchar st3; /* rejestr statusowy 3  */
+    unsigned char msr; // main status register
+    unsigned char st0; // rejestr statusowy 0
+    unsigned char st1; // rejestr statusowy 1
+    unsigned char st2; // rejestr statusowy 2
+    unsigned char st3; // rejestr statusowy 3
 
-    /* parametry wewn FDC */
-    uchar srt; /* "Step Rate Time"      */
-    uchar hut; /* "Head Unload Time "   */
-    uchar hlt; /* "Head Load Time"      */
-    uchar hds; /* "HeaD Select"         */
-    uchar pcn; /* "Present Cylinder Number" */
-    uchar ds; /* "Drive Select"        */
+    /* parametry wewnętrzne FDC */
+    unsigned char srt; // "Step Rate Time"
+    unsigned char hut; // "Head Unload Time "
+    unsigned char hlt; // "Head Load Time"
+    unsigned char hds; // "HeaD Select"
+    unsigned char pcn; // "Present Cylinder Number"
+    unsigned char ds; // "Drive Select"
 
     /* zmienne interpretacji rozkazu */
-    uchar call; /* miejsce wywołania opcode               */
-    uchar icntr; /* licznik odczytów rejestru msr          */
-    uchar phase; /* faza wykonywania rozkazu               */
-    uchar data; /* dana do zapisu / odczytu portu         */
-    uchar buffer[16]; /* bufor operacji                         */
-    uchar idx_0, idx_1; /* zmienne licznikowe operacji na buforze */
-    i8272opc* opcode; /* wskaźnik na instrukcję                 */
+    unsigned char call; // miejsce wywołania opcode
+    unsigned char icntr; // licznik odczytów rejestru msr
+    unsigned char phase; // faza wykonywania rozkazu
+    unsigned char data; // dana do zapisu / odczytu portu
+    unsigned char buffer[16]; // bufor operacji
+    unsigned char idx_0, idx_1; // zmienne licznikowe operacji na buforze
+    struct i8272opc* opcode; // wskaźnik na instrukcję
 
     /* sprzęgnięcie z emulacją napędu */
-    void* parameter[4]; /* parametr wywołania funkcji napędu  */
-    int (*drive)( /* funkcja obsługi napędu */
-        void* i8272, /* struktura FDC   */
-        void* fdd, /* parametr napędu (struktura opisu dyskietki )*/
-        uchar action, /* kod operacji   */
-        uchar wdata /* dane do zapisu */
-    ); /* zwracana wartość to dana odczytu lub kod błędu */
+    void* parameter[4]; // parametr wywołania funkcji napędu
+    int (*drive)( // funkcja obsługi napędu
+        void* i8272, //      struktura FDC
+        void* fdd, //      parametr napędu (struktura opisu dyskietki)
+        unsigned char action, //      kod operacji
+        unsigned char wdata //      dane do zapisu
+    ); // zwracana wartość to dana odczytu lub kod błędu */
 
     /* sprzęg z CPU */
-    uchar int_line;
+    unsigned char int_line;
 
     /* parametry dla operacji read/write */
-    uchar rw; /* flaga wskazująca na fazę exec komendy read lub write */
-    uchar cn; /* numer cylindra      */
-    uchar ha; /* numer głowicy       */
-    uchar rec; /* numer sektora       */
-    uchar nb; /* ilość bajtów/sektor */
-    uchar eot; /* koniec ścieżki      */
-    uchar gpl; /* długość GAP3        */
-    uchar dtl; /* ilość danych do zapisu/odczytu sektora, jeśli nb=0 */
-    /* zmieene odczytu/zapisu sektora */
-    unsigned int sbyte; /* nr bajtu w sektorze, licznik   */
-    unsigned int slen; /* rozmiar sektora w bajtach      */
-    unsigned int trlen; /* rozmiar ścieżki w bajtach      */
-    int err; /* błąd napędu */
-} i8272;
+    unsigned char rw; // flaga wskazująca na fazę exec komendy read lub write
+    unsigned char cn; // numer cylindra
+    unsigned char ha; // numer głowicy
+    unsigned char rec; // numer sektora
+    unsigned char nb; // ilość bajtów/sektor
+    unsigned char eot; // koniec ścieżki
+    unsigned char gpl; // długość GAP3
+    unsigned char dtl; // ilość danych do zapisu/odczytu sektora, jeśli nb=0 */
+
+    /* zmienne odczytu/zapisu sektora */
+    unsigned int sbyte; // nr bajtu w sektorze, licznik
+    unsigned int slen; // rozmiar sektora w bajtach
+    unsigned int trlen; // rozmiar ścieżki w bajtach
+    int err; // błąd napędu
+};
 
 /* Bity rejestru MSR */
 enum {
@@ -107,27 +104,24 @@ enum {
 /*
   Sprzęg z emulatorem
 */
+
 /* zainicjowanie struktury */
-extern void i8272_init(i8272* fdc);
-
+void i8272_init(struct i8272* fdc);
 /* ustwienie linii 'terminal count' */
-extern void i8272_tc(i8272* fdc, unsigned char tc);
-
+void i8272_tc(struct i8272* fdc, unsigned char tc);
 /* ustawienie linii 'reset' */
-extern void i8272_reset(i8272* fdc, unsigned char reset);
-
+void i8272_reset(struct i8272* fdc, unsigned char reset);
 /* zapis do rejestrów i8272, address_bit - A0  */
-extern void i8272_out(i8272* fdc, unsigned char address_bit, unsigned char data);
-
+void i8272_out(struct i8272* fdc, unsigned char address_bit, unsigned char data);
 /* odczyt z rejestrów i8272, address_bit - A0  */
-extern unsigned char i8272_in(i8272* fdc, unsigned char address_bit);
+unsigned char i8272_in(struct i8272* fdc, unsigned char address_bit);
 
 /*
-  Sprzęg z napędem wirtualnym, należy wowołać po i8272_init()
+  Sprzęg z napędem wirtualnym, należy wywołać po i8272_init()
 */
 extern void i8272_fdd_connect(
-    i8272* fdc, /* struktura FDC */
-    int (*drive)(void*, void*, uchar, uchar), /* funkcja napędu wirtualnego */
+    struct i8272* fdc, /* struktura FDC */
+    int (*drive)(void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
     void*, void*, void*, void* /* struktury napędów 0,1,2,3 */
 );
 
@@ -238,45 +232,30 @@ enum {
     FDC_CMD
 };
 
-void i8272_rd_cmd(i8272*);
-
-void i8272_rdd_cmd(i8272*);
-
-void i8272_wd_cmd(i8272*);
-
-void i8272_wdd_cmd(i8272*);
-
-void i8272_rt_cmd(i8272*);
-
-void i8272_rid_cmd(i8272*);
-
-void i8272_ft_cmd(i8272*);
-
-void i8272_seq_cmd(i8272*);
-
-void i8272_sleq_cmd(i8272*);
-
-void i8272_sheq_cmd(i8272*);
-
-void i8272_rec_cmd(i8272*);
-
-void i8272_sis_cmd(i8272*);
-
-void i8272_specify_cmd(i8272*);
-
-void i8272_sds_cmd(i8272*);
-
-void i8272_seek_cmd(i8272*);
-
-void i8272_invalid_cmd(i8272*);
+void i8272_rd_cmd(struct i8272*);
+void i8272_rdd_cmd(struct i8272*);
+void i8272_wd_cmd(struct i8272*);
+void i8272_wdd_cmd(struct i8272*);
+void i8272_rt_cmd(struct i8272*);
+void i8272_rid_cmd(struct i8272*);
+void i8272_ft_cmd(struct i8272*);
+void i8272_seq_cmd(struct i8272*);
+void i8272_sleq_cmd(struct i8272*);
+void i8272_sheq_cmd(struct i8272*);
+void i8272_rec_cmd(struct i8272*);
+void i8272_sis_cmd(struct i8272*);
+void i8272_specify_cmd(struct i8272*);
+void i8272_sds_cmd(struct i8272*);
+void i8272_seek_cmd(struct i8272*);
+void i8272_invalid_cmd(struct i8272*);
 
 enum {
-    /* akcje FDD */
+    // akcje FDD
     FDD_SEEK,
     FDD_READ_TRACK,
     FDD_WRITE_TRACK,
     FDD_SEEK_SECTOR,
-    /* Wartości zwracane przez FDD */
+    // Wartości zwracane przez FDD
     FDD_ERR_WPROT = -1,
     FDD_ERR_NODISK = -2,
     FDD_ERR_OVER = -3,
@@ -287,6 +266,6 @@ enum {
 enum {
     FDC_IC_NT = 0, /* Normalne zakończenie. Rozkaz kompletny i poprawnie wykonany. */
     FDC_IC_AT0 = 1, /* Błąd wykonania rozkazu. Wykonanie rozkazu rozpoczęte, ale nie zakończone */
-    FDC_IC_IC = 2, /* Błędny rozkaz. */
+    FDC_IC_IC = 2, /* Błądny rozkaz. */
     FDC_IC_AT1 = 3 /* Błąd wykonania rozkazu ponieważ, w czasie jego wykonania zmianie uległa linia ready */
 };

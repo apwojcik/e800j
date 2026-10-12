@@ -48,7 +48,7 @@ extern char* file_get_profile(const char* cfg, char* str);
 
 extern int file_bios_load(const char* cfg, char* rom, char* profile, int romsize);
 
-extern char file_init(elwro*, char* cpath, int argc, char** argv);
+extern char file_init(struct elwro*, char* cpath, int argc, char** argv);
 
 /*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji,
     jeśli znajdzie zwraca jej numer, inaczej zwraca 0

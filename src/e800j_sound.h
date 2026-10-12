@@ -20,32 +20,29 @@
 
 #pragma once
 
-#include "z80_cpu.h"
+#include "e800j.h"
 
-typedef struct {
-    unsigned char* rbuffer; /* bufor kołowy dźwięku */
-    unsigned char* lbuffer; /* bufor liniowy        */
-    char* sin; /* tablica sinus do antyaliasingu   */
+struct sound {
+    unsigned char* rbuffer; // bufor kołowy dźwięku
+    unsigned char* lbuffer; // bufor liniowy
+    char* sin; // tablica sinus do antyaliasingu
 
-    int  head; /* początek bufora kołowego  */
-    int tail; /* koniec bufora kołowego    */
-    int volume; /* głośność               */
-    int size; /* rozmiar bufora         */
-    int  freq; /* ilość sampli / sekundę */
-    int len; /* długość bufora na karcie, wartość musi być pot 2 i może być skorygowana */
-    char chn; /* ilość kanałów */
-    bool nosound; /* czy włączona obsługa dźwięku */
-    bool alias; /* czy ma być włączony antyaliasing */
-    bool ovr; /* wystąpiło przepełnienie bufora   */
-    int scale; /* skalowanie długości okresów      */
+    int head; /* początek bufora kołowego  */
+    int tail; // koniec bufora kołowego
+    int volume; // głośność
+    int size; // rozmiar bufora
+    int freq; /* ilość sampli / sekundę */
+    int len; // długość bufora na karcie, wartość musi być pot 2 i może być skorygowana
+    int chn; // ilość kanałów
+    unsigned char nosound : 1; // czy włączyć obsługę dźwięku
+    unsigned char alias : 1; // czy ma być włączony antyaliasing
+    unsigned char ovr : 1; // wystąpiło przepełnienie bufora
+    int scale; // skalowanie długości okresów
     long old_ticks;
     char old_r373;
-} sound;
+};
 
-extern void snd_beeper(char r373, z80* z);
-
-extern void snd_beeper_play();
-
-extern void snd_init(void* elw);
-
-extern void snd_free_buffers(sound*);
+void snd_beeper(char r373, struct z80* z);
+void snd_beeper_play();
+void snd_init(const struct elwro* e);
+void snd_free_buffers(struct sound* s);
