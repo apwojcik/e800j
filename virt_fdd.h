@@ -25,68 +25,63 @@
 #define uchar unsigned char
 #endif
 
-typedef struct
-{
-    char format_name[0x22];	/* 00-21 */
-    char creator[14];		/* 22-2F */
-    uchar tps;			/* ilość ścieżek */
-    uchar hpd;			/* ilość głowic  */
+typedef struct {
+    char format_name[0x22]; /* 00-21 */
+    char creator[14]; /* 22-2F */
+    uchar tps; /* ilość ścieżek */
+    uchar hpd; /* ilość głowic  */
     uchar size_1;
-    uchar size_2;		/* rozmiar ścieżki */
-    uchar unused_2[0xff-0x34+1];
+    uchar size_2; /* rozmiar ścieżki */
+    uchar unused_2[0xff - 0x34 + 1];
 } vfdd_hdr;
 
-typedef struct
-{
-    char info[13];	/* Track-Info\r\n */
+typedef struct {
+    char info[13]; /* Track-Info\r\n */
     char unused_0[3];
-    uchar tr_nb;	/* numer ścieżki */
-    uchar hd_nb;	/* numer głowicy */
+    uchar tr_nb; /* numer ścieżki */
+    uchar hd_nb; /* numer głowicy */
     char unused_1[2];
-/* parametry formatowania ścieżki */
-    uchar bps;		/* bytes per sector */
-    uchar spt;		/* sectors per track */
-    uchar gap3;		/* gap#3 format */
-    uchar fill;		/* bajt wypełnienia */
+    /* parametry formatowania ścieżki */
+    uchar bps; /* bytes per sector */
+    uchar spt; /* sectors per track */
+    uchar gap3; /* gap#3 format */
+    uchar fill; /* bajt wypełnienia */
 } vfdd_trk_hdr;
 
-typedef struct
-{
+typedef struct {
     uchar tr_nb;
     uchar hd_nb;
     uchar sc_nb;
     uchar bps;
     uchar err_1;
-    uchar err_2;    	/* 0x40 - deleted, */
-    short int sec_len;  /* little endian */
+    uchar err_2; /* 0x40 - deleted, */
+    short int sec_len; /* little endian */
 } vfdd_sec_hdr;
 
-
-typedef struct
-{
-    FILE *f;	       /* uchwyt czytanego pliku obrazu */
-    vfdd_hdr     hdr;  /* nagłówek obrazu dysku */
+typedef struct {
+    FILE* f; /* uchwyt czytanego pliku obrazu */
+    vfdd_hdr hdr; /* nagłówek obrazu dysku */
     vfdd_trk_hdr th;
     vfdd_sec_hdr sh;
-    int   sbyte;
-    int   lbytes;
-    long  seek;
-    int   stat;
-    int   emulation;   /* rodzaj emulacji */
+    int sbyte;
+    int lbytes;
+    long seek;
+    int stat;
+    int emulation; /* rodzaj emulacji */
 } vfdd_disk;
 
-enum{
+enum {
     VFDD_DOPEN = 1,
     VFDD_WPROT = 2,
 };
 
-enum{
+enum {
     VFDD_RO = 0,
     VFDD_RW = 1,
 };
 
 /* akcje, dla vfdd_dsk_floppy */
-enum{
+enum {
     VFDD_INIT,
     VFDD_LOAD,
     VFDD_UNLOAD,
@@ -96,10 +91,10 @@ enum{
     VFDD_WR_SEC,
 };
 
-enum{
-    VFDD_EMUL_DSK,	/* emulacja zawartości dyskietki w pliku CPCEmu formatu DSK */
-    VFDD_EMUL_DIR,	/* emulacja zawartości dyskietki katalogiem na HDD */
-    VFDD_EMUL_REAL	/* emulacja rzeczywistego napędu przez stację FDD  */
+enum {
+    VFDD_EMUL_DSK, /* emulacja zawartości dyskietki w pliku CPCEmu formatu DSK */
+    VFDD_EMUL_DIR, /* emulacja zawartości dyskietki katalogiem na HDD */
+    VFDD_EMUL_REAL /* emulacja rzeczywistego napędu przez stację FDD  */
 };
 
 /* póki nie ma innych emulacji napędu niż pliki *.dsk */
@@ -113,21 +108,20 @@ enum{
 extern int vfdd_dsk_floppy(
     vfdd_disk*,
     char action,
-    char parm0,	/* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
-    char parm1,	/* sektor  | 2-typ emulacji */
-    char parm2,	/* głowica */
-        char *path	/* ścieżka do pliku/katalogu */
-    );
+    char parm0, /* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
+    char parm1, /* sektor  | 2-typ emulacji */
+    char parm2, /* głowica */
+    char* path /* ścieżka do pliku/katalogu */
+);
 
 /*
     Emulacja napędu
 */
 extern int vfdd_drive(
-    void *ptr, 	/* wskaźnik nadrzędnej struktury danych */
-    void *dsk, 	/* vfdd_disk */
-    uchar action, 	/* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
-    uchar wdata	/* dana dla operacji zapisu */
-    );
+    void* ptr, /* wskaźnik nadrzędnej struktury danych */
+    void* dsk, /* vfdd_disk */
+    uchar action, /* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
+    uchar wdata /* dana dla operacji zapisu */
+);
 
 #endif
-

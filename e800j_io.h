@@ -23,9 +23,9 @@
 
 #define RELOK_R175	0x20
 
-extern unsigned char io_read(void *z, unsigned short int addr);
-extern void io_write(void *z, unsigned short int addr, unsigned char data);
+extern unsigned char io_read(void* z, unsigned short int addr);
 
+extern void io_write(void* z, unsigned short int addr, unsigned char data);
 
 /* 512 bajtów pamięci PROM 'IO' KR556RT5 */
 #define PROM_IO {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,\
@@ -62,4 +62,3 @@ extern void io_write(void *z, unsigned short int addr, unsigned char data);
         0xff,0xdf,0xff,0xff,0xff,0xff,0xff,0xfd,0xff,0xff,0xff,0xfe,0xff,0xff,0xfe,0xff};
 
 #endif
-

@@ -34,15 +34,13 @@
 #define __Z80_CORE_H__
 #include "z80_cpu.h"
 
-
 /* struktura tablicy dekodera rozkazów */
-typedef struct
-{
-    void (*code)(z80*);   /* kod operacji              - OC */
+typedef struct {
+    void (*code)(z80*); /* kod operacji              - OC */
     /* reg2 = reg0 OPERATOR reg2  */
-    unsigned char reg0;	/* rejest wyniku  - D  */
-    unsigned char reg1;	/* rejest param 0 - R0 */
-    unsigned char reg2;	/* rejest param 1 - R1 */
+    unsigned char reg0; /* rejest wyniku  - D  */
+    unsigned char reg1; /* rejest param 0 - R0 */
+    unsigned char reg2; /* rejest param 1 - R1 */
 
     unsigned char bytes;  /* długość rozkazu w bajtach - LC */
     unsigned char cycles; /* ilość cykli maszynowych   - CC */
@@ -51,11 +49,9 @@ typedef struct
     unsigned char f_mask_and; /* maska zerowanych znaczników     - AM */
     unsigned char f_mask_or;  /* maska ustawianych znaczników    - OM */
     unsigned char f_mask_chg; /* maska modyfikowanych znaczników - CM */
-
 } z80dt;
 
-enum
-{
+enum {
     RA = 0,
     RF = 1,
     RB = 2,
@@ -76,12 +72,12 @@ enum
     MSP = 17,
     MBC = 18,
     MDE = 19,
-/* specjalne */
-    MCDW = 32,	/* zmienna adresowana stałą */
-    CDB  = 33,  /* stała bajtowa */
-    CDW  = 34,  /* stała słowo   */
-    RNR  = 35,  /* bez rejestru  */
-/* rejestry bezwzgl 16 bitowe */
+    /* specjalne */
+    MCDW = 32, /* zmienna adresowana stałą */
+    CDB = 33, /* stała bajtowa */
+    CDW = 34, /* stała słowo   */
+    RNR = 35, /* bez rejestru  */
+    /* rejestry bezwzgl 16 bitowe */
     RAF = 0,
     RBC = 1,
     RDE = 2,
@@ -90,15 +86,14 @@ enum
     RIY = 5,
     RSP = 6,
     RPC = 7,
-    R0AF= 8,
-    R1AF= 9,
+    R0AF = 8,
+    R1AF = 9,
 };
 
 /*
     Kodowanie znaczników
 */
-enum
-{
+enum {
     FS = 128,
     FZ = 64,
     F5 = 32,
@@ -112,12 +107,15 @@ enum
 /*************************************************************************************************/
 
 /* podklasa dla arytmometru, ARYTMO,X */
-enum{ INC, DEC, ADD, SUB, ADC, SBC, CP };
+enum { INC, DEC, ADD, SUB, ADC, SBC, CP };
+
 /* podklasa dla operacji blokowych */
-enum{ PIR,PDR, PI, PD };
+enum { PIR, PDR, PI, PD };
+
 #define DEB_BLOCK_TAB {"IR","DR","I","D"}
+
 /* warunki */
-enum{NOC=0,NZ,Z,NC,C,PO,PE,P,M};
+enum { NOC = 0, NZ, Z, NC, C, PO, PE, P, M };
 
 #define NOP	z80_nop
 #define LDB	z80_ldb
@@ -224,110 +222,212 @@ enum{NOC=0,NZ,Z,NC,C,PO,PE,P,M};
 #define SBCX	z80_sbcx
 #define JPHL	z80_jphl
 
-
 extern void z80_ldbrmn(z80*);
+
 extern void z80_addx(z80*);
+
 extern void z80_adcx(z80*);
+
 extern void z80_sbcx(z80*);
+
 extern void z80_add8(z80*);
+
 extern void z80_addn8(z80*);
+
 extern void z80_addm8(z80*);
+
 extern void z80_adc8(z80*);
+
 extern void z80_adcn8(z80*);
+
 extern void z80_adcm8(z80*);
+
 extern void z80_sub8(z80*);
+
 extern void z80_subn8(z80*);
+
 extern void z80_subm8(z80*);
+
 extern void z80_sbc8(z80*);
+
 extern void z80_sbcn8(z80*);
+
 extern void z80_sbcm8(z80*);
+
 extern void z80_cp(z80*);
+
 extern void z80_cpn(z80*);
+
 extern void z80_cpm(z80*);
+
 extern void z80_inc8(z80*);
+
 extern void z80_incm8(z80*);
+
 extern void z80_dec8(z80*);
+
 extern void z80_decm8(z80*);
+
 extern void z80_nop(z80*);
+
 extern void z80_ldb(z80*);
+
 extern void z80_ldbn(z80*);
+
 extern void z80_ldbrm(z80*);
+
 extern void z80_ldbmr(z80*);
+
 extern void z80_ldbmn(z80*);
+
 extern void z80_ldbmnr(z80*);
+
 extern void z80_ldw(z80*);
+
 extern void z80_ldwn(z80*);
+
 extern void z80_ldwmnr(z80*);
+
 extern void z80_ldwrmn(z80*);
+
 extern void z80_ex(z80*);
+
 extern void z80_djnz(z80*);
+
 extern void z80_jr(z80*);
+
 extern void z80_daa(z80*);
+
 extern void z80_cpl(z80*);
+
 extern void z80_scf(z80*);
+
 extern void z80_ccf(z80*);
+
 extern void z80_halt(z80*);
+
 extern void z80_and(z80*);
+
 extern void z80_andn(z80*);
+
 extern void z80_andm(z80*);
+
 extern void z80_or(z80*);
+
 extern void z80_orn(z80*);
+
 extern void z80_orm(z80*);
+
 extern void z80_xor(z80*);
+
 extern void z80_xorn(z80*);
+
 extern void z80_xorm(z80*);
+
 extern void z80_ret(z80*);
+
 extern void z80_pop(z80*);
+
 extern void z80_jp(z80*);
+
 extern void z80_call(z80*);
+
 extern void z80_push(z80*);
+
 extern void z80_rst(z80*);
+
 extern void z80_outa(z80*);
+
 extern void z80_exx(z80*);
+
 extern void z80_ina(z80*);
+
 extern void z80_pref_dd(z80*);
+
 extern void z80_pref_ed(z80*);
+
 extern void z80_pref_fd(z80*);
+
 extern void z80_pref_cb(z80*);
+
 extern void z80_di(z80*);
+
 extern void z80_ei(z80*);
+
 extern void z80_im(z80*);
+
 extern void z80_neg(z80*);
+
 extern void z80_reti(z80*);
+
 extern void z80_retn(z80*);
+
 extern void z80_bit(z80*);
+
 extern void z80_bitm(z80*);
+
 extern void z80_res(z80*);
+
 extern void z80_resm(z80*);
+
 extern void z80_set(z80*);
+
 extern void z80_setm(z80*);
+
 extern void z80_ldb_(z80*);
+
 extern void z80_ldbl(z80*);
+
 extern void z80_cpbl(z80*);
+
 extern void z80_inbl(z80*);
+
 extern void z80_outbl(z80*);
+
 extern void z80_inbc(z80*);
+
 extern void z80_outbc(z80*);
+
 extern void z80_rrd(z80*);
+
 extern void z80_rld(z80*);
+
 extern void z80_rlc(z80*);
+
 extern void z80_rlcm(z80*);
+
 extern void z80_rrc(z80*);
+
 extern void z80_rrcm(z80*);
+
 extern void z80_rls(z80*);
+
 extern void z80_rlsm(z80*);
+
 extern void z80_rr(z80*);
+
 extern void z80_rrm(z80*);
+
 extern void z80_sla(z80*);
+
 extern void z80_slam(z80*);
+
 extern void z80_sra(z80*);
+
 extern void z80_sram(z80*);
+
 extern void z80_sli(z80*);
+
 extern void z80_slim(z80*);
+
 extern void z80_srl(z80*);
+
 extern void z80_srlm(z80*);
+
 extern void z80_incx(z80*);
+
 extern void z80_decx(z80*);
+
 extern void z80_jphl(z80*);
 
 #define AFr	(*(z->AF_r))
@@ -354,4 +454,3 @@ extern void z80_jphl(z80*);
 #define Rr	(*(z->R_r))
 
 #endif
-

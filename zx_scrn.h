@@ -21,25 +21,22 @@
 #ifndef __ZX_SCRN_H__
 #define __ZX_SCRN_H__
 
-typedef struct
-{
+typedef struct {
     unsigned char ri;
     unsigned char gi;
     unsigned char bi;
     unsigned char ai; /* bajt nadmiarowy do kopiowania 32 bitowego */
 } rgbi;
 
-typedef struct
-{
+typedef struct {
     float rf;
     float gf;
     float bf;
 } rgbf;
 
-typedef struct
-{
+typedef struct {
     char msg[256];
-    char scr_buffer[192*256*3+1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
+    char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
     rgbi palettei[16];
     rgbf palettef[16];
     int width;
@@ -47,14 +44,14 @@ typedef struct
     int bpp;
     int rgb_size[3];
     int dbf;
-    char *zx_patt; /* wzory bitowe - 6kB */
-    char *zx_attr; /* kolory kranu - 1kB */
+    char* zx_patt; /* wzory bitowe - 6kB */
+    char* zx_attr; /* kolory kranu - 1kB */
     char border_color;
     char old_border_color;
     char rfsh;
-    void *t0;
-    void *t2;
-    int  flash; /* tempo migania atrybutu flash w ms */
+    void* t0;
+    void* t2;
+    int flash; /* tempo migania atrybutu flash w ms */
     char inverse;
     char fscrn;
     int bright;
@@ -68,13 +65,19 @@ typedef struct
 } zx_scrn;
 
 extern char sdl_init; /* jeśli =1 tzn, że już była inicjowana SDL */
-extern void zx_make_palette(zx_scrn *zx, int nrm, int brt, int wht);
-extern void zx_scr_rfsh(zx_scrn *zx);
+extern void zx_make_palette(zx_scrn* zx, int nrm, int brt, int wht);
+
+extern void zx_scr_rfsh(zx_scrn* zx);
+
 /* argv -> -fullscreen, -noframe */
-extern char zx_initvideo(zx_scrn *zx, int width, int height, int bpp, int argc, char **argv, int rfsh);
+extern char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** argv, int rfsh);
+
 extern void zx_setgamma(float brt, float r, float g, float b);
-extern void zx_border(zx_scrn *zx, unsigned int color);
-extern void (*zx_kbrd)(int key, int state, void *kbptr);
+
+extern void zx_border(zx_scrn* zx, unsigned int color);
+
+extern void (*zx_kbrd)(int key, int state, void* kbptr);
+
 extern void zx_quit();
 
 #endif

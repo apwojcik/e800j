@@ -25,21 +25,19 @@
 /* tablica mapowania pamięci - obraz pamięci PROM 'MEM' Elwro 800 junior */
 unsigned char prom_mem[512] = PROM_MEM;
 
-
 /*********************************************************************************************/
 /*                                   ZX SPECTRUM 48K                                         */
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_zx48_read(void *z, ushort addr)
-{
-    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
-    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
+uchar mem_zx48_read(void* z, ushort addr) {
+    if (addr < 16384)
+        return ((elwro*)((z80*)z)->ptr)->rom[addr];
+    return ((elwro*)((z80*)z)->ptr)->ram[addr];
 }
 
-void mem_zx48_write(void *z, ushort addr, uchar data)
-{
-    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+void mem_zx48_write(void* z, ushort addr, uchar data) {
+    ((elwro*)((z80*)z)->ptr)->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -47,25 +45,28 @@ void mem_zx48_write(void *z, ushort addr, uchar data)
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_e800j_read(void *z, ushort addr)
-{
-    elwro *el = (elwro*)((z80 *)z)->ptr;
+uchar mem_e800j_read(void* z, ushort addr) {
+    elwro* el = (elwro*)((z80*)z)->ptr;
     uchar bank = ~prom_mem[(el->mem_mask | (addr >> 10)) & 0x1ff];
     ushort romaddr = addr & 0x1fff;
 
-//    if(bank & 0x20); /* RST 48 */
-    if(bank & 0x01) return el->rom[ 0x0000 + romaddr ];  /* BAS0 */
-    if(bank & 0x02) return el->rom[ 0x2000 + romaddr ];  /* BAS1 */
-    if(bank & 0x10) return el->rom[ 0x4000 + romaddr ];  /* BOOT */
-    if(bank & 0x08) return el->ram[ addr ]; // pamięć RAM
-    if(bank & 0x04) return el->ram[ addr ]; // pamięć atrybutów
+    //    if(bank & 0x20); /* RST 48 */
+    if (bank & 0x01)
+        return el->rom[0x0000 + romaddr]; /* BAS0 */
+    if (bank & 0x02)
+        return el->rom[0x2000 + romaddr]; /* BAS1 */
+    if (bank & 0x10)
+        return el->rom[0x4000 + romaddr]; /* BOOT */
+    if (bank & 0x08)
+        return el->ram[addr]; // pamięć RAM
+    if (bank & 0x04)
+        return el->ram[addr]; // pamięć atrybutów
 
     return 0xff;
 }
 
-void mem_e800j_write(void *z, ushort addr, uchar data)
-{
-    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+void mem_e800j_write(void* z, ushort addr, uchar data) {
+    ((elwro*)((z80*)z)->ptr)->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -73,15 +74,12 @@ void mem_e800j_write(void *z, ushort addr, uchar data)
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_zx128_read(void *z, ushort addr)
-{
-//    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
-//    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
+uchar mem_zx128_read(void* z, ushort addr) {
+    //    if(addr < 16384) return ((elwro*)((z80 *)z)->ptr)->rom[ addr ];
+    //    return ((elwro*)((z80 *)z)->ptr)->ram[ addr ];
     return 0xff;
 }
 
-void mem_zx128_write(void *z, ushort addr, uchar data)
-{
-//    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+void mem_zx128_write(void* z, ushort addr, uchar data) {
+    //    ((elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
 }
-

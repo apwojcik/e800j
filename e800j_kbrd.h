@@ -25,48 +25,45 @@
 #define KB_MODE_E800J	1	/* Mapowanie Elwro 800 Junior 			   */
 #define KB_MODE_PC	2	/* Mapowanie klawiatury PC (programisty ) na E800J */
 
-
 #define KB_ROWS		10	/* ilość rzędów matrycy klawiatury */
 #define KB_ZX_ROW_MASK	0x0
 #define KB_ZX_COL_MASK	0x0
 
-typedef struct
-{
-/* klawiatura */
-    int		  key_code;		/* ostatni kod klawisza  */
-    char	  state;		/* ostatni stan klawisza */
-    char	  mode;			/* tryb klawiatury       */
-    char	  alt_r;		/* wciśnięty prawy ALT	 */
-    unsigned char matrix[KB_ROWS];	/* matryca klawiszy      */
-    char	  *matrix_map1;		/* pierwszy stopień mapowania klawiszy */
-    unsigned short int row_mask;	/* maska adresu (odcina część linii adresowych ) */
-    unsigned char col_mask;		/* maska danych (odcina część linii kolumn     ) */
+typedef struct {
+    /* klawiatura */
+    int key_code; /* ostatni kod klawisza  */
+    char state; /* ostatni stan klawisza */
+    char mode; /* tryb klawiatury       */
+    char alt_r; /* wciśnięty prawy ALT	 */
+    unsigned char matrix[KB_ROWS]; /* matryca klawiszy      */
+    char* matrix_map1; /* pierwszy stopień mapowania klawiszy */
+    unsigned short int row_mask; /* maska adresu (odcina część linii adresowych ) */
+    unsigned char col_mask; /* maska danych (odcina część linii kolumn     ) */
 
-/* Joystick */
-    char        joy_mode;	/* tryb emulacji joysticka */
-    unsigned char in1f;	/* zawartość portu 31 */
-/* Sinclair & AGF */
-    int		joy_map_l0;	/* mapowanie klawisza klawiatury na joystick lewo   */
-    int		joy_map_r0;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_u0;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_d0;	/* mapowanie klawisza klawiatury na joystick dół    */
-    int		joy_map_f0;	/* mapowanie klawisza klawiatury na joystick strzał */
-/* Sinclair */
-    int		joy_map_l1;	/* mapowanie klawisza klawiatury na joystick lewo   */
-    int		joy_map_r1;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_u1;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_d1;	/* mapowanie klawisza klawiatury na joystick dół    */
-    int		joy_map_f1;	/* mapowanie klawisza klawiatury na joystick strzał */
-/* Kempston */
-    int		joy_map_lk;	/* mapowanie klawisza klawiatury na joystick lewo   */
-    int		joy_map_rk;	/* mapowanie klawisza klawiatury na joystick prawo  */
-    int		joy_map_uk;	/* mapowanie klawisza klawiatury na joystick góra   */
-    int		joy_map_dk;	/* mapowanie klawisza klawiatury na joystick dół    */
-    int		joy_map_fk;	/* mapowanie klawisza klawiatury na joystick strzał */
+    /* Joystick */
+    char joy_mode; /* tryb emulacji joysticka */
+    unsigned char in1f; /* zawartość portu 31 */
+    /* Sinclair & AGF */
+    int joy_map_l0; /* mapowanie klawisza klawiatury na joystick lewo   */
+    int joy_map_r0; /* mapowanie klawisza klawiatury na joystick prawo  */
+    int joy_map_u0; /* mapowanie klawisza klawiatury na joystick góra   */
+    int joy_map_d0; /* mapowanie klawisza klawiatury na joystick dół    */
+    int joy_map_f0; /* mapowanie klawisza klawiatury na joystick strzał */
+    /* Sinclair */
+    int joy_map_l1; /* mapowanie klawisza klawiatury na joystick lewo   */
+    int joy_map_r1; /* mapowanie klawisza klawiatury na joystick prawo  */
+    int joy_map_u1; /* mapowanie klawisza klawiatury na joystick góra   */
+    int joy_map_d1; /* mapowanie klawisza klawiatury na joystick dół    */
+    int joy_map_f1; /* mapowanie klawisza klawiatury na joystick strzał */
+    /* Kempston */
+    int joy_map_lk; /* mapowanie klawisza klawiatury na joystick lewo   */
+    int joy_map_rk; /* mapowanie klawisza klawiatury na joystick prawo  */
+    int joy_map_uk; /* mapowanie klawisza klawiatury na joystick góra   */
+    int joy_map_dk; /* mapowanie klawisza klawiatury na joystick dół    */
+    int joy_map_fk; /* mapowanie klawisza klawiatury na joystick strzał */
+} kbrd;
 
-} kbrd ;
-
-enum{
+enum {
     JOY_NON = 0,
     JOY_SNR = 1,
     JOY_AGF = 2,
@@ -74,12 +71,14 @@ enum{
 };
 
 /*******************************************************************/
-extern void key_init( kbrd *);
+extern void key_init(kbrd*);
+
 /*	..:: Inicjuje klawiaturę w trybie 'mode' ::..
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-extern void key_set( kbrd *, unsigned int key, unsigned char state);
+extern void key_set(kbrd*, unsigned int key, unsigned char state);
+
 /*
     ..:: podobniem jak key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
@@ -87,20 +86,23 @@ extern void key_set( kbrd *, unsigned int key, unsigned char state);
 
 */
 /*******************************************************************/
-extern unsigned char key_matrix( kbrd *, unsigned short int addr);
+extern unsigned char key_matrix(kbrd*, unsigned short int addr);
+
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15
     wartość zwracana - linie KL0..KL6
 */
 
 /*******************************************************************/
-extern void key_update( kbrd *, int key, char state);
+extern void key_update(kbrd*, int key, char state);
+
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
     state - =1 wciśnięto, =0 puszczono
 */
 
-extern unsigned char key_kempston( kbrd *);
+extern unsigned char key_kempston(kbrd*);
+
 /*
     zwraca wartość dla portu 31 - symulacja wejścia joysticka KEMPSTON
 */
@@ -311,9 +313,8 @@ extern unsigned char key_kempston( kbrd *);
 
 #ifdef __cplusplus
 
-class e800j_kbd
-{
-    kbrd *keyboard;
+class e800j_kbd {
+    kbrd* keyboard;
 public:
     void key_set(unsigned int key, unsigned char state);
     void key_update(int key, char state);
@@ -326,4 +327,3 @@ public:
 #endif
 
 #endif
-
