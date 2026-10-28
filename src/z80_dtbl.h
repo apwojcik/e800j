@@ -841,12 +841,12 @@
 #define _SET6_MIY	_SETR_my(6,IY)
 #define _SET7_MIY	_SETR_my(7,IY)
 
-#define _RESR(bit,r)	{ RES,(uchar)~(1 << bit),R##r,  bit,  0x02, 0x02, 0x08,     0x00, 0x00, 0x00 }
-#define _RESR_x(bit,r)	{ RES,(uchar)~(1 << bit),R##r,  bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
-#define _RESR_y(bit,r)	{ RES,(uchar)~(1 << bit),R##r,  bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
-#define _RESR_m(bit,r)	{ RESM,(uchar)~(1 << bit),R##r, bit,  0x02, 0x02, 0x08,     0x00, 0x00, 0x00 }
-#define _RESR_mx(bit,r)	{ RESM,(uchar)~(1 << bit),R##r, bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
-#define _RESR_my(bit,r) { RESM,(uchar)~(1 << bit),R##r, bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
+#define _RESR(bit,r)	{ RES,(unsigned char)~(1 << bit),R##r,  bit,  0x02, 0x02, 0x08,     0x00, 0x00, 0x00 }
+#define _RESR_x(bit,r)	{ RES,(unsigned char)~(1 << bit),R##r,  bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
+#define _RESR_y(bit,r)	{ RES,(unsigned char)~(1 << bit),R##r,  bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
+#define _RESR_m(bit,r)	{ RESM,(unsigned char)~(1 << bit),R##r, bit,  0x02, 0x02, 0x08,     0x00, 0x00, 0x00 }
+#define _RESR_mx(bit,r)	{ RESM,(unsigned char)~(1 << bit),R##r, bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
+#define _RESR_my(bit,r) { RESM,(unsigned char)~(1 << bit),R##r, bit,  0x03, 0x03, 0x0b,     0x00, 0x00, 0x00 }
 #define _RES0_A		_RESR(0,A)
 #define _RES1_A		_RESR(1,A)
 #define _RES2_A		_RESR(2,A)

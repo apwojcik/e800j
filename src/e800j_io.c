@@ -74,17 +74,17 @@ static unsigned char prom_io[512] = {
     0xff,0xdf,0xff,0xff,0xff,0xff,0xff,0xfd,0xff,0xff,0xff,0xfe,0xff,0xff,0xfe,0xff
 };
 
-uchar io_read(void* z, ushort addr) {
-    struct elwro* el = ((z80*)z)->ptr;
-    uchar adec = ~prom_io[addr & 0x1ff];
-    uchar dout = 0xff;
+unsigned char io_read(const void* p, unsigned short addr) {
+    const struct elwro* e = p;
+    unsigned char adec = ~prom_io[addr & 0x1ff];
+    unsigned char dout = 0xff;
 
     if (adec & PORT_CFE) {
-        dout = key_matrix(el->kb, addr);
+        dout = key_matrix(e->kbd, addr);
     }
 
     if (adec & PORT_CSFDC)
-        dout = fdc_rd_i8272(el->fdc, addr & 0x01);
+        dout = fdc_i8272_read(e->fdc, addr & 0x01);
 
     if (adec & PORT_CS51) {
     }
@@ -94,36 +94,36 @@ uchar io_read(void* z, ushort addr) {
     return dout;
 }
 
-void io_write(void* z, ushort addr, uchar data) {
-    struct elwro* el = ((z80*)z)->ptr;
-    uchar adec = ~prom_io[addr & 0x1ff];
+void io_write(void* p, const unsigned short addr, unsigned char data) {
+    struct elwro* e = p;
+    unsigned char adec = ~prom_io[addr & 0x1ff];
 
     if (adec & PORT_CF7) {
-        el->mem_mask = (data & 0xc0) | ((data & 0x20) << 3);
+        e->mem_mask = (data & 0xc0) | ((data & 0x20) << 3);
 
         if (data & RELOK_R175) {
-            if (!(el->port_f7 & RELOK_R175))
+            if (!(e->port_f7 & RELOK_R175))
                 msg_printf(MSG_MSG, "Relocate screen at 0xE000 address\n");
-            el->zx->zx_patt = el->ram + 0xE000;
-            el->zx->zx_attr = el->ram + 0xF800;
+            e->scn->zx_patt = e->ram + 0xE000;
+            e->scn->zx_attr = e->ram + 0xF800;
         }
         else {
-            if (el->port_f7 & RELOK_R175)
+            if (e->port_f7 & RELOK_R175)
                 msg_printf(MSG_MSG, "Relocate screen at 0x4000 address\n");
-            el->zx->zx_patt = el->ram + 0x4000;
-            el->zx->zx_attr = el->ram + 0x5800;
+            e->scn->zx_patt = e->ram + 0x4000;
+            e->scn->zx_attr = e->ram + 0x5800;
         }
-        el->port_f7 = data;
+        e->port_f7 = data;
     }
     if (adec & PORT_CFE) {
-        el->zx->border_color = data & 0x07;
-        snd_beeper(data, z);
+        e->scn->border_color = data & 0x07;
+        snd_beeper(e->snd, data);
         //	tape_save(data, z);
     }
     if (adec & PORT_CF1)
-        fdc_wr_r175(el->fdc, data);
+        fdc_r175_write(e->fdc, data);
     if (adec & PORT_CSFDC)
-        fdc_wr_i8272(el->fdc, addr & 0x01, data);
+        fdc_i8272_write(e->fdc, addr & 0x01, data);
 
     if (adec & PORT_CS51) {
     }

@@ -33,39 +33,38 @@
 #include "e800j_file.h"
 #include "e800j_msg.h"
 
-static char sdl_init_ = 0;
+static char sdl_init_ = {};
 
-void zx_border(struct screen* zx, unsigned int color) {
+void screen_border(struct screen* s, const unsigned char color) {
     if (color < 16)
-        zx->border_color = color;
+        s->border_color = color;
 }
 
-void zx_make_palette(struct screen* zx, int nrm, int brt, int wht) {
-    unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
-    int color, i;
-    for (i = 0; i < 16; i++) {
-        color = (i == 7) ? wht : (i & 0x07 ? brt : nrm);
-        zx->palettef[i].bf = (zx->palettei[i].bi = (palgen[i & 7] & 1) ? color : 0) / 256.0;
-        zx->palettef[i].gf = (zx->palettei[i].gi = (palgen[i & 7] & 2) ? color : 0) / 256.0;
-        zx->palettef[i].rf = (zx->palettei[i].ri = (palgen[i & 7] & 4) ? color : 0) / 256.0;
+void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
+    for (int i = 0; i < 16; i++) {
+        const unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
+        int color = (i == 7) ? wht : (i & 0x07 ? brt : nrm);
+        s->palettef[i].bf = (float)(s->palettei[i].bi = (palgen[i & 7] & 1) ? color : 0) / 256.0f;
+        s->palettef[i].gf = (float)(s->palettei[i].gi = (palgen[i & 7] & 2) ? color : 0) / 256.0f;
+        s->palettef[i].rf = (float)(s->palettei[i].ri = (palgen[i & 7] & 4) ? color : 0) / 256.0f;
     }
 }
 
-static void zx_draw_zxscreen(struct screen* zx) {
-    glDrawPixels(256, 192,GL_RGB,GL_UNSIGNED_BYTE, zx->scr_buffer);
+static void screen_draw(struct screen* s) {
+    glDrawPixels(256, 192,GL_RGB,GL_UNSIGNED_BYTE, s->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
         *((int*)fb) = *((int*)(pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f)));\
         fb +=3;
 
-static void zx_trans_scr(struct screen* zx) {
-    char* fb = zx->scr_buffer;
-    rgbi* pal = zx->palettei;
-    char* attr = zx->zx_attr;
-    char* x = zx->zx_patt;
+static void screen_transform(struct screen* s) {
+    char* fb = s->scr_buffer;
+    struct rgbi* pal = s->palettei;
+    unsigned char* attr = s->zx_attr;
+    unsigned char* x = s->zx_patt;
     short yy, xx, aa, i, pt = 0;
-    char inv = zx->inverse ? 0xff : 0;
+    char inv = s->inverse ? -1 : 0;
 
     for (i = 0; i < 6144; i++) {
         yy = i >> 5;
@@ -90,29 +89,29 @@ static void zx_trans_scr(struct screen* zx) {
     }
 }
 
-static void zx_draw_border(struct screen* zx, int color) {
-    glColor3f(zx->palettef[color].rf, zx->palettef[color].gf, zx->palettef[color].bf);
+static void screen_draw_border(struct screen* s) {
+    glColor3f(s->palettef[s->border_color].rf, s->palettef[s->border_color].gf, s->palettef[s->border_color].bf);
     glBegin(GL_POLYGON);
-    glVertex2f(0.0, 0.0);
-    glVertex2f(1.0, 0.0);
-    glVertex2f(1.0, zx->scrh);
-    glVertex2f(0.0, zx->scrh);
+    glVertex2f(0.0f, 0.0f);
+    glVertex2f(1.0f, 0.0f);
+    glVertex2f(1.0f, s->scrh);
+    glVertex2f(0.0f, s->scrh);
     glEnd();
 }
 
-void zx_scr_rfsh(struct screen* zx) {
+void screen_refresh(struct screen* s) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
-    zx_draw_border(zx, zx->border_color);
-    zx_trans_scr(zx);
-    zx_draw_zxscreen(zx);
-    SDL_GL_SwapWindow(zx->window);
+    screen_draw_border(s);
+    screen_transform(s);
+    screen_draw(s);
+    SDL_GL_SwapWindow(s->window);
 }
 
-static void zx_glinit(struct screen* zx) {
-    memset(zx->scr_buffer, 0x80, sizeof(zx->scr_buffer));
-    zx_make_palette(zx, 0xb0, 0xf0, 0xe0);
-    glViewport(0, 0, zx->width, zx->height);
-    glClearColor(0.0, 0.3, 0.8, 0.0);
+static void screen_glinit(struct screen* s) {
+    memset(s->scr_buffer, 0x80, sizeof(s->scr_buffer));
+    screen_make_palette(s, 0xb0, 0xf0, 0xe0);
+    glViewport(0, 0, s->width, s->height);
+    glClearColor(0.0f, 0.3f, 0.8f, 0.0f);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -122,12 +121,12 @@ static void zx_glinit(struct screen* zx) {
     //    glMatrixMode(GL_MODELVIEW);
     //    glLoadIdentity();
 
-    zx->scrh = 1.0 - (float)zx->yresv / zx->height;
-    if (zx->bsize > 0.5)
-        zx->bsize = 0.4;
-    glPixelZoom((((float)zx->width - 2 * zx->width * zx->bsize) / 256),
-                (((float)zx->height - 2 * zx->height * zx->bsize - zx->yresv) / 192));
-    glRasterPos2d(zx->bsize, zx->bsize);
+    s->scrh = 1.0f - (float)s->yresv / (float)s->height;
+    if (s->bsize > 0.5)
+        s->bsize = 0.4;
+    glPixelZoom((((float)s->width - 2 * s->width * s->bsize) / 256),
+                (((float)s->height - 2 * s->height * s->bsize - s->yresv) / 192));
+    glRasterPos2d(s->bsize, s->bsize);
 
     //    glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
 
@@ -138,18 +137,19 @@ static void zx_glinit(struct screen* zx) {
     //    glDisable(GL_POINT_SMOOTH);
     //    glDisable(GL_BLEND);
 
-    zx_draw_zxscreen(zx);
-    zx_draw_border(zx, 1);
-    SDL_GL_SwapWindow(zx->window);
+    screen_border(s, 1);
+    screen_draw(s);
+    screen_draw_border(s);
+    SDL_GL_SwapWindow(s->window);
 }
 
 static Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
     (void)id;
     SDL_Event event;
     SDL_zero(event);
-    if (((struct screen*)zx)->rfsh == 1)
+    if (((struct screen*)zx)->refresh == 1)
         return interval;
-    ((struct screen*)zx)->rfsh = 1;
+    ((struct screen*)zx)->refresh = 1;
     event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
@@ -188,7 +188,7 @@ static void zx_free_flash(int n, void* zx) {
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t2);
 }
 
-char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
+char screen_init(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
     int i, ver;
     SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL;
 
@@ -283,7 +283,7 @@ char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, c
     msg_printf(MSG_MSG, "SDL GL BLUE SIZE   : %d\n", zx->rgb_size[2]);
     msg_printf(MSG_MSG, "SDL GL DEPTH SIZE  : %d\n", zx->bpp);
     msg_printf(MSG_MSG, "SDL GL DOUBLEBUFFER: %s\n", zx->dbf ? "Yes" : "No");
-    zx_glinit(zx);
+    screen_glinit(zx);
 
     if (!(zx->t0 = (void*)(uintptr_t)SDL_AddTimer(rfsh, zx_refresh, zx))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
@@ -304,7 +304,7 @@ char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, c
 
 void zx_kbrd_(int key, int state, void* a) {
     //    if(key == 316) ((elwro*)a)->cpu->dbg_on = state;
-    key_set(((struct elwro*)a)->kb, key, state);
+    key_set(((struct elwro*)a)->kbd, key, state);
 }
 
 void zx_quit() {
@@ -316,49 +316,50 @@ void zx_quit() {
 
 void (*zx_kbrd)(int, int, void*) = zx_kbrd_;
 
-void time_int(z80* z, void* ptr) {
+void time_int(struct cpu* z, void* ptr) {
     (void)ptr;
-    z80_int(z,NULL);
+    z80_int(z, nullptr);
 }
 
-void zx_main(struct elwro* ptr) {
+void zx_main(struct elwro* e) {
     SDL_Event event;
     static char ik = 1;
 
-    if (ik) {
+    if (ik != 0) {
         ik = 0;
-        if (!(ptr->t1 = (void*)(uintptr_t)SDL_AddTimer(ptr->cpu_rfsh, zx_cpu_rfsh, ptr))) {
+        e->t1 = SDL_AddTimer(e->cpu_rfsh, zx_cpu_rfsh, e);
+        if (e->t1 == 0) {
             msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
             exit(0);
         }
-        on_exit(zx_free_cpu_rfsh, (void*)ptr);
-        msg_printf(MSG_MSG, "Set cpu refresh to     : %ims ( %iHz )\n", ptr->cpu_rfsh, (1000 / ptr->cpu_rfsh));
-        msg_printf(MSG_MSG, "Set cpu tics/refresh to: %i\n", ptr->tr);
-        msg_printf(MSG_MSG, "Set cpu interrupt to   : %i tics\n", ptr->ifreq);
-        msg_printf(MSG_MSG, "Emulated CPU frequency : %fMHz\n", ((1000 / ptr->cpu_rfsh) * ptr->tr) / 1000000.0);
+        on_exit(zx_free_cpu_rfsh, (void*)e);
+        msg_printf(MSG_MSG, "Set cpu refresh to     : %ims ( %iHz )\n", e->cpu_rfsh, (1000 / e->cpu_rfsh));
+        msg_printf(MSG_MSG, "Set cpu tics/refresh to: %i\n", e->tr);
+        msg_printf(MSG_MSG, "Set cpu interrupt to   : %i tics\n", e->ifreq);
+        msg_printf(MSG_MSG, "Emulated CPU frequency : %fMHz\n", ((1000 / e->cpu_rfsh) * e->tr) / 1000000.0);
     }
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
             if (!event.key.repeat)
-                zx_kbrd(event.key.key, 1, ptr);
+                zx_kbrd(event.key.key, 1, e);
             break;
         case SDL_EVENT_KEY_UP:
-            zx_kbrd(event.key.key, 0, ptr);
+            zx_kbrd(event.key.key, 0, e);
             break;
         case SDL_EVENT_QUIT:
             msg_printf(MSG_MSG, "bye...\n");
             return;
         case SDL_EVENT_USER:
-            if (ptr->zx->rfsh) {
-                ptr->zx->rfsh = 0;
-                zx_scr_rfsh(ptr->zx);
+            if (e->scn->refresh) {
+                e->scn->refresh = 0;
+                screen_refresh(e->scn);
             }
-            if (ptr->tcpu) {
-                ptr->tcpu = 0;
-                z80_loop(ptr->cpu, ptr->tr, ptr->ifreq, time_int, NULL);
+            if (e->tcpu) {
+                e->tcpu = 0;
+                z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);
             }
-            fdc_clk(ptr->fdc);
+            fdc_clk(e->fdc);
             break;
         }
     }

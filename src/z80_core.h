@@ -36,7 +36,7 @@
 
 /* struktura tablicy dekodera rozkazów */
 struct z80dt {
-    void (*code)(z80*); /* kod operacji              - OC */
+    void (*code)(struct cpu*); /* kod operacji              - OC */
     /* reg2 = reg0 OPERATOR reg2  */
     unsigned char reg0; /* rejest wyniku  - D  */
     unsigned char reg1; /* rejest param 0 - R0 */
@@ -111,8 +111,6 @@ enum { INC, DEC, ADD, SUB, ADC, SBC, CP };
 
 /* podklasa dla operacji blokowych */
 enum { PIR, PDR, PI, PD };
-
-#define DEB_BLOCK_TAB {"IR","DR","I","D"}
 
 /* warunki */
 enum { NOC = 0, NZ, Z, NC, C, PO, PE, P, M };
@@ -222,213 +220,110 @@ enum { NOC = 0, NZ, Z, NC, C, PO, PE, P, M };
 #define SBCX	z80_sbcx
 #define JPHL	z80_jphl
 
-extern void z80_ldbrmn(z80*);
-
-extern void z80_addx(z80*);
-
-extern void z80_adcx(z80*);
-
-extern void z80_sbcx(z80*);
-
-extern void z80_add8(z80*);
-
-extern void z80_addn8(z80*);
-
-extern void z80_addm8(z80*);
-
-extern void z80_adc8(z80*);
-
-extern void z80_adcn8(z80*);
-
-extern void z80_adcm8(z80*);
-
-extern void z80_sub8(z80*);
-
-extern void z80_subn8(z80*);
-
-extern void z80_subm8(z80*);
-
-extern void z80_sbc8(z80*);
-
-extern void z80_sbcn8(z80*);
-
-extern void z80_sbcm8(z80*);
-
-extern void z80_cp(z80*);
-
-extern void z80_cpn(z80*);
-
-extern void z80_cpm(z80*);
-
-extern void z80_inc8(z80*);
-
-extern void z80_incm8(z80*);
-
-extern void z80_dec8(z80*);
-
-extern void z80_decm8(z80*);
-
-extern void z80_nop(z80*);
-
-extern void z80_ldb(z80*);
-
-extern void z80_ldbn(z80*);
-
-extern void z80_ldbrm(z80*);
-
-extern void z80_ldbmr(z80*);
-
-extern void z80_ldbmn(z80*);
-
-extern void z80_ldbmnr(z80*);
-
-extern void z80_ldw(z80*);
-
-extern void z80_ldwn(z80*);
-
-extern void z80_ldwmnr(z80*);
-
-extern void z80_ldwrmn(z80*);
-
-extern void z80_ex(z80*);
-
-extern void z80_djnz(z80*);
-
-extern void z80_jr(z80*);
-
-extern void z80_daa(z80*);
-
-extern void z80_cpl(z80*);
-
-extern void z80_scf(z80*);
-
-extern void z80_ccf(z80*);
-
-extern void z80_halt(z80*);
-
-extern void z80_and(z80*);
-
-extern void z80_andn(z80*);
-
-extern void z80_andm(z80*);
-
-extern void z80_or(z80*);
-
-extern void z80_orn(z80*);
-
-extern void z80_orm(z80*);
-
-extern void z80_xor(z80*);
-
-extern void z80_xorn(z80*);
-
-extern void z80_xorm(z80*);
-
-extern void z80_ret(z80*);
-
-extern void z80_pop(z80*);
-
-extern void z80_jp(z80*);
-
-extern void z80_call(z80*);
-
-extern void z80_push(z80*);
-
-extern void z80_rst(z80*);
-
-extern void z80_outa(z80*);
-
-extern void z80_exx(z80*);
-
-extern void z80_ina(z80*);
-
-extern void z80_pref_dd(z80*);
-
-extern void z80_pref_ed(z80*);
-
-extern void z80_pref_fd(z80*);
-
-extern void z80_pref_cb(z80*);
-
-extern void z80_di(z80*);
-
-extern void z80_ei(z80*);
-
-extern void z80_im(z80*);
-
-extern void z80_neg(z80*);
-
-extern void z80_reti(z80*);
-
-extern void z80_retn(z80*);
-
-extern void z80_bit(z80*);
-
-extern void z80_bitm(z80*);
-
-extern void z80_res(z80*);
-
-extern void z80_resm(z80*);
-
-extern void z80_set(z80*);
-
-extern void z80_setm(z80*);
-
-extern void z80_ldb_(z80*);
-
-extern void z80_ldbl(z80*);
-
-extern void z80_cpbl(z80*);
-
-extern void z80_inbl(z80*);
-
-extern void z80_outbl(z80*);
-
-extern void z80_inbc(z80*);
-
-extern void z80_outbc(z80*);
-
-extern void z80_rrd(z80*);
-
-extern void z80_rld(z80*);
-
-extern void z80_rlc(z80*);
-
-extern void z80_rlcm(z80*);
-
-extern void z80_rrc(z80*);
-
-extern void z80_rrcm(z80*);
-
-extern void z80_rls(z80*);
-
-extern void z80_rlsm(z80*);
-
-extern void z80_rr(z80*);
-
-extern void z80_rrm(z80*);
-
-extern void z80_sla(z80*);
-
-extern void z80_slam(z80*);
-
-extern void z80_sra(z80*);
-
-extern void z80_sram(z80*);
-
-extern void z80_sli(z80*);
-
-extern void z80_slim(z80*);
-
-extern void z80_srl(z80*);
-
-extern void z80_srlm(z80*);
-
-extern void z80_incx(z80*);
-
-extern void z80_decx(z80*);
-
-extern void z80_jphl(z80*);
+void z80_ldbrmn(struct cpu*);
+void z80_addx(struct cpu*);
+void z80_adcx(struct cpu*);
+void z80_sbcx(struct cpu*);
+void z80_add8(struct cpu*);
+void z80_addn8(struct cpu*);
+void z80_addm8(struct cpu*);
+void z80_adc8(struct cpu*);
+void z80_adcn8(struct cpu*);
+void z80_adcm8(struct cpu*);
+void z80_sub8(struct cpu*);
+void z80_subn8(struct cpu*);
+void z80_subm8(struct cpu*);
+void z80_sbc8(struct cpu*);
+void z80_sbcn8(struct cpu*);
+void z80_sbcm8(struct cpu*);
+void z80_cp(struct cpu*);
+void z80_cpn(struct cpu*);
+void z80_cpm(struct cpu*);
+void z80_inc8(struct cpu*);
+void z80_incm8(struct cpu*);
+void z80_dec8(struct cpu*);
+void z80_decm8(struct cpu*);
+void z80_nop(struct cpu*);
+void z80_ldb(struct cpu*);
+void z80_ldbn(struct cpu*);
+void z80_ldbrm(struct cpu*);
+void z80_ldbmr(struct cpu*);
+void z80_ldbmn(struct cpu*);
+void z80_ldbmnr(struct cpu*);
+void z80_ldw(struct cpu*);
+void z80_ldwn(struct cpu*);
+void z80_ldwmnr(struct cpu*);
+void z80_ldwrmn(struct cpu*);
+void z80_ex(struct cpu*);
+void z80_djnz(struct cpu*);
+void z80_jr(struct cpu*);
+void z80_daa(struct cpu*);
+void z80_cpl(struct cpu*);
+void z80_scf(struct cpu*);
+void z80_ccf(struct cpu*);
+void z80_halt(struct cpu*);
+void z80_and(struct cpu*);
+void z80_andn(struct cpu*);
+void z80_andm(struct cpu*);
+void z80_or(struct cpu*);
+void z80_orn(struct cpu*);
+void z80_orm(struct cpu*);
+void z80_xor(struct cpu*);
+void z80_xorn(struct cpu*);
+void z80_xorm(struct cpu*);
+void z80_ret(struct cpu*);
+void z80_pop(struct cpu*);
+void z80_jp(struct cpu*);
+void z80_call(struct cpu*);
+void z80_push(struct cpu*);
+void z80_rst(struct cpu*);
+void z80_outa(struct cpu*);
+void z80_exx(struct cpu*);
+void z80_ina(struct cpu*);
+void z80_pref_dd(struct cpu*);
+void z80_pref_ed(struct cpu*);
+void z80_pref_fd(struct cpu*);
+void z80_pref_cb(struct cpu*);
+void z80_di(struct cpu*);
+void z80_ei(struct cpu*);
+void z80_im(struct cpu*);
+void z80_neg(struct cpu*);
+void z80_reti(struct cpu*);
+void z80_retn(struct cpu*);
+void z80_bit(struct cpu*);
+void z80_bitm(struct cpu*);
+void z80_res(struct cpu*);
+void z80_resm(struct cpu*);
+void z80_set(struct cpu*);
+void z80_setm(struct cpu*);
+void z80_ldb_(struct cpu*);
+void z80_ldbl(struct cpu*);
+void z80_cpbl(struct cpu*);
+void z80_inbl(struct cpu*);
+void z80_outbl(struct cpu*);
+void z80_inbc(struct cpu*);
+void z80_outbc(struct cpu*);
+void z80_rrd(struct cpu*);
+void z80_rld(struct cpu*);
+void z80_rlc(struct cpu*);
+void z80_rlcm(struct cpu*);
+void z80_rrc(struct cpu*);
+void z80_rrcm(struct cpu*);
+void z80_rls(struct cpu*);
+void z80_rlsm(struct cpu*);
+void z80_rr(struct cpu*);
+void z80_rrm(struct cpu*);
+void z80_sla(struct cpu*);
+void z80_slam(struct cpu*);
+void z80_sra(struct cpu*);
+void z80_sram(struct cpu*);
+void z80_sli(struct cpu*);
+void z80_slim(struct cpu*);
+void z80_srl(struct cpu*);
+void z80_srlm(struct cpu*);
+void z80_incx(struct cpu*);
+void z80_decx(struct cpu*);
+void z80_jphl(struct cpu*);
 
 #define AFr	(*(z->AF_r))
 #define BCr	(*(z->BC_r))

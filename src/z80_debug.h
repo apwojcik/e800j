@@ -33,14 +33,16 @@ enum {
     C_CNTR
 };
 
-typedef struct {
+struct dbg_bp {
     char cond_type; /* typ warunku    */
     int address; /* wartość adresu */
     int life; /* ilość warunków  'czas życia warunku' */
     void* next; /* następny warunek */
-} dbg_bp;
+};
 
-typedef struct {
+struct cpu;
+
+struct dbg {
     char mach[MAX_BYTES]; /* kod maszynowy instrukcji */
     char cmdline[MAX_CMDCHR];
     char line[LINE_LEN]; /* bufor wyniku zdeasemblowanej linii */
@@ -53,21 +55,21 @@ typedef struct {
     void (*out)(char*); /* funkcja zwrotna do wyrzucania tekstu */
     char (*in)();
 
-    z80* z;
+    struct cpu* z;
 /* warunek załaczenia */
     char cond;
 /* wartosc załaczenia */
     int addr;
     /* ilość instrukcji do wykonania */
     int cntr;
-    dbg_bp* bp; /* break pointy */
+    struct dbg_bp* bp; /* break pointy */
     /* adres przy wyświetlaniu mapy pamięci */
     int daddr;
     int dline;
     /* adres deasemblacji */
     int zaddr;
     int zline;
-} dbg;
+};
 
 enum {
     DBG_OFF = 0,
@@ -79,19 +81,19 @@ enum {
     komunikaty konsolowe I/O są wyprowadzane domyślnie na stdin/stdout, chyba
     że zostanie użyta funkcja dbg_set_stream.
 */
-extern void dbg_init(dbg* d, z80* z, char debugg_on, char console_on);
+void dbg_init(struct dbg* d, struct cpu* z, char debugg_on, char console_on);
 
 /*
     przekierowanie strumienia komunikatów I/O
 */
-extern void dbg_set_stream(dbg* d, char (*s_in)(void), void (*s_out)(char*));
+void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*));
 
 /*
     włączenie/wyłączenie debuggera
 */
-extern void dbg_don(dbg* d, char flag);
+void dbg_don(struct dbg* d, char flag);
 
 /*
     włączenie/wyłączenie konsoli
 */
-extern void dbg_con(dbg* d, char flag);
+void dbg_con(struct dbg* d, char flag);

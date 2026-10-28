@@ -20,33 +20,33 @@
 
 #pragma once
 
-typedef struct {
+struct rgbi {
     unsigned char ri;
     unsigned char gi;
     unsigned char bi;
     unsigned char ai; /* bajt nadmiarowy do kopiowania 32 bitowego */
-} rgbi;
+};
 
-typedef struct {
+struct rgbf {
     float rf;
     float gf;
     float bf;
-} rgbf;
+};
 
 struct screen {
     char msg[256];
     char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
-    rgbi palettei[16];
-    rgbf palettef[16];
+    struct rgbi palettei[16];
+    struct rgbf palettef[16];
     int width;
     int height;
     int bpp;
     int rgb_size[3];
     int dbf;
-    char* zx_patt; /* wzory bitowe - 6kB */
-    char* zx_attr; /* kolory kranu - 1kB */
-    char border_color;
-    char rfsh;
+    unsigned char* zx_patt; /* wzory bitowe - 6kB */
+    unsigned char* zx_attr; /* kolory kranu - 1kB */
+    unsigned char border_color;
+    char refresh;
     void* t0;
     void* t2;
     void* window; /* SDL_Window* */
@@ -64,16 +64,15 @@ struct screen {
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
 };
 
-extern char sdl_init; /* jeśli =1 tzn, że już była inicjowana SDL */
-extern void zx_make_palette(struct screen* zx, int nrm, int brt, int wht);
+void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
 
-extern void zx_scr_rfsh(struct screen* zx);
+void screen_refresh(struct screen* s);
 
 /* argv -> -fullscreen, -noframe */
-extern char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh);
+char screen_init(struct screen* s, int width, int height, int bpp, int argc, char** argv, int refresh);
 
-extern void zx_border(struct screen* zx, unsigned int color);
+void screen_border(struct screen* s, unsigned char color);
 
 extern void (*zx_kbrd)(int key, int state, void* kbptr);
 
-extern void zx_quit();
+void zx_quit();

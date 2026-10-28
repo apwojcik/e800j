@@ -23,27 +23,27 @@
 #include "virt_fdd.h"
 #include "i8272_fdc.h"
 
-int vfdd_open_image(vfdd_disk* dsk, char* path, char wmode) {
+int vfdd_open_image(struct vfdd_disk* dsk, char* path, char wmode) {
     if (!(dsk->f = fopen(path, wmode ? "r+" : "r"))) {
         if (!(dsk->f = fopen(path, "r")))
             return -1;
         wmode = 0;
     }
-    if (fread(&dsk->hdr, sizeof(vfdd_hdr), 1, dsk->f) != 1)
-        memset(&dsk->hdr, 0, sizeof(vfdd_hdr));
+    if (fread(&dsk->hdr, sizeof(struct vfdd_hdr), 1, dsk->f) != 1)
+        memset(&dsk->hdr, 0, sizeof(struct vfdd_hdr));
     dsk->stat = wmode ? 0 : VFDD_WPROT;
     dsk->sbyte = 0;
     dsk->lbytes = 0;
     return 0;
 }
 
-void vfdd_close_image(vfdd_disk* dsk) {
+void vfdd_close_image(struct vfdd_disk* dsk) {
     fclose(dsk->f);
     dsk->f = NULL;
     dsk->stat = VFDD_DOPEN;
 }
 
-int vfdd_seek_track(vfdd_disk* dsk, int trk, char hd) {
+int vfdd_seek_track(struct vfdd_disk* dsk, int trk, char hd) {
     long fsize;
 
     if (fseek(dsk->f, 0x0L, SEEK_END))
@@ -57,7 +57,7 @@ int vfdd_seek_track(vfdd_disk* dsk, int trk, char hd) {
     dsk->seek = 0x100;
     while (!feof(dsk->f)) {
         /* odczyt nagłówka ścieżki */
-        if (fread(&dsk->th, sizeof(vfdd_trk_hdr), 1, dsk->f) != 1)
+        if (fread(&dsk->th, sizeof(struct vfdd_trk_hdr), 1, dsk->f) != 1)
             return 1;
         if (dsk->th.tr_nb == trk && dsk->th.hd_nb == hd)
             break;
@@ -71,17 +71,17 @@ int vfdd_seek_track(vfdd_disk* dsk, int trk, char hd) {
     return feof(dsk->f);
 }
 
-int vfdd_seek_sector(vfdd_disk* dsk, int trk, int sec, int hd) {
+int vfdd_seek_sector(struct vfdd_disk* dsk, int trk, int sec, int hd) {
     int i;
     vfdd_seek_track(dsk, trk, hd);
-    if (fseek(dsk->f, dsk->seek + sizeof(vfdd_trk_hdr), SEEK_SET))
+    if (fseek(dsk->f, dsk->seek + sizeof(struct vfdd_trk_hdr), SEEK_SET))
         return 1;
 
     /* przeszukuje tablicę w poszukiwaniu właściwego sektora */
     for (i = 0; i < dsk->th.spt; i++) {
         if (feof(dsk->f))
             return -3;
-        if (fread(&dsk->sh, sizeof(vfdd_sec_hdr), 1, dsk->f) != 1)
+        if (fread(&dsk->sh, sizeof(struct vfdd_sec_hdr), 1, dsk->f) != 1)
             return -3;
         if (dsk->sh.tr_nb == trk && dsk->sh.sc_nb == sec && dsk->sh.hd_nb == hd) {
             /* ustawia na początek danych sektora */
@@ -96,7 +96,7 @@ int vfdd_seek_sector(vfdd_disk* dsk, int trk, int sec, int hd) {
     return -3; /* Nie znaleziono sektora */
 }
 
-int vfdd_read_sector(vfdd_disk* dsk) {
+int vfdd_read_sector(struct vfdd_disk* dsk) {
     int data;
     if (dsk->stat & VFDD_DOPEN || !dsk->f)
         return FDD_ERR_NODISK;
@@ -106,7 +106,7 @@ int vfdd_read_sector(vfdd_disk* dsk) {
     return data;
 }
 
-int vfdd_write_sector(vfdd_disk* dsk, unsigned char data) {
+int vfdd_write_sector(struct vfdd_disk* dsk, unsigned char data) {
     if (dsk->stat & VFDD_DOPEN || !dsk->f)
         return FDD_ERR_NODISK;
     if (dsk->stat & VFDD_WPROT)
@@ -121,7 +121,7 @@ int vfdd_write_sector(vfdd_disk* dsk, unsigned char data) {
 
 /***********************************/
 
-int vfdd_dsk_floppy(vfdd_disk* dsk, char action, char parm0, char parm1, char parm2, char* path) {
+int vfdd_dsk_floppy(struct vfdd_disk* dsk, char action, char parm0, char parm1, char parm2, char* path) {
     int ret = 0;
     switch (action) {
     case VFDD_INIT:

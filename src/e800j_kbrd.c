@@ -22,10 +22,10 @@
 
 static unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na współrzędne w matrycy */
 
-void key_init(struct e800j_kbrd* kb) {
+void key_init(struct keyboard* kb) {
     size_t i;
     /* zerowanie całej struktury */
-    for (i = 0; i < sizeof(struct e800j_kbrd); i++)
+    for (i = 0; i < sizeof(struct keyboard); i++)
         *((char*)kb + i) = 0;
     kb->mode = KB_MODE_PC;
     /* wypełnienie matrycy klawiatury wartościami 0xff - nie naciśnięty żaden klawisz */
@@ -33,7 +33,7 @@ void key_init(struct e800j_kbrd* kb) {
         *(kb->matrix + i) = 0xff;
 }
 
-unsigned char key_matrix(struct e800j_kbrd* kb, unsigned short int addr) {
+unsigned char key_matrix(struct keyboard* kb, unsigned short int addr) {
     /* skanowanie klawiatury dla linii KA0..KA8 */
     int i = 0x8000;
     unsigned char kbr = 0xff;
@@ -60,7 +60,7 @@ state:
     1 - wciśnięto
     0 - zwolniono
 */
-void key_matrix_update(struct e800j_kbrd* kb, unsigned char coord, unsigned char state) {
+void key_matrix_update(struct keyboard* kb, unsigned char coord, unsigned char state) {
     unsigned char col, row;
 
     row = (coord >> 4) & 0xf;
@@ -77,7 +77,7 @@ void key_matrix_update(struct e800j_kbrd* kb, unsigned char coord, unsigned char
         kb->matrix[row] |= col;
 }
 
-void key_update(struct e800j_kbrd* kb, int key_code, char state) {
+void key_update(struct keyboard* kb, int key_code, char state) {
     int key_idx = 0xff;
 
     if (kb->mode == KB_MODE_PC) {
@@ -191,7 +191,7 @@ unsigned int key_joymap(kbrd *kb,  unsigned int key, unsigned int nkey, char sta
 }
 */
 
-void key_set(struct e800j_kbrd* kb, unsigned int key, unsigned char kb_state) {
+void key_set(struct keyboard* kb, unsigned int key, unsigned char kb_state) {
     //    int nkey=key;
     //kb->joy_mode = JOY_KEM;
     /* mapowanie klawiszy specjalnych */

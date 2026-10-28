@@ -20,14 +20,11 @@
 
 #pragma once
 
-extern unsigned char mem_zx48_read(void* z, unsigned short int addr);
+struct elwro;
 
-extern void mem_zx48_write(void* z, unsigned short int addr, unsigned char data);
-
-extern unsigned char mem_zx128_read(void* z, unsigned short int addr);
-
-extern void mem_zx128_write(void* z, unsigned short int addr, unsigned char data);
-
-extern unsigned char mem_e800j_read(void* z, unsigned short int addr);
-
-extern void mem_e800j_write(void* z, unsigned short int addr, unsigned char data);
+unsigned char mem_zx48_read(void*, unsigned short addr);
+void mem_zx48_write(void*, unsigned short addr, unsigned char data);
+unsigned char mem_zx128_read(void*, unsigned short addr);
+void mem_zx128_write(void*, unsigned short addr, unsigned char data);
+unsigned char mem_e800j_read(const void*, unsigned short addr);
+void mem_e800j_write(const void*, unsigned short addr, unsigned char data);

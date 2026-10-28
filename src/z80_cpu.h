@@ -34,90 +34,67 @@
 #define LITTLE_ENDIAN
 #endif
 
-#ifndef __cplusplus
-#define Z80_CPU(z)	z->
-#define Z80_PTR		z
-#define Z80_CLASS
-#define Z80_STRUCT	z80 *z
-#define Z80_STRUCTC	z80 *z,
-#define Z80_STRUCT_NAME z80
-#define Z80_CLASS_NAME  typedef struct z80
-#else
-#define Z80_CPU(z)
-#define Z80_PTR		this
-#define Z80_CLASS	z80::
-#define Z80_STRUCT
-#define Z80_STRUCTC
-#define Z80_STRUCT_NAME
-#define Z80_CLASS_NAME  class z80
-#endif
-
-#ifndef ushort
-#define ushort unsigned short
-#endif
-
-#ifndef uchar
-#define uchar unsigned char
-#endif
-
-#define Z80_LAST_READ_BYTE(str,data)	((z80*)(str))->last_mem_rd = data
-#define Z80_LAST_WRITE_BYTE(str,data)	((z80*)(str))->last_mem_wr = data
+#define Z80_LAST_READ_BYTE(str,data)	((struct z80*)(str))->last_mem_rd = data
+#define Z80_LAST_WRITE_BYTE(str,data)	((struct z80*)(str))->last_mem_wr = data
 
 #define Z80_DATA_SIZE 1024
 
-Z80_CLASS_NAME {
-#ifdef __cplusplus
-    public :
-#endif
+typedef void (*debug_t)(const void*, int, unsigned char);
+typedef void (*memory_write_t)(const void*, unsigned short, unsigned char);
+typedef unsigned char (*memory_read_t)(const void*, unsigned short);
+typedef void (*io_write_t)(void*, unsigned short, unsigned char);
+typedef unsigned char (*io_read_t)(const void*, unsigned short);
+
+struct cpu {
     union {
         struct {
             /* rejestry p-value */
             union {
-                ushort* regs16[8];
+                unsigned short* regs16[8];
 
                 struct {
-                    ushort *AF_r, *BC_r, *DE_r, *HL_r, *IX_r, *IY_r, *SP_r, *PC_r;
+                    unsigned short *AF_r, *BC_r, *DE_r, *HL_r, *IX_r, *IY_r, *SP_r, *PC_r;
                 };
             };
 
             union {
-                uchar* regs8[20];
+                unsigned char* regs8[20];
 
                 struct {
-                    uchar *A_r, *F_r, *B_r, *C_r, *D_r, *E_r, *H_r, *L_r;
-                    uchar *XH_r, *XL_r, *YH_r, *YL_r, *I_r, *R_r;
-                    uchar *MHL_r, *MIX_r, *MIY_r, *MSP_r, *MBC_r, *MDE_r;
+                    unsigned char *A_r, *F_r, *B_r, *C_r, *D_r, *E_r, *H_r, *L_r;
+                    unsigned char *XH_r, *XL_r, *YH_r, *YL_r, *I_r, *R_r;
+                    unsigned char *MHL_r, *MIX_r, *MIY_r, *MSP_r, *MBC_r, *MDE_r;
                 };
             };
 
             /* Rejestry l-value */
             union {
                 struct {
-                    ushort AFs0, BCs0, DEs0, HLs0, AFs1, BCs1, DEs1, HLs1, IXs, IYs;
+                    unsigned short AFs0, BCs0, DEs0, HLs0, AFs1, BCs1, DEs1, HLs1, IXs, IYs;
                 };
 
                 struct {
-                    uchar Fs0, As0, Cs0, Bs0, Es0, Ds0, Ls0, Hs0, Fs1, As1;
-                    uchar Cs1, Bs1, Es1, Ds1, Ls1, Hs1, XLs, XHs, YLs, YHs;
+                    unsigned char Fs0, As0, Cs0, Bs0, Es0, Ds0, Ls0, Hs0, Fs1, As1;
+                    unsigned char Cs1, Bs1, Es1, Ds1, Ls1, Hs1, XLs, XHs, YLs, YHs;
                 };
             };
 
-            ushort SPs, PCs;
-            uchar Is, Rs;
-            uchar MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
+            unsigned short SPs, PCs;
+            unsigned char Is, Rs;
+            unsigned char MHLs, MIXs, MIYs, MSPs, MBCs, MDEs;
             /* rejestry niejawne CPU */
-            uchar iff1;
-            uchar iff2;
+            unsigned char iff1;
+            unsigned char iff2;
             /* stany CPU */
-            uchar imode; /* tryb przerwań                                       */
-            uchar intr; /* wywołanie przerwania maskowalnego                   */
-            uchar inmi; /* wywołanie przerwania niemaskowalnego                */
-            uchar halt; /* CPU jest w stanie HALT                              */
+            unsigned char imode; /* tryb przerwań                                       */
+            unsigned char intr; /* wywołanie przerwania maskowalnego                   */
+            unsigned char inmi; /* wywołanie przerwania niemaskowalnego                */
+            unsigned char halt; /* CPU jest w stanie HALT                              */
             /* flagi dodatkowe, pomocnicze */
-            uchar alt_rg; /* flaga określająca który bank rejestrów jest aktywny */
-            uchar alt_af; /* flaga określająca który bank AF jest aktywny  */
-            uchar ipend; /* jeśli ustawiona to instrukcja w toku */
-            uchar irupt; /* wykonuje przerwanie */
+            unsigned char alt_rg; /* flaga określająca, który bank rejestrów jest aktywny */
+            unsigned char alt_af; /* flaga określająca, który bank AF jest aktywny  */
+            unsigned char ipend; /* jeśli ustawiona to instrukcja w toku */
+            unsigned char irupt; /* wykonuje przerwanie */
             /* zmienne sterowania CPU */
             int pref_cb_ed;
             int pref_dd_fd;
@@ -129,62 +106,50 @@ Z80_CLASS_NAME {
             long int ticks; /* przechowuje ilość taktów */
             int _tic; /* ilość taktów na wykonaną instrukcję */
             /* parametry wywołania instrukcji */
-            uchar p0, p1, p2;
-            uchar b, c, t;
-            uchar a, o, x;
+            unsigned char p0, p1, p2;
+            unsigned char b, c, t;
+            unsigned char a, o, x;
             /* zmienne tymczasowe */
-            uchar dd0, dd1, dd3;
-            ushort dd2;
+            unsigned char dd0, dd1, dd3;
+            unsigned short dd2;
             /* dodatkowe informacje dla debuggera i flagi sterujące */
-            uchar int_off; /* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
-            uchar jmp_off; /* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
-            uchar dbg_on; /* załączenie debuggera */
-            uchar cpu_off; /* ustawienie ignoruje wywołanie funkcji CPU */
-            uchar djnz; /* cpu wykonuje instrukcję DJNZ */
-            ushort adrs; /* wartość PC pod którą zaczyna się instrukcja */
-            uchar cmd_type; /* typ instrukcji */
-            uchar reg80; /* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
-            uchar reg81; /* rejestr 8 bit   drugi parametr */
-            uchar regx0; /* rejestr 16 bit  pierwszy parametr */
-            uchar regx1; /* rejestr 16 bit  drugi parametr */
-            uchar exit; /* powoduje wyjście z pętli */
+            unsigned char int_off; /* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
+            unsigned char jmp_off; /* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
+            unsigned char dbg_on; /* załączenie debuggera */
+            unsigned char cpu_off; /* ustawienie ignoruje wywołanie funkcji CPU */
+            unsigned char djnz; /* cpu wykonuje instrukcję DJNZ */
+            unsigned short adrs; /* wartość PC pod którą zaczyna się instrukcja */
+            unsigned char cmd_type; /* typ instrukcji */
+            unsigned char reg80; /* rejestr 8 bit   pierwszy parametr lub warunek JP,JR,CALL,RET */
+            unsigned char reg81; /* rejestr 8 bit   drugi parametr */
+            unsigned char regx0; /* rejestr 16 bit  pierwszy parametr */
+            unsigned char regx1; /* rejestr 16 bit  drugi parametr */
+            unsigned char exit; /* powoduje wyjście z pętli */
             char dd; /* stała 8 bitowa  */
-            ushort nn; /* stała 16 bitowa */
-            uchar last_in_data; /* ostatnio pobrana dana z portu */
-            ushort last_in_addr; /* ostatni adres pobierania danych z portu */
-            uchar last_out_data; /* ostatnio wpisana dana do portu */
-            ushort last_out_addr; /* ostatni adres odwołania do portu wyjściowego */
-            ushort last_mem_rd; /* ostatnio odczytana dana z pamięci */
-            ushort last_mem_wr; /* ostatnio zapisana dana do pamięci */
+            unsigned short nn; /* stała 16 bitowa */
+            unsigned char last_in_data; /* ostatnio pobrana dana z portu */
+            unsigned short last_in_addr; /* ostatni adres pobierania danych z portu */
+            unsigned char last_out_data; /* ostatnio wpisana dana do portu */
+            unsigned short last_out_addr; /* ostatni adres odwołania do portu wyjściowego */
+            unsigned short last_mem_rd; /* ostatnio odczytana dana z pamięci */
+            unsigned short last_mem_wr; /* ostatnio zapisana dana do pamięci */
             unsigned int nested; /* wskazuje zagłębienie podprogramów */
         int    force_in;		/* jesli > 0 wartośc będzie odczytana przez IN */
-        }; /*koniec struktury */
-        char z80_data[Z80_DATA_SIZE]; /* maksymalny dopuszczalny rozmiar pola danych */
-    }; /* koniec unii */
-#ifdef __cplusplus
-    public :
-    void z80_reset();
-    void z80_nmi();
-    void z80_int(uchar* bus);
-    void z80_loop(int cnt, int call, void* param);
+        }; // koniec struktury
+        char z80_data[Z80_DATA_SIZE]; // maksymalny dopuszczalny rozmiar pola danych
+    }; // koniec unii
 
-    virtual void callback(void* param);
-    virtual uchar mem_rd(void* ptr, ushort addr); /* funkcja odczytu z pamięci */
-    virtual void mem_wr(void* ptr, ushort addr, uchar data); /* funkcja zapisu do pamięci */
-    virtual uchar input(void* ptr, ushort addr); /* funkcja odczytu IO        */
-    virtual void output(void* ptr, ushort addr, uchar data); /* funkcja zapisu do IO      */
-    virtual void debug(void* ptr, int mode, uchar data); /* funkcja debuggera         */
-#else
     /* funkcje zewnętrzne */
-    uchar (*mem_rd)(void* ptr, ushort addr); /* funkcja odczytu z pamięci */
-    void (*mem_wr)(void* ptr, ushort addr, uchar data); /* funkcja zapisu do pamięci */
-    uchar (*input)(void* ptr, ushort addr); /* funkcja odczytu IO        */
-    void (*output)(void* ptr, ushort addr, uchar data); /* funkcja zapisu do IO      */
-    void (*debug)(void* ptr, int mode, uchar data); /* funkcja debuggera         */
-#endif
-    void* ptr; /* dowolny wskaźnik          */
-    void* ptx; /* dowolny wskaźnik          */
-} Z80_STRUCT_NAME;
+    debug_t debug;               // funkcja debuggera
+
+    memory_read_t memory_read;   // funkcja odczytu z pamięci
+    memory_write_t memory_write; // funkcja zapisu do pamięci
+    io_read_t io_read;           // funkcja odczytu IO
+    io_write_t io_write;         // funkcja zapisu do IO
+
+    void* ptr; // dowolny wskaźnik
+    void* ptx; // dowolny wskaźnik
+};
 
 /* ID instrukcji i index w tabeli DEB_DEC_TABL */
 enum {
@@ -209,53 +174,17 @@ enum {
     D_TESTIN = 0xfd
 };
 
-#define TAB_REGS8_NME { "A","F","B","C","D","E","H","L","XH","XL"\
-            ,"YH","YL","I","R","(HL)","(IX)","(IY)","(SP)","(BC)","(DE)" }
-#define TAB_REGSX_NME { "AF","BC","DE","HL","IX","IY","SP","PC","AF","AF'" }
-#define TAB_RCND_NME  { "","NZ","Z","NC","C","PO","PE","P","M" }
-#define DEB_DEC_TABL	\
-{\
-    "-","NOP","LD   %r,%z","LD   %r,%n","LD   %r,(%m)","LD   (%m),%r","LD   (%m),%f","LD   (%N),%r",\
-    "LD   %R,%Z","LD   %R,%N  ","LD   %R,(%N)","LD   (%N),%R","HALT","IM   %n","DI","EI","JR   %c%N",\
-    "JP   %c%N","DJNZ %N","CALL %c%N","RST  %n","RET  %c","RETI","RETN","POP  %R","PUSH %R","EXX",\
-    "EX   %R,%Z","DAA","SCF","CCF","CPL","BIT  %b,%r","BIT  %b,(%m)","RES  %b,%r","RES  %b,(%m)",\
-    "SET  %b,%r","SET  %b,(%m)","AND  %r","AND  %n","AND  (%m)","OR   %r","OR   %n","OR   (%m)",\
-    "XOR  %r","XOR  %n","XOR  (%m)","RLC  %r","RLC  (%m)","RRC  %r","RRC  (%m)","RL   %r","RL   (%m)",\
-    "RR   %r","RR   (%m)","SLA  %r","SLA  (%m)","SRA  %r","SRA  (%m)","SLI  %r","SLI  (%m)","SRL  %r",\
-    "SRL  (%m)","RRD","RLD","IN   A,(%n)","OUT  (%n),A","IN   %r,(C)","OUT  (C),%r","ADD  %r",\
-    "ADD  %n","ADD  (%m)","ADC  %r","ADC  %n","ADC  (%m)","SUB  %r","SUB  %n","SUB  (%m)","SBC  %r",\
-    "SBC  %n","SBC  (%m)","CP   %r","CP   %n","CP   (%m)","INC  %r","INC  (%m)","DEC  %r","DEC  (%m)",\
-    "INC  %R","DEC  %R","NEG","ADD  %R,%Z","ADC  %R,%Z","SBC  %R,%Z","LD%w","JP  (%R)","LD %r,(%N)",\
-    "EX   (SP),%R", "CP%w", "IN%w", "OUT%w"\
-}
-
-#ifndef __cplusplus
-/* reset CPU */
-
-extern void z80_init(
-    z80*, /* wskaźnik na objekt z80  */
-    uchar (*mem_rd)(void* z, ushort addr), /* funkcja odczytu pamięci */
-    void (*mem_wr)(void* z, ushort addr, uchar data), /* funkcja zapisu pamięci  */
-    uchar (*io_rd)(void* z, ushort addr), /* funkcja odczytu I/O     */
-    void (*io_wr)(void* z, ushort addr, uchar data), /* funkcja zapisu I/O      */
-    void* ptr, /* wskaźnik do własnego użytku 1 */
-    void* ptx /* wskaźnik do własnego użytku 1 */
-);
-
-extern void z80_reset(z80*);
-
-extern void z80_step(z80*);
+void z80_init(struct cpu*, memory_read_t, memory_write_t, io_read_t, io_write_t, void* ptr, void* ptx);
+void z80_reset(struct cpu*);
+void z80_step(struct cpu*);
 
 /* wykonuje pętlę zadaną ilością taktów, w trakcie wywołuje funkcję
-   callback z parametrem callback_param (jeśli nie NULL)
+   callback z parametrem callback_param (jesli nie NULL)
    icall ilość obiegów pętli, po których zostanie wywołany callback
    zwraca ilość nadmiarowych taktów, nie mieszczacych się w zadanych ilościach taktów do wykonania
    funkcja callback przyjmuje dwa parametry, pierwszym z nich jest przepisywany wskaźnik
    callback_param, zaś drugim liczba taktów CPU.
 */
-extern void z80_loop(z80*, int cnt, int icall, void (*callback)(z80*, void*), void* callback_param);
-
-extern void z80_nmi(z80*);
-
-extern void z80_int(z80*, uchar* bus);
-#endif
+void z80_loop(struct cpu*, int cnt, int icall, void (*callback)(struct cpu*, void*), void* callback_param);
+void z80_nmi(struct cpu*);
+void z80_int(struct cpu*, unsigned char* bus);

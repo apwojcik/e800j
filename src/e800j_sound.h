@@ -40,9 +40,10 @@ struct sound {
     int scale; // skalowanie długości okresów
     long old_ticks;
     char old_r373;
+    const struct cpu* cpu;
 };
 
-void snd_beeper(char r373, struct z80* z);
-void snd_beeper_play();
-void snd_init(const struct elwro* e);
-void snd_free_buffers(struct sound* s);
+void snd_beeper(struct sound* snd, char r373);
+void snd_beeper_play(struct sound* snd);
+void snd_init(struct sound* snd, const struct cpu* cpu);
+void snd_free_buffers(struct sound* snd);
