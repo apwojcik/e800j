@@ -23,10 +23,9 @@
 static unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na współrzędne w matrycy */
 
 void key_init(struct keyboard* kb) {
-    int i;
+    size_t i;
     /* zerowanie całej struktury */
-    for (i = 0; i < sizeof(struct keyboard); i++)
-        *((char*)kb + i) = 0;
+    memset(kb, 0, sizeof(*kb));
     kb->mode = KB_MODE_PC;
     /* wypełnienie matrycy klawiatury wartościami 0xff - nie naciśnięty żaden klawisz */
     for (i = 0; i < sizeof(kb->matrix); i++)
@@ -61,29 +60,25 @@ state:
     0 - zwolniono
 */
 static void key_matrix_update(struct keyboard* kb, unsigned char coord, unsigned char state) {
-    unsigned char col, row;
+    const unsigned char row = (coord >> 4) & 0xf;
+    const unsigned char col = 1 << (coord & 0x7);
 
-    row = (coord >> 4) & 0xf;
-    col = coord & 0x7;
-
-    col = 0x01 << col;
-
-    if (row >= KB_ROWS)
-        return;
-
-    if (state)
-        kb->matrix[row] &= ~col;
-    else
-        kb->matrix[row] |= col;
+    if (row < KB_ROWS) {
+        if (state) {
+            kb->matrix[row] &= ~col;
+        } else {
+            kb->matrix[row] |= col;
+        }
+    }
 }
 
-void key_update(struct keyboard* kb, int key_code, char state) {
+void key_update(struct keyboard* kb, int key, const int state) {
     int key_idx = 0xff;
 
     if (kb->mode == KB_MODE_PC) {
-        if (key_code < KEY_CONTROL_CNT)
-            key_idx = key_code;
-        switch (key_code) {
+        if (key < KEY_CONTROL_CNT)
+            key_idx = key;
+        switch (key) {
         case '~':
             key_idx = KB_ROOF;
             break;
@@ -114,56 +109,60 @@ void key_update(struct keyboard* kb, int key_code, char state) {
         case '=':
             key_idx = KB_PLUS;
             break;
+        default:
+            break;
         }
-        if (key_code == KB_ALT_R) {
+        if (key == KB_ALT_R) {
             kb->alt_r = state;
             return;
         }
         if (kb->alt_r) {
-            switch (key_code) {
+            switch (key) {
             case 'a':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_A_;
                 break;
             case 'c':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_C_;
                 break;
             case 'e':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_E_;
                 break;
             case 'l':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_L_;
                 break;
             case 'n':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_N_;
                 break;
             case 'o':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_O_;
                 break;
             case 's':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_S_;
                 break;
             case 'z':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_Z_;
                 break;
             case 'x':
-                key_code = 0xff;
+                key = 0xff;
                 key_idx = KB_Z__;
+                break;
+            default:
                 break;
             }
         }
     }
-    if ((key_code >= 'a') && (key_code <= 'z'))
-        key_idx = key_code - 'a' + KB_LET_START;
-    if ((key_code >= '0') && (key_code <= '9'))
-        key_idx = key_code - '0' + KB_DIG_START;
+    if ((key >= 'a') && (key <= 'z'))
+        key_idx = key - 'a' + KB_LET_START;
+    if ((key >= '0') && (key <= '9'))
+        key_idx = key - '0' + KB_DIG_START;
     if (key_idx >= KB_ALL_CNT)
         return;
     key_matrix_update(kb, keymap_table[key_idx], state);
@@ -191,7 +190,7 @@ unsigned int key_joymap(struct keyboard *kb,  unsigned int key, unsigned int nke
 }
 */
 
-void key_set(struct keyboard* kb, int key, char kb_state) {
+void key_set(struct keyboard* kb, int key, const int state) {
     //    int nkey=key;
     //kb->joy_mode = JOY_KEM;
     /* mapowanie klawiszy specjalnych */
@@ -258,13 +257,15 @@ void key_set(struct keyboard* kb, int key, char kb_state) {
     case E8K_TAB:
         key = KB_TAB;
         break;
+    default:
+        break;
     }
 
     //    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
     if ((int)key < 0)
         return;
 
-    key_update(kb, key, kb_state);
+    key_update(kb, key, state);
 }
 
 //unsigned char key_kempston(struct keyboard *kb){ return kb->in1f & 0x1f; }

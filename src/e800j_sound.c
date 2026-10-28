@@ -60,10 +60,9 @@ static void snd_init_rbuffer(struct sound* w, int lbsize) {
 
 /* kopiuje len bajtów z bufora rbuffer i zwraca ilość skopiowanych bajtów */
 static char snd_rbuffer_pop(struct sound* w) {
-    char a;
     if (w->tail == w->head)
         return w->rbuffer[w->tail];
-    a = w->rbuffer[w->tail++];
+    const char a = w->rbuffer[w->tail++];
     if (w->tail == w->size)
         w->tail = 0;
     return a;
@@ -88,12 +87,11 @@ void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amoun
     (void) total_amount;
     struct sound* w = (struct sound*)ud;
     Uint8 mix[SND_CHUNK];
-    int i, n;
 
     while (additional_amount > 0) {
-        n = additional_amount < SND_CHUNK ? additional_amount : SND_CHUNK;
+        const int n = additional_amount < SND_CHUNK ? additional_amount : SND_CHUNK;
         /* kopiowanie n bajtów z bufora kołowego do liniowego */
-        for (i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
             w->lbuffer[i] = snd_rbuffer_pop(w);
         /* zmiksowanie ciszy z buforem liniowym i przekazanie do karty */
         memset(mix, 0x80, n); /* cisza dla AUDIO_U8 */
@@ -132,28 +130,25 @@ void snd_init(struct sound* snd, const struct cpu* cpu) {
 }
 
 void snd_beeper(struct sound* snd, char r373) {
-    int i, smpls;
-    double period, data;
-
     if (snd->nosound)
         return;
     if (!((r373 ^ snd->old_r373) & 0x10))
         return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdą */
     snd->old_r373 = r373;
-    period = (snd->cpu->ticks - snd->old_ticks) / (float)snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
-    smpls = period * 256;
+    double period = (snd->cpu->ticks - snd->old_ticks) / (float)snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
+    const int smpls = period * 256;
     snd->old_ticks = snd->cpu->ticks;
 
     r373 &= 0x10;
     if (snd->alias) {
-        data = r373 ? 127 : -128;
+        const double data = r373 ? 127 : -128;
         period = 3.14 / smpls;
-        for (i = 0; i < smpls; i++)
+        for (int i = 0; i < smpls; i++)
             snd_rbuffer_push(snd, 128 + data * sin(i * period));
     }
     else {
-        data = r373 ? 0 : 0xff;
-        for (i = 0; i < smpls; i++)
+        const double data = r373 ? 0 : 0xff;
+        for (int i = 0; i < smpls; i++)
             snd_rbuffer_push(snd, data);
     }
 }

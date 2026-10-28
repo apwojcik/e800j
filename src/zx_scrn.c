@@ -33,6 +33,8 @@
 #include "e800j_sound.h"
 #include "e800j_file.h"
 #include "e800j_msg.h"
+#include "zx_scrn.h"
+#include "e800j_fdc.h"
 
 static char sdl_init_ = {};
 
@@ -179,7 +181,7 @@ static void zx_free_rfsh(int n, void* zx) {
     SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t0);
 }
 
-static void zx_free_cpu_rfsh(int n, void* zx) {
+static void zx_free_cpu_refresh(int n, void* zx) {
     (void)n;
     SDL_RemoveTimer((SDL_TimerID)((struct elwro*)zx)->t1);
 }
@@ -189,9 +191,9 @@ static void zx_free_flash(int n, void* zx) {
     SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t2);
 }
 
-char screen_init(struct screen* s, int width, int height, int bpp, int argc, char** argv, int rfsh) {
-    int i;
-    if ((i = file_lookup_option(argc, argv, "-bpp")))
+char screen_init(struct screen* s, int width, int height, int bpp, const int argc, const char** argv, const int refresh) {
+    int i = file_lookup_option(argc, argv, "-bpp");
+    if (i)
         file_option_param(argc, argv, i, 0, 32, &bpp);
     if ((i = file_lookup_option(argc, argv, "-xres")))
         file_option_param(argc, argv, i, 256, 2048, &width);
@@ -306,12 +308,12 @@ char screen_init(struct screen* s, int width, int height, int bpp, int argc, cha
     */
     screen_glinit(s);
 
-    if (!(s->t0 = SDL_AddTimer(rfsh, zx_refresh, s))) {
+    if (!(s->t0 = SDL_AddTimer(refresh, zx_refresh, s))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
     on_exit(zx_free_rfsh, (void*)s);
-    msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", rfsh, (1000 / rfsh));
+    msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", refresh, (1000 / refresh));
 
     if (!(s->t2 = SDL_AddTimer(s->flash, zx_flash, s))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
@@ -353,7 +355,7 @@ void zx_main(struct elwro* e) {
             msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
             exit(0);
         }
-        on_exit(zx_free_cpu_rfsh, (void*)e);
+        on_exit(zx_free_cpu_refresh, (void*)e);
         msg_printf(MSG_MSG, "Set cpu refresh to     : %ims ( %iHz )\n", e->cpu_rfsh, (1000 / e->cpu_rfsh));
         msg_printf(MSG_MSG, "Set cpu tics/refresh to: %i\n", e->tr);
         msg_printf(MSG_MSG, "Set cpu interrupt to   : %i tics\n", e->ifreq);
@@ -373,14 +375,16 @@ void zx_main(struct elwro* e) {
             return;
         case SDL_EVENT_USER:
             if (e->scn->refresh) {
-                e->scn->refresh = 0;
                 screen_refresh(e->scn);
+                e->scn->refresh = 0;
             }
             if (e->tcpu) {
                 e->tcpu = 0;
                 z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);
             }
             fdc_clk(e->fdc);
+            break;
+        default:
             break;
         }
     }
