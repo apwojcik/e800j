@@ -81,7 +81,7 @@ enum {
     komunikaty konsolowe I/O są wyprowadzane domyślnie na stdin/stdout, chyba
     że zostanie użyta funkcja dbg_set_stream.
 */
-void dbg_init(struct dbg* d, struct cpu* z, char debugg_on, char console_on);
+void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on);
 
 /*
     przekierowanie strumienia komunikatów I/O

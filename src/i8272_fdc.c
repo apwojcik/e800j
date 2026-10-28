@@ -28,7 +28,7 @@ void i8272_command(struct i8272* fdc, char plc);
 void i8272_result(struct i8272* fdc, char plc);
 void i8272_write_data(struct i8272* fdc, char mode);
 
-int i8272_dummy_drive(void* f, void* param, unsigned char action, unsigned char wdata) {
+int i8272_dummy_drive(const void* f, void* param, unsigned char action, unsigned char wdata) {
     (void)f;
     (void)param;
     (void)action;
@@ -38,7 +38,7 @@ int i8272_dummy_drive(void* f, void* param, unsigned char action, unsigned char 
 
 /**************************************************************************************************/
 
-void i8272_fdd_connect(struct i8272* fdc, int (*drive)(void*, void*, unsigned char, unsigned char), void* f0,
+void i8272_fdd_connect(struct i8272* fdc, int (*drive)(const void*, void*, unsigned char, unsigned char), void* f0,
     void* f1, void* f2, void* f3)
 {
     fdc->drive = drive;

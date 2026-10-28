@@ -116,7 +116,7 @@ void snd_init(struct sound* snd, const struct cpu* cpu) {
     spec.format = SDL_AUDIO_U8; /* format danych    */
     spec.channels = snd->chn; // ilość kanałów
 
-    snprintf(samples, sizeof(samples), "%d", snd->len);
+    snprintf(samples, sizeof(samples), "%d", snd->length);
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
 
     if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, snd))) {

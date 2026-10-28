@@ -75,28 +75,27 @@ static unsigned char prom_io[512] = {
 };
 
 unsigned char io_read(const void* p, unsigned short addr) {
-    const struct elwro* e = p;
-    unsigned char adec = ~prom_io[addr & 0x1ff];
-    unsigned char dout = 0xff;
+    const struct elwro* e = ((struct cpu*)(p))->ptr;
+    const unsigned char adec = ~prom_io[addr & 0x1ff];
 
     if (adec & PORT_CFE) {
-        dout = key_matrix(e->kbd, addr);
+        return key_matrix(e->kbd, addr);
     }
-
-    if (adec & PORT_CSFDC)
-        dout = fdc_i8272_read(e->fdc, addr & 0x01);
-
-    if (adec & PORT_CS51) {
+    if (adec & PORT_CSFDC) {
+        return fdc_i8272_read(e->fdc, addr & 0x01);
+    }
+    /* if (adec & PORT_CS51) {
     }
     if (adec & PORT_CS55) {
     }
-
-    return dout;
+    if (adec & PORT_IAL) {
+    }*/
+    return 0xff;
 }
 
 void io_write(void* p, const unsigned short addr, unsigned char data) {
-    struct elwro* e = p;
-    unsigned char adec = ~prom_io[addr & 0x1ff];
+    struct elwro* e = ((struct cpu*)(p))->ptr;
+    const unsigned char adec = ~prom_io[addr & 0x1ff];
 
     if (adec & PORT_CF7) {
         e->mem_mask = (data & 0xc0) | ((data & 0x20) << 3);
@@ -128,5 +127,7 @@ void io_write(void* p, const unsigned short addr, unsigned char data) {
     if (adec & PORT_CS51) {
     }
     if (adec & PORT_CS55) {
+    }
+    if (adec & PORT_IAL) {
     }
 }

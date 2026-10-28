@@ -25,6 +25,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include "zx_scrn.h"
+#include <SDL3/SDL_video.h>
 #include "e800j.h"
 #include "z80_cpu.h"
 #include "e800j_kbrd.h"
@@ -51,7 +52,7 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
 }
 
 static void screen_draw(struct screen* s) {
-    glDrawPixels(256, 192,GL_RGB,GL_UNSIGNED_BYTE, s->scr_buffer);
+    glDrawPixels(256, 192, GL_RGB,GL_UNSIGNED_BYTE, s->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
@@ -61,17 +62,17 @@ static void screen_draw(struct screen* s) {
 static void screen_transform(struct screen* s) {
     char* fb = s->scr_buffer;
     struct rgbi* pal = s->palettei;
-    unsigned char* attr = s->zx_attr;
-    unsigned char* x = s->zx_patt;
-    short yy, xx, aa, i, pt = 0;
-    char inv = s->inverse ? -1 : 0;
+    const unsigned char* attr = s->zx_attr;
+    const unsigned char* patt = s->zx_patt;
+    short pt = 0;
+    const char inv = s->inverse ? (char)0xff : 0;
 
-    for (i = 0; i < 6144; i++) {
-        yy = i >> 5;
-        xx = (i & 0x1f);
-        aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38))
+    for (short i = 0; i < 6144; i++) {
+        const short yy = (short)(i >> 5);
+        const short xx = (short)(i & 0x1f);
+        short aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38))
             ^ ((~(yy << 1) & 0x80) | 0x3f)) << 5;
-        pt = *(x + aa + xx) << 2;
+        pt = *(patt + aa + xx) << 2;
         aa = (23 - (yy >> 3)) << 5;
         aa = *(attr + aa + xx);
         if (aa & 0x80)
@@ -143,55 +144,53 @@ static void screen_glinit(struct screen* s) {
     SDL_GL_SwapWindow(s->window);
 }
 
-static Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
-    (void)id;
+static Uint32 zx_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
+    (void)timerID;
     SDL_Event event;
-    SDL_zero(event);
-    if (((struct screen*)zx)->refresh == 1)
+    struct screen* s = userdata;
+    if (s->refresh == 1)
         return interval;
-    ((struct screen*)zx)->refresh = 1;
+    s->refresh = 1;
     event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
 }
 
-static Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
-    (void)id;
+static Uint32 zx_cpu_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
+    (void)timerID;
     SDL_Event event;
-    SDL_zero(event);
-    if (((struct elwro*)z)->tcpu == 1)
+    struct elwro* e = userdata;
+    if (e->tcpu == 1)
         return interval;
-    ((struct elwro*)z)->tcpu = 1;
+    e->tcpu = 1;
     event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
 }
 
-static Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
-    (void)id;
+static Uint32 zx_flash(void* zx, SDL_TimerID timerID, Uint32 interval) {
+    (void)timerID;
     ((struct screen*)zx)->inverse = !((struct screen*)zx)->inverse;
     return interval;
 }
 
 static void zx_free_rfsh(int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t0);
+    SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t0);
 }
 
 static void zx_free_cpu_rfsh(int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct elwro*)zx)->t1);
+    SDL_RemoveTimer((SDL_TimerID)((struct elwro*)zx)->t1);
 }
 
 static void zx_free_flash(int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t2);
+    SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t2);
 }
 
-char screen_init(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
-    int i, ver;
-    SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL;
-
+char screen_init(struct screen* s, int width, int height, int bpp, int argc, char** argv, int rfsh) {
+    int i;
     if ((i = file_lookup_option(argc, argv, "-bpp")))
         file_option_param(argc, argv, i, 0, 32, &bpp);
     if ((i = file_lookup_option(argc, argv, "-xres")))
@@ -199,9 +198,9 @@ char screen_init(struct screen* zx, int width, int height, int bpp, int argc, ch
     if ((i = file_lookup_option(argc, argv, "-yres")))
         file_option_param(argc, argv, i, 256, 2048, &height);
 
-    zx->width = width;
-    zx->height = height;
-    zx->bpp = bpp;
+    s->width = width;
+    s->height = height;
+    s->bpp = bpp;
 
     /* zainicjowanie ekranu SDL */
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -209,11 +208,17 @@ char screen_init(struct screen* zx, int width, int height, int bpp, int argc, ch
         return 1;
     }
 
-    ver = SDL_GetVersion();
     msg_printf(MSG_MSG, "SDL initialized\n");
-    msg_printf(MSG_MSG, "SDL compiled version: %d.%d.%d\n", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    const int compiled = SDL_VERSION;
+    msg_printf(MSG_MSG, "SDL compiled version: %d.%d.%d\n",
+        SDL_VERSIONNUM_MAJOR(compiled),
+        SDL_VERSIONNUM_MINOR(compiled),
+        SDL_VERSIONNUM_MICRO(compiled));
+    const int linked = SDL_GetVersion();
     msg_printf(MSG_MSG, "SDL linked version: %d.%d.%d\n",
-               SDL_VERSIONNUM_MAJOR(ver), SDL_VERSIONNUM_MINOR(ver), SDL_VERSIONNUM_MICRO(ver));
+        SDL_VERSIONNUM_MAJOR(linked),
+        SDL_VERSIONNUM_MINOR(linked),
+        SDL_VERSIONNUM_MICRO(linked));
 
     if (sdl_init_ == 0) {
         atexit(SDL_Quit);
@@ -222,47 +227,55 @@ char screen_init(struct screen* zx, int width, int height, int bpp, int argc, ch
 
     /* automatyczne ustawienie głębi kolorów */
     if (bpp == 0) {
-        const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
+        const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
         if (mode && SDL_BITSPERPIXEL(mode->format) <= 8)
-            zx->bpp = 8;
+            s->bpp = 8;
         else
-            zx->bpp = 16;
+            s->bpp = 16;
     }
 
+    Uint32 video_flags = SDL_WINDOW_OPENGL;
     if (file_lookup_option(argc, argv, "-fs"))
-        window_flags |= SDL_WINDOW_FULLSCREEN;
+        video_flags |= SDL_WINDOW_FULLSCREEN;
     if (file_lookup_option(argc, argv, "-nf"))
-        window_flags |= SDL_WINDOW_BORDERLESS;
+        video_flags |= SDL_WINDOW_BORDERLESS;
 
     /* rozmiar bitowy składowych koloru */
-    switch (zx->bpp) {
+    switch (s->bpp) {
     case 8:
-        zx->rgb_size[0] = 3;
-        zx->rgb_size[0] = 3;
-        zx->rgb_size[0] = 2;
+        s->rgb_size[0] = 3;
+        s->rgb_size[1] = 3;
+        s->rgb_size[2] = 2;
         break;
     case 15:
     case 16:
-        zx->rgb_size[0] = 5;
-        zx->rgb_size[0] = 5;
-        zx->rgb_size[0] = 5;
+        s->rgb_size[0] = 5;
+        s->rgb_size[1] = 5;
+        s->rgb_size[2] = 5;
         break;
     default:
-        zx->rgb_size[0] = 8;
-        zx->rgb_size[0] = 8;
-        zx->rgb_size[0] = 8;
+        s->rgb_size[0] = 8;
+        s->rgb_size[1] = 8;
+        s->rgb_size[2] = 8;
         break;
     }
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, zx->rgb_size[0]);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, zx->rgb_size[0]);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, zx->rgb_size[0]);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, s->rgb_size[0]);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, s->rgb_size[1]);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, s->rgb_size[2]);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     /* inicjowanie trybu graficznego */
-    if (!(zx->window = SDL_CreateWindow("Elwro 800 Junior", zx->width, zx->height, window_flags))
-        || !(zx->glctx = SDL_GL_CreateContext(zx->window))) {
+    SDL_Window* window = SDL_CreateWindow("Elwro 800 Junior", s->width, s->height, video_flags);
+    if (window == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't set GL mode: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    s->window = window;
+    s->glctx = SDL_GL_CreateContext(window);
+    if (s->glctx == 0) {
+        msg_printf(MSG_CRITICAL_ERROR, "Couldn't create GL context: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
@@ -273,31 +286,39 @@ char screen_init(struct screen* zx, int width, int height, int bpp, int argc, ch
     msg_printf(MSG_MSG, "Version    : %s\n", glGetString(GL_VERSION));
 
     /* pobranie informacji o bieżącym trybie graficznym */
-    SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &zx->rgb_size[0]);
-    SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &zx->rgb_size[1]);
-    SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &zx->rgb_size[2]);
-    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &zx->bpp);
-    SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &zx->dbf);
-    msg_printf(MSG_MSG, "SDL GL RED SIZE    : %d\n", zx->rgb_size[0]);
-    msg_printf(MSG_MSG, "SDL GL GREEN SIZE  : %d\n", zx->rgb_size[1]);
-    msg_printf(MSG_MSG, "SDL GL BLUE SIZE   : %d\n", zx->rgb_size[2]);
-    msg_printf(MSG_MSG, "SDL GL DEPTH SIZE  : %d\n", zx->bpp);
-    msg_printf(MSG_MSG, "SDL GL DOUBLEBUFFER: %s\n", zx->dbf ? "Yes" : "No");
-    screen_glinit(zx);
+    SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &s->rgb_size[0]);
+    SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &s->rgb_size[1]);
+    SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &s->rgb_size[2]);
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &s->bpp);
+    SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &s->dbf);
+    msg_printf(MSG_MSG, "SDL GL RED SIZE     : %d\n", s->rgb_size[0]);
+    msg_printf(MSG_MSG, "SDL GL GREEN SIZE   : %d\n", s->rgb_size[1]);
+    msg_printf(MSG_MSG, "SDL GL BLUE SIZE    : %d\n", s->rgb_size[2]);
+    msg_printf(MSG_MSG, "SDL GL DEPTH SIZE   : %d\n", s->bpp);
+    msg_printf(MSG_MSG, "SDL GL DOUBLE BUFFER: %s\n", s->dbf ? "Yes" : "No");
+    /*
+        SDL_VERSION(&(info.version));
+        if( SDL_GetWMInfo(&info) == -1){
+        printf("(EE)Error getting WM info: %s\n",SDL_GetError());
+        exit(0);
+        }
+        XReparentWindow(info.info.x11.display, info.info.x11.wmwindow, zx->parent,0,0 );
+    */
+    screen_glinit(s);
 
-    if (!(zx->t0 = (void*)(uintptr_t)SDL_AddTimer(rfsh, zx_refresh, zx))) {
+    if (!(s->t0 = SDL_AddTimer(rfsh, zx_refresh, s))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
-    on_exit(zx_free_rfsh, (void*)zx);
+    on_exit(zx_free_rfsh, (void*)s);
     msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", rfsh, (1000 / rfsh));
 
-    if (!(zx->t2 = (void*)(uintptr_t)SDL_AddTimer(zx->flash, zx_flash, zx))) {
+    if (!(s->t2 = SDL_AddTimer(s->flash, zx_flash, s))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
-    on_exit(zx_free_flash, (void*)zx);
-    msg_printf(MSG_MSG, "Set flash time         : %ims ( %iHz )\n", zx->flash, (1000 / zx->flash));
+    on_exit(zx_free_flash, (void*)s);
+    msg_printf(MSG_MSG, "Set flash time         : %ims ( %iHz )\n", s->flash, (1000 / s->flash));
 
     return 0;
 }
@@ -327,7 +348,7 @@ void zx_main(struct elwro* e) {
 
     if (ik != 0) {
         ik = 0;
-        e->t1 = SDL_AddTimer(e->cpu_rfsh, zx_cpu_rfsh, e);
+        e->t1 = SDL_AddTimer(e->cpu_rfsh, zx_cpu_refresh, e);
         if (e->t1 == 0) {
             msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
             exit(0);

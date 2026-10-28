@@ -56,7 +56,7 @@ struct i8272 {
     /* sprzęgnięcie z emulacją napędu */
     void* parameter[4]; // parametr wywołania funkcji napędu
     int (*drive)( // funkcja obsługi napędu
-        void* i8272, //      struktura FDC
+        const void* i8272, //      struktura FDC
         void* fdd, //      parametr napędu (struktura opisu dyskietki)
         unsigned char action, //      kod operacji
         unsigned char wdata //      dane do zapisu
@@ -121,7 +121,7 @@ unsigned char i8272_in(struct i8272* fdc, unsigned char address_bit);
 */
 void i8272_fdd_connect(
     struct i8272* fdc, /* struktura FDC */
-    int (*drive)(void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
+    int (*drive)(const void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
     void*, void*, void*, void* /* struktury napędów 0,1,2,3 */
 );
 

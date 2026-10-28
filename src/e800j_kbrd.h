@@ -75,7 +75,7 @@ void key_init(struct keyboard*);
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-void key_set(struct keyboard*, unsigned int key, unsigned char state);
+void key_set(struct keyboard*, int key, char state);
 /*
     ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
@@ -83,7 +83,7 @@ void key_set(struct keyboard*, unsigned int key, unsigned char state);
 
 */
 /*******************************************************************/
-unsigned char key_matrix(struct keyboard*, unsigned short int addr);
+unsigned char key_matrix(const struct keyboard*, unsigned short int addr);
 
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15

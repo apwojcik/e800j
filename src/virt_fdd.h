@@ -113,7 +113,7 @@ int vfdd_dsk_floppy(
     Emulacja napędu
 */
 int vfdd_drive(
-    void* ptr, /* wskaźnik nadrzędnej struktury danych */
+    const void* ptr, /* wskaźnik nadrzędnej struktury danych */
     void* dsk, /* vfdd_disk */
     unsigned char action, /* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
     unsigned char wdata /* dana dla operacji zapisu */
