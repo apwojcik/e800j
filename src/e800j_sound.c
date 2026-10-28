@@ -103,58 +103,57 @@ void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amoun
     }
 }
 
-void snd_init(const struct elwro* e) {
+void snd_init(struct sound* snd, const struct cpu* cpu) {
     SDL_AudioSpec spec;
     char samples[16];
-    struct sound* ww = e->snd;
 
-    if (ww->nosound)
+    if (snd->nosound)
         return;
     printf("(II)Sound init\n");
+    snd->cpu = cpu;
 
-    spec.freq = ww->freq; // ilość sampli/sec
+    spec.freq = snd->freq; // ilość sampli/sec
     spec.format = SDL_AUDIO_U8; /* format danych    */
-    spec.channels = ww->chn; // ilość kanałów
+    spec.channels = snd->chn; // ilość kanałów
 
-    snprintf(samples, sizeof(samples), "%d", ww->len);
+    snprintf(samples, sizeof(samples), "%d", snd->len);
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
 
-    if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, ww))) {
+    if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, snd))) {
         printf("(WW)Couldn't open audio: %s\n", SDL_GetError());
-        ww->nosound = true;
+        snd->nosound = true;
         return;
     }
 
     printf("(II)Using audio driver: %s\n", SDL_GetCurrentAudioDriver());
     atexit(snd_close_audio);
-    snd_init_rbuffer(ww, SND_CHUNK);
+    snd_init_rbuffer(snd, SND_CHUNK);
     SDL_ResumeAudioStreamDevice(snd_stream);
 }
 
-void snd_beeper(char r373, struct z80* z) {
-    struct sound* ww = ((struct elwro*)(z->ptr))->snd;
+void snd_beeper(struct sound* snd, char r373) {
     int i, smpls;
     double period, data;
 
-    if (ww->nosound)
+    if (snd->nosound)
         return;
-    if (!((r373 ^ ww->old_r373) & 0x10))
+    if (!((r373 ^ snd->old_r373) & 0x10))
         return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdą */
-    ww->old_r373 = r373;
-    period = (z->ticks - ww->old_ticks) / (float)ww->scale; /* ile upłynęło przedziałów 20ms od zmiany */
+    snd->old_r373 = r373;
+    period = (snd->cpu->ticks - snd->old_ticks) / (float)snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
     smpls = period * 256;
-    ww->old_ticks = z->ticks;
+    snd->old_ticks = snd->cpu->ticks;
 
     r373 &= 0x10;
-    if (ww->alias) {
+    if (snd->alias) {
         data = r373 ? 127 : -128;
         period = 3.14 / smpls;
         for (i = 0; i < smpls; i++)
-            snd_rbuffer_push(ww, 128 + data * sin(i * period));
+            snd_rbuffer_push(snd, 128 + data * sin(i * period));
     }
     else {
         data = r373 ? 0 : 0xff;
         for (i = 0; i < smpls; i++)
-            snd_rbuffer_push(ww, data);
+            snd_rbuffer_push(snd, data);
     }
 }

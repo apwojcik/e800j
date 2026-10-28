@@ -20,28 +20,28 @@
 
 #pragma once
 
+struct screen;
 struct cpu;
-struct zx_scrn;
-struct e800j_kbrd;
+struct keyboard;
 struct sound;
-struct e800j_fdc;
+struct fdc;
 
 struct elwro {
     // elementy komputera
-    struct z80* cpu;
-    struct screen* zx;
-    struct e800j_kbrd* kb;
+    struct screen* scn;
+    struct cpu* cpu;
+    struct keyboard* kbd;
     struct sound* snd;
-    struct e800j_fdc* fdc;
+    struct fdc* fdc;
 
     // pamięć
-    char* ram;
-    char* rom;
+    unsigned char* ram;
+    unsigned char* rom;
     int ram_size;
     int rom_size;
 
     char tcpu;
-    void* t1;
+    unsigned int t1;
     int cpu_rfsh;
     int ifreq; /* co ile taktów CPU ma zostać wywołane przerwanie */
     int tr; /* ilość taktów/wywołanie   */
@@ -59,4 +59,4 @@ struct elwro {
     char debug; /* true -> uruchamia w trybie komend */
 };
 
-extern void zx_main(struct elwro*);
+void zx_main(struct elwro*);

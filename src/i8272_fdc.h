@@ -119,7 +119,7 @@ unsigned char i8272_in(struct i8272* fdc, unsigned char address_bit);
 /*
   Sprzęg z napędem wirtualnym, należy wywołać po i8272_init()
 */
-extern void i8272_fdd_connect(
+void i8272_fdd_connect(
     struct i8272* fdc, /* struktura FDC */
     int (*drive)(void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
     void*, void*, void*, void* /* struktury napędów 0,1,2,3 */

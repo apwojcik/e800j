@@ -18,7 +18,6 @@
  *
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "z80_cpu.h"
@@ -34,20 +33,19 @@
 #include "virt_fdd.h"
 #include "e800j_msg.h"
 
-static struct screen zx;
+static struct screen screen;
 
-static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_disk* disk, char dn) {
-    int tmp, tmp1;
+static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, struct vfdd_disk* disk, char dn) {
+    int tmp;
 
-    if ((tmp = file_lookup_option(argc, argv, dparm))) {
+    if ((tmp = file_lookup_option(argc, argv, dparm)) != 0) {
         if (tmp < argc) {
-            if ((tmp1 = file_lookup_option(argc, argv, mode))) {
+            if (file_lookup_option(argc, argv, mode) != 0) {
                 if (vfdd_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp + 1]) < 0) {
                     msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
                 }
                 msg_printf(MSG_MSG, "Open file %s for RW as drive %c.\n", argv[tmp + 1], dn);
-            }
-            else {
+            } else {
                 if (vfdd_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, "mat.dsk") < 0) {
                     msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
                 }
@@ -58,23 +56,23 @@ static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_di
 }
 
 int main(int argc, char** argv) {
-    struct e800j_fdc fdc;
-    z80 cpu;
-    dbg pt;
-    struct elwro e800;
+    struct elwro e;
+    struct fdc fdc;
+    struct cpu cpu;
+    struct dbg dbg;
     struct sound snd;
-    struct e800j_kbrd keyboard;
-    vfdd_disk disk_a, disk_b;
+    struct keyboard kbd;
+    struct vfdd_disk disk_a, disk_b;
     int tmp;
 
-    e800.cpu = &cpu;
-    e800.zx = &zx;
-    e800.snd = &snd;
-    e800.kb = &keyboard;
-    e800.fdc = &fdc;
-    e800.mem_mask = 0;
-    e800.junet_addr = 0xf3;
-    e800.debug = 0;
+    e.cpu = &cpu;
+    e.scn = &screen;
+    e.snd = &snd;
+    e.kbd = &kbd;
+    e.fdc = &fdc;
+    e.mem_mask = 0;
+    e.junet_addr = 0xf3;
+    e.debug = 0;
 
     if (file_lookup_option(argc, argv, "-help"))
         file_help();
@@ -93,26 +91,26 @@ int main(int argc, char** argv) {
 
     /* odczyt konfiguracji i na tej podstawie ustawienie e800 */
 
-    if (file_init(&e800, "./e800j.cfg", argc, argv))
+    if (file_init(&e, "./e800j.cfg", argc, argv))
         return -1;
 
-    zx.zx_patt = e800.ram + 16384;
-    zx.zx_attr = e800.ram + 16384 + 6 * 1024;
-    zx_border(&zx, 1);
+    screen.zx_patt = e.ram + 16384;
+    screen.zx_attr = e.ram + 16384 + 6 * 1024;
+    screen_border(&screen, 1);
 
-    key_init(&keyboard);
-    z80_init(&cpu, mem_e800j_read, mem_e800j_write, io_read, io_write, &e800, NULL);
-    dbg_init(&pt, &cpu, e800.debug, 1);
+    key_init(&kbd);
+    z80_init(&cpu, mem_e800j_read, mem_e800j_write, io_read, io_write, &e, NULL);
+    dbg_init(&dbg, &cpu, e.debug, 1);
 
     fdc_init(&fdc);
-    i8272_fdd_connect(fdc.i8272, vfdd_drive, &disk_a, &disk_b, 0, 0);
+    i8272_fdd_connect(&fdc.i8272, vfdd_drive, &disk_a, &disk_b, 0, 0);
 
-    zx_initvideo(&zx, zx.width, zx.height, zx.bpp, argc, argv, 20);
+    screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, 20);
 
-    snd_init(&e800);
-    file_get_cline(argc, argv, &cpu, e800.ram, &e800.zx->border_color, 0);
+    snd_init(&snd, &cpu);
+    file_get_cline(argc, argv, &e, e.ram, &e.scn->border_color, 0);
 
-    zx_main(&e800);
+    zx_main(&e);
 
     snd_free_buffers(&snd);
     vfdd_floppy(&disk_a, VFDD_UNLOAD, 0, 0, 0, 0);

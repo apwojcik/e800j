@@ -38,8 +38,9 @@ int i8272_dummy_drive(void* f, void* param, unsigned char action, unsigned char 
 
 /**************************************************************************************************/
 
-void i8272_fdd_connect
-(struct i8272* fdc, int (*drive)(void*, void*, unsigned char, unsigned char), void* f0, void* f1, void* f2, void* f3) {
+void i8272_fdd_connect(struct i8272* fdc, int (*drive)(void*, void*, unsigned char, unsigned char), void* f0,
+    void* f1, void* f2, void* f3)
+{
     fdc->drive = drive;
     fdc->parameter[0] = f0;
     fdc->parameter[1] = f1;

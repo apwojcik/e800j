@@ -22,6 +22,7 @@
 
 #define RELOK_R175	0x20
 
-extern unsigned char io_read(void* z, unsigned short int addr);
+struct elwro;
 
-extern void io_write(void* z, unsigned short int addr, unsigned char data);
+unsigned char io_read(const void* p, unsigned short addr);
+void io_write(void* p, unsigned short addr, unsigned char data);

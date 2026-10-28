@@ -27,7 +27,7 @@
 #define KB_ZX_ROW_MASK	0x0
 #define KB_ZX_COL_MASK	0x0
 
-struct e800j_kbrd {
+struct keyboard {
     /* klawiatura */
     int key_code; /* ostatni kod klawisza  */
     char state; /* ostatni stan klawisza */
@@ -69,13 +69,13 @@ enum {
 };
 
 /*******************************************************************/
-extern void key_init(struct e800j_kbrd*);
+void key_init(struct keyboard*);
 
 /*	..:: Inicjuje klawiaturę w trybie 'mode' ::..
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-extern void key_set(struct e800j_kbrd*, unsigned int key, unsigned char state);
+void key_set(struct keyboard*, unsigned int key, unsigned char state);
 /*
     ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
@@ -83,7 +83,7 @@ extern void key_set(struct e800j_kbrd*, unsigned int key, unsigned char state);
 
 */
 /*******************************************************************/
-extern unsigned char key_matrix(struct e800j_kbrd*, unsigned short int addr);
+unsigned char key_matrix(struct keyboard*, unsigned short int addr);
 
 /*	..:: emulacja matrycy klawiszowej Elwro 800 Junior ::..
         addr - linie KA2, KA7..KA15
@@ -91,14 +91,14 @@ extern unsigned char key_matrix(struct e800j_kbrd*, unsigned short int addr);
 */
 
 /*******************************************************************/
-extern void key_update(struct e800j_kbrd*, int key, char state);
+void key_update(struct keyboard*, int key, char state);
 
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
     state - =1 wciśnięto, =0 puszczono
 */
 
-extern unsigned char key_kempston(struct e800j_kbrd*);
+unsigned char key_kempston(const struct keyboard*);
 
 /*
     zwraca wartość dla portu 31 - symulacja wejścia joysticka KEMPSTON

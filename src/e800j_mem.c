@@ -64,14 +64,14 @@ static unsigned char prom_mem[512] = {
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_zx48_read(void* z, ushort addr) {
-    if (addr < 16384)
-        return ((struct elwro*)((z80*)z)->ptr)->rom[addr];
-    return ((struct elwro*)((z80*)z)->ptr)->ram[addr];
+unsigned char mem_zx48_read(void* p, const unsigned short addr) {
+    const struct elwro* e = ((struct cpu*)(p))->ptr;
+    return addr < 16384 ? e->rom[addr] : e->ram[addr];
 }
 
-void mem_zx48_write(void* z, ushort addr, uchar data) {
-    ((struct elwro*)((z80*)z)->ptr)->ram[addr] = data;
+void mem_zx48_write(void* p, const unsigned short addr, const unsigned char data) {
+    const struct elwro* e = ((struct cpu*)(p))->ptr;
+    e->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -79,28 +79,34 @@ void mem_zx48_write(void* z, ushort addr, uchar data) {
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_e800j_read(void* z, ushort addr) {
-    struct elwro* el = (struct elwro*)((z80*)z)->ptr;
-    uchar bank = ~prom_mem[(el->mem_mask | (addr >> 10)) & 0x1ff];
-    ushort romaddr = addr & 0x1fff;
+unsigned char mem_e800j_read(const void* p, const unsigned short addr) {
+    const struct elwro* e = ((struct cpu*)(p))->ptr;
+    const unsigned char bank = ~prom_mem[(e->mem_mask | (addr >> 10)) & 0x1ff];
+    const unsigned short rom_addr = addr & 0x1fff;
 
     //    if(bank & 0x20); /* RST 48 */
-    if (bank & 0x01)
-        return el->rom[0x0000 + romaddr]; /* BAS0 */
-    if (bank & 0x02)
-        return el->rom[0x2000 + romaddr]; /* BAS1 */
-    if (bank & 0x10)
-        return el->rom[0x4000 + romaddr]; /* BOOT */
-    if (bank & 0x08)
-        return el->ram[addr]; // pamięć RAM
-    if (bank & 0x04)
-        return el->ram[addr]; // pamięć atrybutów
+    if (bank & 0x01) {
+        return e->rom[0x0000 + rom_addr]; /* BAS0 */
+    }
+    if (bank & 0x02) {
+        return e->rom[0x2000 + rom_addr]; /* BAS1 */
+    }
+    if (bank & 0x10) {
+        return e->rom[0x4000 + rom_addr]; /* BOOT */
+    }
+    if (bank & 0x08) {
+        return e->ram[addr]; // pamięć RAM
+    }
+    if (bank & 0x04) {
+        return e->ram[addr]; // pamięć atrybutów
+    }
 
     return 0xff;
 }
 
-void mem_e800j_write(void* z, ushort addr, uchar data) {
-    ((struct elwro*)((z80*)z)->ptr)->ram[addr] = data;
+void mem_e800j_write(const void* p, const unsigned short addr, const unsigned char data) {
+    const struct elwro* e = ((struct cpu*)(p))->ptr;
+    e->ram[addr] = data;
 }
 
 /*********************************************************************************************/
@@ -108,17 +114,18 @@ void mem_e800j_write(void* z, ushort addr, uchar data) {
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-uchar mem_zx128_read(void* z, ushort addr) {
-    (void)z;
+unsigned char mem_zx128_read(void* p, const unsigned short addr) {
+    (void)p;
     (void)addr;
-    //    if(addr < 16384) return ((struct elwro*)((z80 *)z)->ptr)->rom[ addr ];
-    //    return ((struct elwro*)((z80 *)z)->ptr)->ram[ addr ];
+    //const struct elwro* e = ((struct cpu*)(p))->ptr;
+    //return addr < 16384 ? e->rom[addr] : e->ram[addr];
     return 0xff;
 }
 
-void mem_zx128_write(void* z, ushort addr, uchar data) {
-    (void)z;
+void mem_zx128_write(void* p, const unsigned short addr, const unsigned char data) {
+    (void)p;
     (void)addr;
     (void)data;
-    //    ((struct elwro*)((z80 *)z)->ptr)->ram[ addr] = data;
+    //const struct elwro* e = ((struct cpu*)(p))->ptr;
+    //e->ram[addr] = data;
 }

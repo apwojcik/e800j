@@ -24,15 +24,6 @@
 
 #include "i8272_fdc.h"
 
-
-struct e800j_fdc {
-    struct i8272 i8272str;
-    struct i8272* i8272;
-    unsigned int drive_mtime;
-    unsigned int drive_a;
-    unsigned int drive_b;
-};
-
 enum {
     FDC_R175_DRIVE_A = 0x01,
     FDC_R175_DRIVE_B = 0x02,
@@ -40,14 +31,16 @@ enum {
     FDC_R175_RESET = 0x08
 };
 
-extern void fdc_init(struct e800j_fdc* fdc);
+struct fdc {
+    struct i8272 i8272;
+    unsigned int drive_mtime;
+    unsigned int drive_a;
+    unsigned int drive_b;
+};
 
-extern void fdc_wr_r175(struct e800j_fdc* fdc, unsigned char data);
-
-extern void fdc_wr_i8272(struct e800j_fdc* fdc, unsigned char a0, unsigned char data);
-
-extern unsigned char fdc_rd_i8272(struct e800j_fdc* fdc, unsigned char a0);
-
-extern void fdc_reset(struct e800j_fdc* fdc);
-
-extern void fdc_clk(struct e800j_fdc* fdc);
+void fdc_init(struct fdc* fdc);
+void fdc_r175_write(struct fdc* fdc, unsigned char data);
+void fdc_i8272_write(struct fdc* fdc, unsigned char a0, unsigned char data);
+unsigned char fdc_i8272_read(struct fdc* fdc, unsigned char a0);
+void fdc_reset(struct fdc* fdc);
+void fdc_clk(struct fdc* fdc);

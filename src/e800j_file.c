@@ -37,9 +37,7 @@ int file_lookup_option(int argc, char** argv, const char* name) {
     return 0;
 }
 
-char file_snap_cpy(libspectrum_snap* snap, z80* z, char* ram, char* reg373, char rest) {
-    int i;
-
+char file_snap_cpy(libspectrum_snap* snap, struct cpu* z, unsigned char* ram, unsigned char* reg373, char rest) {
     if (!snap || !z || !ram || !reg373)
         return 1;
 
@@ -84,7 +82,7 @@ char file_snap_cpy(libspectrum_snap* snap, z80* z, char* ram, char* reg373, char
     *reg373 = libspectrum_snap_out_ula(snap);
 
     /* kopiowanie pamięci */
-    for (i = 0; i < 16; i++)
+    for (int i = 0; i < 16; i++)
         if (libspectrum_snap_pages(snap, i)) {
             switch (i) {
             case 0:
@@ -105,8 +103,8 @@ char file_load_blk(FILE* f, unsigned char* buffer, long length) {
     return fread(buffer, length, 1, f) != 1;
 }
 
-int file_snap_load(const char* fname, z80* cp, char* ram, char* r373, char rest) {
-    libspectrum_snap* snap = NULL;
+int file_snap_load(const char* fname, struct elwro* e, unsigned char* ram, unsigned char* r373, char rest) {
+    libspectrum_snap* snap;
     int error = 1;
     unsigned char* buffer;
     long length;
@@ -139,7 +137,7 @@ int file_snap_load(const char* fname, z80* cp, char* ram, char* r373, char rest)
     if ((buffer = (unsigned char*)malloc(length))) {
         if (!(error = file_load_blk(f, buffer, length))) {
             if (!(error = libspectrum_snap_read(snap, buffer, length, LIBSPECTRUM_ID_UNKNOWN, fname)))
-                error = file_snap_cpy(snap, cp, ram, r373, rest);
+                error = file_snap_cpy(snap, e->cpu, ram, r373, rest);
         }
         free(buffer);
     }
@@ -161,13 +159,13 @@ int file_snap_load(const char* fname, z80* cp, char* ram, char* r373, char rest)
     return error;
 }
 
-void file_get_cline(int argc, char** argv, z80* cp, char* ram, char* r373, char rest) {
+void file_get_cline(int argc, char** argv, struct elwro* e, unsigned char* ram, unsigned char* r373, char rest) {
     if (argc != 2)
         return;
     if (*argv[1] == '-')
         return;
     msg_printf(MSG_MSG, "Loading snapshot: %s\n", argv[1]);
-    file_snap_load(argv[1], cp, ram, r373, rest);
+    file_snap_load(argv[1], e, ram, r373, rest);
 }
 
 /****************************************************************/
@@ -364,7 +362,7 @@ void file_unquote(char* str) {
     }
 }
 
-char file_read_rom(char* fn, int addr, char* rom, int romsize) {
+char file_read_rom(char* fn, int addr, unsigned char* rom, int romsize) {
     FILE* f;
     int len;
 
@@ -391,7 +389,7 @@ char file_read_rom(char* fn, int addr, char* rom, int romsize) {
     return 0;
 }
 
-int file_bios_load(const char* cfg, char* rom, char* profile, int romsize) {
+int file_bios_load(const char* cfg, unsigned char* rom, char* profile, int romsize) {
     char *tmp, *tmp1, *path, *fn, *x = NULL;
     int addr;
     char ttt[256];
@@ -506,7 +504,7 @@ char file_memo_set(char* cfg, struct elwro* el, char* profile) {
     el->rom_size = strtol(tmp0,NULL, 16);
     if (el->rom_size < 8192)
         msg_printf(MSG_WARN, "Very small ROM buffer size. Is it a correct size ?\n");
-    if (!(el->rom = (char*)malloc(el->rom_size))) {
+    if ((el->rom = malloc(el->rom_size)) == NULL) {
         msg_printf(MSG_ERROR, "Error allocate memory for ROM buffer.\n");
         free(tmp1);
         return 1;
@@ -519,7 +517,7 @@ char file_memo_set(char* cfg, struct elwro* el, char* profile) {
     el->ram_size = strtol(tmp0,NULL, 16);
     if (el->ram_size < 8192)
         msg_printf(MSG_WARN, "Very small RAM buffer size. Is it a correct size ?\n");
-    if (!(el->ram = (char*)malloc(el->ram_size))) {
+    if ((el->ram = malloc(el->ram_size)) == NULL) {
         msg_printf(MSG_ERROR, "Error allocate memory for RAM buffer.\n");
         free(el->rom);
         free(tmp1);
@@ -569,7 +567,7 @@ char file_set_cpu(char* cfg, struct elwro* el, char* profile) {
 }
 
 /*******************************************/
-char file_set_screen(char* cfg, struct elwro* el, char* profile) {
+char file_set_screen(char* cfg, struct elwro* e, char* profile) {
     char tmp0[1024], *tmp1;
     if (!file_find_cfg_option(profile, "screen", tmp0,NULL, 0, 0))
         return 1;
@@ -586,20 +584,20 @@ char file_set_screen(char* cfg, struct elwro* el, char* profile) {
         free(tmp1);
         return 1;
     }
-    el->zx->flash = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Set blinking to: %i [ms]\n", el->zx->flash);
+    e->scn->flash = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Set blinking to: %i [ms]\n", e->scn->flash);
     if (!file_find_cfg_option(tmp1, "rfsh", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->rfsh = strtol(tmp0,NULL, 0);
+    e->scn->refresh = strtol(tmp0,NULL, 0);
     if (!file_find_cfg_option(tmp1, "brdsize", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->bsize = strtod(tmp0,NULL);
-    msg_printf(MSG_MSG, "Set border size to: %.3f of window size \n", el->zx->bsize);
-    msg_printf(MSG_MSG, "Set refresh screen to %i [ms]\n", el->zx->rfsh);
+    e->scn->bsize = strtod(tmp0,NULL);
+    msg_printf(MSG_MSG, "Set border size to: %.3f of window size \n", e->scn->bsize);
+    msg_printf(MSG_MSG, "Set refresh screen to %i [ms]\n", e->scn->refresh);
     if (!file_find_cfg_section(tmp1, "palette", tmp0,NULL, 0)) {
         free(tmp1);
         return 1;
@@ -608,26 +606,26 @@ char file_set_screen(char* cfg, struct elwro* el, char* profile) {
         free(tmp1);
         return 1;
     }
-    el->zx->bright = strtol(tmp1,NULL, 0);
-    msg_printf(MSG_MSG, "Set palette bright to: %i \n", el->zx->bright);
+    e->scn->bright = strtol(tmp1,NULL, 0);
+    msg_printf(MSG_MSG, "Set palette bright to: %i \n", e->scn->bright);
     if (!file_find_cfg_option(tmp0, "brt_normal", tmp1,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->nbrt = strtol(tmp1,NULL, 0);
-    msg_printf(MSG_MSG, "Set palette bright normal to: %i \n", el->zx->nbrt);
+    e->scn->nbrt = strtol(tmp1,NULL, 0);
+    msg_printf(MSG_MSG, "Set palette bright normal to: %i \n", e->scn->nbrt);
     if (!file_find_cfg_option(tmp0, "brt_brt", tmp1,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->bbrt = strtol(tmp1,NULL, 0);
-    msg_printf(MSG_MSG, "Set palette bright 'bright' to: %i \n", el->zx->bbrt);
+    e->scn->bbrt = strtol(tmp1,NULL, 0);
+    msg_printf(MSG_MSG, "Set palette bright 'bright' to: %i \n", e->scn->bbrt);
     if (!file_find_cfg_option(tmp0, "brt_wht", tmp1,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->wbrt = strtol(tmp1,NULL, 0);
-    msg_printf(MSG_MSG, "Set palette bright white color to: %i \n", el->zx->wbrt);
+    e->scn->wbrt = strtol(tmp1,NULL, 0);
+    msg_printf(MSG_MSG, "Set palette bright white color to: %i \n", e->scn->wbrt);
 
     free(tmp1);
     return 0;
@@ -652,26 +650,26 @@ char file_set_video(char* cfg, struct elwro* el, char* profile) {
         free(tmp1);
         return 1;
     }
-    el->zx->width = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Set width to : %i\n", el->zx->width);
+    el->scn->width = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Set width to : %i\n", el->scn->width);
     if (!file_find_cfg_option(tmp1, "height", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->height = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Set height to: %i\n", el->zx->height);
+    el->scn->height = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Set height to: %i\n", el->scn->height);
     if (!file_find_cfg_option(tmp1, "bpp", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->bpp = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Set bpp to: %i\n", el->zx->bpp);
+    el->scn->bpp = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Set bpp to: %i\n", el->scn->bpp);
     if (!file_find_cfg_option(tmp1, "fscrn", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    el->zx->fscrn = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Set fullscreen to: %i\n", el->zx->fscrn);
+    el->scn->fscrn = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Set fullscreen to: %i\n", el->scn->fscrn);
 
     free(tmp1);
     return 0;
