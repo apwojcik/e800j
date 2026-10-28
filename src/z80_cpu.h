@@ -115,7 +115,7 @@ struct cpu {
             /* dodatkowe informacje dla debuggera i flagi sterujące */
             unsigned char int_off; /* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
             unsigned char jmp_off; /* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
-            unsigned char dbg_on; /* załączenie debuggera */
+            unsigned char debug_on; /* załączenie debuggera */
             unsigned char cpu_off; /* ustawienie ignoruje wywołanie funkcji CPU */
             unsigned char djnz; /* cpu wykonuje instrukcję DJNZ */
             unsigned short adrs; /* wartość PC pod którą zaczyna się instrukcja */

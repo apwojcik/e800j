@@ -32,14 +32,14 @@ struct sound {
     int volume; // głośność
     int size; // rozmiar bufora
     int freq; /* ilość sampli / sekundę */
-    int len; // długość bufora na karcie, wartość musi być pot 2 i może być skorygowana
+    int length; // długość bufora na karcie, wartość musi być pot 2 i może być skorygowana
     int chn; // ilość kanałów
     unsigned char nosound : 1; // czy włączyć obsługę dźwięku
     unsigned char alias : 1; // czy ma być włączony antyaliasing
     unsigned char ovr : 1; // wystąpiło przepełnienie bufora
     int scale; // skalowanie długości okresów
     long old_ticks;
-    char old_r373;
+    unsigned char old_r373;
     const struct cpu* cpu;
 };
 

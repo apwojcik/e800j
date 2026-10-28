@@ -30,7 +30,7 @@ extern char msg_stream;
  zmienna globalna definiująca poziom wysyłanych komunikatów
  domyślną wartością jest 0, czyli jedynie błędy krytyczne będą wysyłane
 */
-extern char msg_level;
+extern long msg_level;
 
 /*
     wysłanie komunikatu

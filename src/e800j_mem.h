@@ -22,9 +22,9 @@
 
 struct elwro;
 
-unsigned char mem_zx48_read(void*, unsigned short addr);
-void mem_zx48_write(void*, unsigned short addr, unsigned char data);
-unsigned char mem_zx128_read(void*, unsigned short addr);
-void mem_zx128_write(void*, unsigned short addr, unsigned char data);
+unsigned char mem_zx48_read(const void*, unsigned short addr);
+void mem_zx48_write(const void*, unsigned short addr, unsigned char data);
+unsigned char mem_zx128_read(const void*, unsigned short addr);
+void mem_zx128_write(const void*, unsigned short addr, unsigned char data);
 unsigned char mem_e800j_read(const void*, unsigned short addr);
 void mem_e800j_write(const void*, unsigned short addr, unsigned char data);

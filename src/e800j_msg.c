@@ -24,7 +24,7 @@
 #include "e800j_msg.h"
 
 char msg_stream = 0;
-char msg_level = 0;
+long msg_level = 0;
 
 static void msg_putchar(const char chr) {
     if (msg_stream == 0)

@@ -104,7 +104,7 @@ static unsigned char z80_fetch_byte(struct cpu* z) {
     }
 
     z->dd0 = z->memory_read(z,PCr++);
-    if (z->dbg_on)
+    if (z->debug_on)
         z->debug(z, D_FETCH, z->dd0);
     return z->dd0;
 }
@@ -1595,7 +1595,7 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
             }
         }
 
-        if (z->dbg_on && z->debug)
+        if (z->debug_on && z->debug)
             z->debug(z, D_PRE, 0);
 
         if (z->exit)
@@ -1649,7 +1649,7 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                 }
             }
         }
-        if (!z->halt && z->dbg_on && z->debug)
+        if (!z->halt && z->debug_on && z->debug)
             z->debug(z, D_FLUSH, 0);
     }
 }
@@ -1661,7 +1661,7 @@ void z80_step(struct cpu* z)
     if (z->cpu_off)
         return;
 
-    if (z->dbg_on && z->debug)
+    if (z->debug_on && z->debug)
         z->debug(z, D_PRE, 0);
 
     *z->R_r = ((*z->R_r) + 1) & 0x7f;
@@ -1714,7 +1714,7 @@ void z80_step(struct cpu* z)
         }
     }
 
-    if (!z->halt && z->dbg_on && z->debug)
+    if (!z->halt && z->debug_on && z->debug)
         z->debug(z, D_FLUSH, 0);
 }
 

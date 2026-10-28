@@ -64,12 +64,12 @@ static unsigned char prom_mem[512] = {
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-unsigned char mem_zx48_read(void* p, const unsigned short addr) {
+unsigned char mem_zx48_read(const void* p, const unsigned short addr) {
     const struct elwro* e = ((struct cpu*)(p))->ptr;
     return addr < 16384 ? e->rom[addr] : e->ram[addr];
 }
 
-void mem_zx48_write(void* p, const unsigned short addr, const unsigned char data) {
+void mem_zx48_write(const void* p, const unsigned short addr, const unsigned char data) {
     const struct elwro* e = ((struct cpu*)(p))->ptr;
     e->ram[addr] = data;
 }
@@ -114,7 +114,7 @@ void mem_e800j_write(const void* p, const unsigned short addr, const unsigned ch
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
-unsigned char mem_zx128_read(void* p, const unsigned short addr) {
+unsigned char mem_zx128_read(const void* p, const unsigned short addr) {
     (void)p;
     (void)addr;
     //const struct elwro* e = ((struct cpu*)(p))->ptr;
@@ -122,7 +122,7 @@ unsigned char mem_zx128_read(void* p, const unsigned short addr) {
     return 0xff;
 }
 
-void mem_zx128_write(void* p, const unsigned short addr, const unsigned char data) {
+void mem_zx128_write(const void* p, const unsigned short addr, const unsigned char data) {
     (void)p;
     (void)addr;
     (void)data;

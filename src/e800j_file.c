@@ -722,8 +722,8 @@ char file_set_sound(char* cfg, struct elwro* el, char* profile) {
         free(tmp1);
         return 1;
     }
-    el->snd->len = strtol(tmp0,NULL, 0);
-    msg_printf(MSG_MSG, "Driver line buffer size: %i\n", el->snd->len);
+    el->snd->length = strtol(tmp0,NULL, 0);
+    msg_printf(MSG_MSG, "Driver line buffer size: %i\n", el->snd->length);
     if (!file_find_cfg_option(tmp1, "mixvol", tmp0,NULL, 0, 0)) {
         free(tmp1);
         return 1;

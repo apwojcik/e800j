@@ -37,7 +37,6 @@ static struct screen screen;
 
 static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, struct vfdd_disk* disk, char dn) {
     int tmp;
-
     if ((tmp = file_lookup_option(argc, argv, dparm)) != 0) {
         if (tmp < argc) {
             if (file_lookup_option(argc, argv, mode) != 0) {

@@ -47,8 +47,8 @@ struct screen {
     unsigned char* zx_attr; /* kolory kranu - 1kB */
     unsigned char border_color;
     char refresh;
-    void* t0;
-    void* t2;
+    unsigned int t0;
+    unsigned int t2;
     void* window; /* SDL_Window* */
     void* glctx; /* SDL_GLContext */
     int flash; /* tempo migania atrybutu flash w ms */

@@ -58,39 +58,39 @@ static const char* rcnd[] = {
     "","NZ","Z","NC","C","PO","PE","P","M"
 };
 
-void dbg_deasm(struct dbg*);
-void dbg_test(struct dbg*, unsigned char);
-void dbg_input(struct dbg*);
-void dbg_cmd(struct dbg* d);
-void dbg_quit(struct dbg* d);
-void dbg_help(struct dbg* d);
-void dbg_poke(struct dbg* d);
-void dbg_trace(struct dbg* d);
-void dbg_proc(struct dbg* d);
-void dbg_var(struct dbg* d);
-void dbg_memo(struct dbg* d);
-void dbg_stck(struct dbg* d);
-void dbg_dasm(struct dbg* d);
-void dbg_trap(struct dbg* d);
-void dbg_goto(struct dbg* d);
-void dbg_regs(struct dbg* d);
-void dbg_iout(struct dbg* d);
-void dbg_iin(struct dbg* d);
-void dbg_bps(struct dbg* d);
-void dbg_dbps(struct dbg* d);
-void dbg_bp_delete_all(struct dbg* d);
-void dbg_bp_delete_first(struct dbg* d);
-void dbg_sregs(struct dbg* d);
-void dbg_deasembly(struct dbg* d);
+static void dbg_deasm(struct dbg*);
+static void dbg_test(struct dbg*, unsigned char);
+static void dbg_input(struct dbg*);
+static void dbg_cmd(struct dbg* d);
+static void dbg_quit(struct dbg* d);
+static void dbg_help(struct dbg* d);
+static void dbg_poke(struct dbg* d);
+static void dbg_trace(struct dbg* d);
+static void dbg_proc(struct dbg* d);
+static void dbg_var(struct dbg* d);
+static void dbg_memo(struct dbg* d);
+static void dbg_stck(struct dbg* d);
+static void dbg_dasm(struct dbg* d);
+static void dbg_trap(struct dbg* d);
+static void dbg_goto(struct dbg* d);
+static void dbg_regs(struct dbg* d);
+static void dbg_iout(struct dbg* d);
+static void dbg_iin(struct dbg* d);
+static void dbg_bps(struct dbg* d);
+static void dbg_dbps(struct dbg* d);
+static void dbg_bp_delete_all(struct dbg* d);
+static void dbg_bp_delete_first(struct dbg* d);
+static void dbg_sregs(struct dbg* d);
+static void dbg_deasembly(struct dbg* d);
 
 /********************************************************************************************/
 /* zwraca 1 jeśli łańcuch t nie jest liczbą */
-char dbg_dcheck(char* t) {
+static char dbg_dcheck(char* t) {
     (void)t;
     return 0;
 }
 
-char* dbg_oc2hexstr(unsigned char n, char* t) {
+static char* dbg_oc2hexstr(unsigned char n, char* t) {
     t[0] = n >> 4;
     t[1] = n & 0x0f;
     t[2] = '\0';
@@ -99,28 +99,27 @@ char* dbg_oc2hexstr(unsigned char n, char* t) {
     return t;
 }
 
-char* dbg_xc2hexstr(ushort n, char* t) {
-    char t0[3] = "", t1[3] = "";
+static char* dbg_xc2hexstr(unsigned short n, char* t) {
+    unsigned char t0[3] = "", t1[3] = "";
     sprintf(t, "%s%s", dbg_oc2hexstr(n >> 8, t0), dbg_oc2hexstr(n & 0xff, t1));
     return t;
 }
 
 static char* dbg_equalize(char* str, int n) {
-    int k = strlen(str);
-    int i;
-    for (i = k; i < n; i++)
+    for (size_t i = strlen(str); i < n; ++i) {
         strcat(str, " ");
+    }
     return str;
 }
 
-static void dbg_resolver(struct cpu* z, const char* code, char* str) {
-    unsigned int i, j = 0, k;
+static void dbg_resolver(const struct cpu* z, char* code, char* str) {
+    unsigned int j = 0;
     char xn[8] = "", kn[8] = "", fn[8] = "";
     if (code == NULL)
         return;
     if (code[0] == '\0')
         return;
-    for (i = 0; i < strlen(code); i++) {
+    for (unsigned int i = 0; i < strlen(code); i++) {
         if (code[i] == '%') {
             i++;
             switch (code[i]) {
@@ -159,7 +158,7 @@ static void dbg_resolver(struct cpu* z, const char* code, char* str) {
             case 'm':
                 strcat(str + j, rX[z->regx0]);
                 if ((z->regx0 == RIX) || (z->regx0 == RIY)) {
-                    k = z->dd < 0 ? -z->dd : z->dd;
+                    unsigned int k = z->dd < 0 ? -z->dd : z->dd;
                     sprintf(kn, "%s$%s", z->dd < 0 ? "-" : "+", dbg_oc2hexstr(k, fn));
                     strcat(str + j, kn);
                 }
@@ -424,7 +423,7 @@ void dbg_cmd(struct dbg* d) {
 }
 
 void dbg_quit(struct dbg* d) {
-    d->z->dbg_on = 0;
+    d->z->debug_on = 0;
     dbg_bp_delete_all(d);
     d->out("Exit debugger...\n");
     d->z->force_in = -1;
@@ -462,7 +461,7 @@ void dbg_trap(struct dbg* d) {
     char cond = 0;
     int addr = 0;
     int life = 1;
-    struct dbg_bp *tmp, *n;
+    struct dbg_bp* n;
 
     /* pobranie argumentów komendy */
     sscanf(d->cmdline, "b %6s %2s %8s", addrs, cnd, slife);
@@ -526,7 +525,7 @@ void dbg_trap(struct dbg* d) {
     }
 
     /* argumenty pobrane czas dodać pułapkę do listy */
-    tmp = (struct dbg_bp*)malloc(sizeof(struct dbg_bp));
+    struct dbg_bp* tmp = malloc(sizeof(struct dbg_bp));
     tmp->next = NULL;
     tmp->cond_type = cond;
     tmp->address = addr;
@@ -542,24 +541,24 @@ void dbg_trap(struct dbg* d) {
 }
 
 void dbg_bps(struct dbg* d) {
-    char* nme[3] = {"eq", "gt", "lt"};
     char tmp[256] = "";
-    struct dbg_bp* bp = d->bp;
+    const struct dbg_bp* bp = d->bp;
     int i = 0;
 
     d->out("Breakpoints:\nnb\taddress\tcondition\tlife\n");
     while (bp) {
+        char* nme[3] = {"eq", "gt", "lt"};
         sprintf(tmp, "%3i.\t%6x\t%s\t%6x\n", i++, bp->address, nme[(int)bp->cond_type], bp->life);
         d->out(tmp);
         bp = bp->next;
     }
 }
 
-void dbg_bp_delete(struct dbg* d, int k) {
-    struct dbg_bp* bp = d->bp, *old_bp;
+static void dbg_bp_delete(struct dbg* d, int k) {
+    struct dbg_bp *bp = d->bp;
     int i = 0;
 
-    old_bp = bp;
+    struct dbg_bp* old_bp = bp;
     if (!bp)
         return;
     while (bp->next && i != k) {
@@ -584,15 +583,13 @@ void dbg_bp_delete_first(struct dbg* d) {
 }
 
 void dbg_bp_delete_all(struct dbg* d) {
-    struct dbg_bp *bp, *b;
-
     if (!d->bp)
         return;
 
-    bp = d->bp;
+    struct dbg_bp* bp = d->bp;
 
     while (bp->next) {
-        b = bp->next;
+        struct dbg_bp* b = bp->next;
         free(bp);
         bp = b;
     }
@@ -613,7 +610,7 @@ void dbg_dbps(struct dbg* d) {
     dbg_bp_delete(d, k);
 }
 
-unsigned char dbg_peek(struct dbg* d, int addrs) {
+static unsigned char dbg_peek(const struct dbg* d, int addrs) {
     return d->z->memory_read(d->z, addrs);
 }
 
@@ -1085,39 +1082,38 @@ void dbg_proc(struct dbg* d) {
 }
 
 /* zapis przy deasemblacji ma iść w pustkę */
-void dbg_dummy_wr(const void* z, ushort addr, unsigned char data) {
+static void dbg_dummy_memory_write(const void* z, unsigned short addr, unsigned char data) {
     (void)z;
     (void)addr;
     (void)data;
 }
 
-void dbg_dummy_output(void* z, ushort addr, unsigned char data) {
+static void dbg_dummy_io_write(void* z, unsigned short addr, unsigned char data) {
     (void)z;
     (void)addr;
     (void)data;
 }
 
-unsigned char dbg_dummy_input(const void* z, ushort addr) {
+static unsigned char dbg_dummy_io_read(const void* z, unsigned short addr) {
     (void)z;
     (void)addr;
     return 0;
 }
 
 static void dbg_debug(const void* z, int mode, unsigned char data) {
-    dbg_call(((const struct cpu*)z)->ptx, mode, data);
+    dbg_call(((struct cpu*)z)->ptx, mode, data);
 }
 
 void dbg_deasembly(struct dbg* d) {
-    int i;
     struct cpu z;
     struct dbg dr;
 
     z80_reset(&z);
     z.memory_read = d->z->memory_read;
-    z.memory_write = dbg_dummy_wr;
-    z.io_read = dbg_dummy_input;
-    z.io_write = dbg_dummy_output;
-    z.dbg_on = 1;
+    z.memory_write = dbg_dummy_memory_write;
+    z.io_write = dbg_dummy_io_write;
+    z.io_read = dbg_dummy_io_read;
+    z.debug_on = 1;
     z.ptx = &dr;
     z.ptr = d->z->ptr;
     z.debug = dbg_debug;
@@ -1129,7 +1125,7 @@ void dbg_deasembly(struct dbg* d) {
     dr.z = &z;
     dr.out = d->out;
 
-    for (i = 0; i < d->zline; i++)
+    for (int i = 0; i < d->zline; i++)
         z80_step(&z);
     d->zaddr = *z.PC_r;
 }
@@ -1207,15 +1203,15 @@ void dbg_iin(struct dbg* d) {
     d->z->force_in = value;
 }
 
-void dbg_sout(char* a) {
+static void dbg_sout(char* a) {
     printf("%s", a);
 }
 
-char dbg_sin() {
-    return getchar();
+static char dbg_sin() {
+    return (char)getchar();
 }
 
-void dbg_init(struct dbg* d, struct cpu* z, char deb_on, char console_on) {
+void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on) {
     if (!d || !z)
         return;
     memset(d, 0, sizeof(struct dbg));
@@ -1225,7 +1221,7 @@ void dbg_init(struct dbg* d, struct cpu* z, char deb_on, char console_on) {
     d->dline = 8;
     d->zline = 16;
     d->console = console_on;
-    z->dbg_on = deb_on;
+    z->debug_on = debug_on;
     z->ptx = d;
     z->debug = dbg_debug;
 }
@@ -1235,8 +1231,8 @@ void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*)) {
     d->in = s_in;
 }
 
-void dbg_don(struct dbg* d, char flag) {
-    d->z->dbg_on = flag;
+void dbg_don(struct dbg* d, const char flag) {
+    d->z->debug_on = flag;
 }
 
 void dbg_con(struct dbg* d, char flag) {
