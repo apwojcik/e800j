@@ -100,19 +100,19 @@ static char* dbg_oc2hexstr(unsigned char n, char* t) {
 }
 
 static char* dbg_xc2hexstr(unsigned short n, char* t) {
-    unsigned char t0[3] = "", t1[3] = "";
+    char t0[3] = "", t1[3] = "";
     sprintf(t, "%s%s", dbg_oc2hexstr(n >> 8, t0), dbg_oc2hexstr(n & 0xff, t1));
     return t;
 }
 
-static char* dbg_equalize(char* str, int n) {
+static char* dbg_equalize(char* str, size_t n) {
     for (size_t i = strlen(str); i < n; ++i) {
         strcat(str, " ");
     }
     return str;
 }
 
-static void dbg_resolver(const struct cpu* z, char* code, char* str) {
+static void dbg_resolver(const struct cpu* z, const char* code, char* str) {
     unsigned int j = 0;
     char xn[8] = "", kn[8] = "", fn[8] = "";
     if (code == NULL)

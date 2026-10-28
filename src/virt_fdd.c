@@ -23,7 +23,7 @@
 #include "virt_fdd.h"
 #include "i8272_fdc.h"
 
-static int vfdd_open_image(struct vfdd_disk* dsk, char* path, char wmode) {
+static int vfdd_open_image(struct vfdd_disk* dsk, const char* path, char wmode) {
     if ((dsk->f = fopen(path, wmode ? "r+" : "r")) == 0) {
         if ((dsk->f = fopen(path, "r")) == 0) {
             return -1;
@@ -118,7 +118,7 @@ static int vfdd_write_sector(struct vfdd_disk* dsk, unsigned char data) {
 
 /***********************************/
 
-int vfdd_dsk_floppy(struct vfdd_disk* dsk, char action, char parm0, char parm1, char parm2, char* path) {
+int vfdd_dsk_floppy(struct vfdd_disk* dsk, char action, char parm0, char parm1, char parm2, const char* path) {
     int ret = 0;
     switch (action) {
     case VFDD_INIT:

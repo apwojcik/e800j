@@ -35,9 +35,9 @@
 
 static struct screen screen;
 
-static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, struct vfdd_disk* disk, char dn) {
-    int tmp;
-    if ((tmp = file_lookup_option(argc, argv, dparm)) != 0) {
+static void disk_vlookup(int argc, const char** argv, char* dparm, char* mode, struct vfdd_disk* disk, char dn) {
+    const int tmp = file_lookup_option(argc, argv, dparm);
+    if (tmp != 0) {
         if (tmp < argc) {
             if (file_lookup_option(argc, argv, mode) != 0) {
                 if (vfdd_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp + 1]) < 0) {
@@ -54,7 +54,7 @@ static void disk_vlookup(int argc, char** argv, char* dparm, char* mode, struct 
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     struct elwro e;
     struct fdc fdc;
     struct cpu cpu;
@@ -62,7 +62,6 @@ int main(int argc, char** argv) {
     struct sound snd;
     struct keyboard kbd;
     struct vfdd_disk disk_a, disk_b;
-    int tmp;
 
     e.cpu = &cpu;
     e.scn = &screen;
@@ -79,7 +78,8 @@ int main(int argc, char** argv) {
         file_help();
     if (file_lookup_option(argc, argv, "--help"))
         file_help();
-    if ((tmp = file_lookup_option(argc, argv, "-msg_lvl")))
+    const int tmp = file_lookup_option(argc, argv, "-msg_lvl");
+    if (tmp)
         msg_level = strtol(argv[tmp + 1], NULL, 0);
 
     vfdd_floppy(&disk_a, VFDD_INIT, 0, 0, 0, 0);

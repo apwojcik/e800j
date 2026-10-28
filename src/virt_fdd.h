@@ -106,7 +106,7 @@ int vfdd_dsk_floppy(
     char parm0, /* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
     char parm1, /* sektor  | 2-typ emulacji */
     char parm2, /* głowica */
-    char* path /* ścieżka do pliku/katalogu */
+    const char* path /* ścieżka do pliku/katalogu */
 );
 
 /*

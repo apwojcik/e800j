@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <SDL3/SDL.h>
+
 struct rgbi {
     unsigned char ri;
     unsigned char gi;
@@ -49,7 +51,6 @@ struct screen {
     char refresh;
     unsigned int t0;
     unsigned int t2;
-    void* window; /* SDL_Window* */
     void* glctx; /* SDL_GLContext */
     int flash; /* tempo migania atrybutu flash w ms */
     char inverse;
@@ -62,6 +63,8 @@ struct screen {
     float bsize;
     float scrh;
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
+    SDL_Window* window;
+    SDL_Renderer* renderer;
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
@@ -69,7 +72,7 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
 void screen_refresh(struct screen* s);
 
 /* argv -> -fullscreen, -noframe */
-char screen_init(struct screen* s, int width, int height, int bpp, int argc, char** argv, int refresh);
+char screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
 
 void screen_border(struct screen* s, unsigned char color);
 

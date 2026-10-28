@@ -49,8 +49,6 @@ void i8272_fdd_connect(struct i8272* fdc, int (*drive)(const void*, void*, unsig
 }
 
 void i8272_init(struct i8272* fdc) {
-    int i;
-
     fdc->msr = 0x80;
     fdc->st0 = 0x80;
     fdc->st1 = 0x00;
@@ -67,7 +65,7 @@ void i8272_init(struct i8272* fdc) {
     fdc->icntr = 0x00;
     fdc->phase = FDC_COMMAND;
     fdc->data = 0x00;
-    for (i = 0; i < 16; i++)
+    for (int i = 0; i < 16; i++)
         fdc->buffer[i] = 0x00;
     fdc->idx_0 = fdc->idx_1 = 0;
     fdc->opcode = (void*)0;
@@ -83,8 +81,6 @@ void i8272_init(struct i8272* fdc) {
 
 /* reakcja na stan linii RESET */
 void i8272_reset(struct i8272* fdc, unsigned char reset) {
-    int i;
-
     if (!reset)
         return;
 
@@ -102,7 +98,7 @@ void i8272_reset(struct i8272* fdc, unsigned char reset) {
     fdc->icntr = 0x00;
     fdc->phase = FDC_COMMAND;
     fdc->data = 0x00;
-    for (i = 0; i < 16; i++)
+    for (int i = 0; i < 16; i++)
         fdc->buffer[i] = 0x00;
     fdc->idx_0 = fdc->idx_1 = 0;
     fdc->opcode = (void*)0;

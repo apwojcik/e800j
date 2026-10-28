@@ -39,7 +39,7 @@ static const char* msg[] = {"(E!)", "(EE)", "(WW)", "(II)", "(VI)", "(NI)", "(UI
 
 void msg_printf(char level, const char* fmt, ...) {
     va_list ap;
-    char *p, *sval;
+    char* p;
     int ival;
     char tabl[16] = "";
 
@@ -58,7 +58,7 @@ void msg_printf(char level, const char* fmt, ...) {
         }
         switch (*(++p)) {
         case 's':
-            for (sval = va_arg(ap, char *); *sval; sval++)
+            for (char* sval = va_arg(ap, char*); *sval; sval++)
                 msg_putchar(*sval);
             break;
         case 'c':

@@ -30,9 +30,9 @@
 struct keyboard {
     /* klawiatura */
     int key_code; /* ostatni kod klawisza  */
-    char state; /* ostatni stan klawisza */
+    int state; /* ostatni stan klawisza */
     char mode; /* tryb klawiatury       */
-    char alt_r; /* wciśnięty prawy ALT	 */
+    int alt_r; /* wciśnięty prawy ALT	 */
     unsigned char matrix[KB_ROWS]; /* matryca klawiszy      */
     char* matrix_map1; /* pierwszy stopień mapowania klawiszy */
     unsigned short int row_mask; /* maska adresu (odcina część linii adresowych) */
@@ -75,7 +75,7 @@ void key_init(struct keyboard*);
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-void key_set(struct keyboard*, int key, char state);
+void key_set(struct keyboard*, int key, int state);
 /*
     ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
@@ -91,7 +91,7 @@ unsigned char key_matrix(const struct keyboard*, unsigned short int addr);
 */
 
 /*******************************************************************/
-void key_update(struct keyboard*, int key, char state);
+void key_update(struct keyboard*, int key, int state);
 
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza
