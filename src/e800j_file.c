@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <libspectrum.h>
 #include "e800j_file.h"
 
@@ -36,6 +37,16 @@
 #include "e800j_msg.h"
 #include "e800j_sound.h"
 #include "zx_scrn.h"
+
+/* strtol() zawężone do zakresu int */
+static int file_cfg_int(const char* str, int base) {
+    long val = strtol(str, NULL, base);
+    if (val > INT_MAX)
+        val = INT_MAX;
+    else if (val < INT_MIN)
+        val = INT_MIN;
+    return (int)val;
+}
 
 int file_lookup_option(const int argc, const char** argv, const char* name) {
     for (int i = 0; i < argc; i++)
@@ -82,10 +93,10 @@ static int file_snap_cpy(libspectrum_snap* snap, const struct elwro* e, unsigned
     e->cpu->iff1 = libspectrum_snap_iff1(snap);
     e->cpu->iff2 = libspectrum_snap_iff2(snap);
     e->cpu->imode = libspectrum_snap_im(snap);
-    e->cpu->halt = libspectrum_snap_halted(snap);
+    e->cpu->halt = libspectrum_snap_halted(snap) != 0;
 
     /* kolor ramki */
-    *reg373 = libspectrum_snap_out_ula(snap);
+    *reg373 = libspectrum_snap_out_ula(snap) & 0xff;
 
     /* kopiowanie pamięci */
     for (int i = 0; i < 16; i++)
@@ -260,7 +271,8 @@ char* file_find_cfg_option(const char* cfg, const char* name, char* str, const c
 
 char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl) {
     (void)err;
-    int line = 1, i, nest = 0;
+    int line = 1, nest = 0;
+    size_t i;
 
     char* tmp = file_find_cfg_name(cfg, "section", lvl, &line);
     if (!tmp) {
@@ -272,7 +284,7 @@ char* file_find_cfg_section(const char* cfg, const char* name, char* str, const 
         msg_printf(MSG_ERROR, "Config file error: missing section %s\n", name);
         return NULL;
     }
-    int z = strlen(tmp);
+    size_t z = strlen(tmp);
 
     for (i = 0; i < z && *tmp != '{'; i++, tmp++)
         if (*tmp > ' ') {
@@ -444,7 +456,7 @@ int file_bios_load(const char* cfg, const unsigned char* rom, const char* profil
         }
         sprintf(fn, "%s%s", path, tmp1);
 
-        const int addr = strtol(ttt, NULL, 16);
+        const int addr = file_cfg_int(ttt, 16);
         msg_printf(MSG_MSG, "Loading file %s to ROM banks at address 0x0%x .... ", fn, addr);
         if (file_read_rom(fn, addr, rom, rom_size)) {
             free(fn);
@@ -488,7 +500,7 @@ static char file_memo_set(const char* cfg, struct elwro* e, const char* profile)
     if (file_find_cfg_option(tmp1, "rom_bank_size", tmp0, NULL, 0, 0) == NULL)
         return 1;
     msg_printf(MSG_MSG, "ROM buffer set to %s byte size.\n", tmp0);
-    e->rom_size = strtol(tmp0, NULL, 16);
+    e->rom_size = file_cfg_int(tmp0, 16);
     if (e->rom_size < 8192)
         msg_printf(MSG_WARN, "Very small ROM buffer size. Is it a correct size ?\n");
     if ((e->rom = (unsigned char*)malloc(e->rom_size)) == NULL) {
@@ -497,11 +509,11 @@ static char file_memo_set(const char* cfg, struct elwro* e, const char* profile)
         return 1;
     }
     for (int i = 0; i < e->rom_size; i++)
-        e->rom[i] = rand();
+        e->rom[i] = rand() & 0xff;
     if (!file_find_cfg_option(tmp1, "ram_bank_size", tmp0, NULL, 0, 0))
         return 1;
     msg_printf(MSG_MSG, "RAM buffer set to %s byte size.\n", tmp0);
-    e->ram_size = strtol(tmp0, NULL, 16);
+    e->ram_size = file_cfg_int(tmp0, 16);
     if (e->ram_size < 8192)
         msg_printf(MSG_WARN, "Very small RAM buffer size. Is it a correct size ?\n");
     if ((e->ram = (unsigned char*)malloc(e->ram_size)) == NULL) {
@@ -511,7 +523,7 @@ static char file_memo_set(const char* cfg, struct elwro* e, const char* profile)
         return 1;
     }
     for (int i = 0; i < e->ram_size; i++) {
-        e->ram[i] = rand();
+        e->ram[i] = rand() & 0xff;
     }
     on_exit(file_free_buffers, e);
     free(tmp1);
@@ -536,19 +548,19 @@ static char file_set_cpu(const char* cfg, struct elwro* e, const char* profile) 
         free(tmp1);
         return 1;
     }
-    e->cpu_rfsh = strtol(tmp0, NULL, 0);
+    e->cpu_rfsh = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set CPU call to: %i [ms]\n", e->cpu_rfsh);
     if (file_find_cfg_option(tmp1, "atom", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->tr = strtol(tmp0, NULL, 0);
+    e->tr = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set %i tics/call\n", e->tr);
     if (file_find_cfg_option(tmp1, "intfq", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->ifreq = strtol(tmp0, NULL, 0);
+    e->ifreq = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set IRQ call for %i tics of CPU\n", e->ifreq);
     free(tmp1);
     return 0;
@@ -572,18 +584,18 @@ static char file_set_screen(const char* cfg, struct elwro* e, const char* profil
         free(tmp1);
         return 1;
     }
-    e->scn->flash = strtol(tmp0, NULL, 0);
+    e->scn->flash = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set blinking to: %i [ms]\n", e->scn->flash);
     if (file_find_cfg_option(tmp1, "rfsh", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->refresh = strtol(tmp0, NULL, 0);
+    e->scn->refresh = file_cfg_int(tmp0, 0);
     if (file_find_cfg_option(tmp1, "brdsize", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->bsize = strtod(tmp0, NULL);
+    e->scn->bsize = strtof(tmp0, NULL);
     msg_printf(MSG_MSG, "Set border size to: %.3f of window size \n", e->scn->bsize);
     msg_printf(MSG_MSG, "Set refresh screen to %i [ms]\n", e->scn->refresh);
     if (file_find_cfg_section(tmp1, "palette", tmp0, NULL, 0) == NULL) {
@@ -594,25 +606,25 @@ static char file_set_screen(const char* cfg, struct elwro* e, const char* profil
         free(tmp1);
         return 1;
     }
-    e->scn->bright = strtol(tmp1, NULL, 0);
+    e->scn->bright = file_cfg_int(tmp1, 0);
     msg_printf(MSG_MSG, "Set palette bright to: %i \n", e->scn->bright);
     if (file_find_cfg_option(tmp0, "brt_normal", tmp1, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->nbrt = strtol(tmp1, NULL, 0);
+    e->scn->nbrt = file_cfg_int(tmp1, 0);
     msg_printf(MSG_MSG, "Set palette bright normal to: %i \n", e->scn->nbrt);
     if (file_find_cfg_option(tmp0, "brt_brt", tmp1, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->bbrt = strtol(tmp1, NULL, 0);
+    e->scn->bbrt = file_cfg_int(tmp1, 0);
     msg_printf(MSG_MSG, "Set palette bright 'bright' to: %i \n", e->scn->bbrt);
     if (file_find_cfg_option(tmp0, "brt_wht", tmp1, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->wbrt = strtol(tmp1, NULL, 0);
+    e->scn->wbrt = file_cfg_int(tmp1, 0);
     msg_printf(MSG_MSG, "Set palette bright white color to: %i \n", e->scn->wbrt);
 
     free(tmp1);
@@ -638,25 +650,25 @@ static char file_set_video(const char* cfg, const struct elwro* e, const char* p
         free(tmp1);
         return 1;
     }
-    e->scn->width = strtol(tmp0, NULL, 0);
+    e->scn->width = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set width to : %i\n", e->scn->width);
     if (file_find_cfg_option(tmp1, "height", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->height = strtol(tmp0, NULL, 0);
+    e->scn->height = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set height to: %i\n", e->scn->height);
     if (file_find_cfg_option(tmp1, "bpp", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->bpp = strtol(tmp0, NULL, 0);
+    e->scn->bpp = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set bpp to: %i\n", e->scn->bpp);
     if (file_find_cfg_option(tmp1, "fscrn", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->scn->fscrn = strtol(tmp0, NULL, 0);
+    e->scn->fscrn = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Set fullscreen to: %i\n", e->scn->fscrn);
 
     free(tmp1);
@@ -681,7 +693,7 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
         free(tmp1);
         return 1;
     }
-    e->snd->nosound = strtol(tmp0, NULL, 0);
+    e->snd->nosound = file_cfg_int(tmp0, 0) != 0;
     msg_printf(MSG_MSG, "Sound : %s\n", e->snd->nosound ? "off" : "on");
     if (e->snd->nosound) {
         free(tmp1);
@@ -691,44 +703,44 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
         free(tmp1);
         return 1;
     }
-    e->snd->chn = strtol(tmp0, NULL, 0);
+    e->snd->chn = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Channels : %i\n", e->snd->chn);
     if (file_find_cfg_option(tmp1, "rbuffer", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->snd->size = strtol(tmp0, NULL, 0);
+    e->snd->size = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Sound round buffer size : %i\n", e->snd->size);
     if (file_find_cfg_option(tmp1, "samplert", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->snd->freq = strtol(tmp0, NULL, 0);
+    e->snd->freq = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Sampling freq : %i Hz\n", e->snd->freq);
     if (file_find_cfg_option(tmp1, "dbuffer", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->snd->length = strtol(tmp0, NULL, 0);
+    e->snd->length = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Driver line buffer size: %i\n", e->snd->length);
     if (file_find_cfg_option(tmp1, "mixvol", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->snd->volume = strtol(tmp0, NULL, 0);
-    msg_printf(MSG_MSG, "Mix volume: %i\n", e->snd->volume);
+    e->snd->volume = strtof(tmp0, NULL);
+    msg_printf(MSG_MSG, "Mix volume: %g\n", e->snd->volume);
     if (file_find_cfg_option(tmp1, "scale", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
     }
-    e->snd->scale = strtol(tmp0, NULL, 0);
+    e->snd->scale = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Max samples / CPU atom: %i\n", e->snd->scale);
 
     if (!file_find_cfg_option(tmp1, "alias", tmp0, NULL, 0, 0)) {
         free(tmp1);
         return 1;
     }
-    e->snd->alias = strtol(tmp0, NULL, 0);
+    e->snd->alias = file_cfg_int(tmp0, 0) != 0;
     msg_printf(MSG_MSG, "Wave antyalias: %s\n", e->snd->alias ? "on" : "off");
 
     free(tmp1);
@@ -817,7 +829,7 @@ void file_option_param(int argc, const char** argv, int pos, int min, int max, i
         msg_printf(MSG_WARN, "Missing parameter to option %s\n", argv[pos]);
         return;
     }
-    int tmp = strtol(argv[pos + 1], NULL, 0);
+    int tmp = file_cfg_int(argv[pos + 1], 0);
     if (tmp < min) {
         msg_printf(MSG_WARN, "Too small parameter for option %s=%i (min=%i)\n", argv[pos], tmp, min);
         return;

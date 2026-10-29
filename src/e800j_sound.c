@@ -135,8 +135,9 @@ void snd_beeper(struct sound* snd, char r373) {
     if (!((r373 ^ snd->old_r373) & 0x10))
         return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdą */
     snd->old_r373 = r373;
-    double period = (snd->cpu->ticks - snd->old_ticks) / (float)snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
-    const int smpls = period * 256;
+    const double ticks = (double)(snd->cpu->ticks - snd->old_ticks);
+    double period = ticks / snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
+    const int smpls = (int)(period * 256);
     snd->old_ticks = snd->cpu->ticks;
 
     r373 &= 0x10;
@@ -144,11 +145,11 @@ void snd_beeper(struct sound* snd, char r373) {
         const double data = r373 ? 127 : -128;
         period = 3.14 / smpls;
         for (int i = 0; i < smpls; i++)
-            snd_rbuffer_push(snd, 128 + data * sin(i * period));
+            snd_rbuffer_push(snd, (char)(128 + data * sin(i * period)));
     }
     else {
         const double data = r373 ? 0 : 0xff;
         for (int i = 0; i < smpls; i++)
-            snd_rbuffer_push(snd, data);
+            snd_rbuffer_push(snd, (char)data);
     }
 }

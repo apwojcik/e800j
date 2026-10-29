@@ -44,7 +44,7 @@ static void vfdd_close_image(struct vfdd_disk* dsk) {
     dsk->stat = VFDD_DOPEN;
 }
 
-static int vfdd_seek_track(struct vfdd_disk* dsk, int trk, char hd) {
+static int vfdd_seek_track(struct vfdd_disk* dsk, int trk, int hd) {
     if (fseek(dsk->f, 0x0L, SEEK_END))
         return 1;
     const long fsize = ftell(dsk->f);

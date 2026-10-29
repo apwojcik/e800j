@@ -48,9 +48,9 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
     for (int i = 0; i < 16; i++) {
         const unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
         int color = (i == 7) ? wht : (i & 0x07 ? brt : nrm);
-        s->palettef[i].bf = (float)(s->palettei[i].bi = (palgen[i & 7] & 1) ? color : 0) / 256.0f;
-        s->palettef[i].gf = (float)(s->palettei[i].gi = (palgen[i & 7] & 2) ? color : 0) / 256.0f;
-        s->palettef[i].rf = (float)(s->palettei[i].ri = (palgen[i & 7] & 4) ? color : 0) / 256.0f;
+        s->palettef[i].bf = (float)(s->palettei[i].bi = (unsigned char)((palgen[i & 7] & 1) ? color : 0)) / 256.0f;
+        s->palettef[i].gf = (float)(s->palettei[i].gi = (unsigned char)((palgen[i & 7] & 2) ? color : 0)) / 256.0f;
+        s->palettef[i].rf = (float)(s->palettei[i].ri = (unsigned char)((palgen[i & 7] & 4) ? color : 0)) / 256.0f;
     }
 }
 
@@ -67,13 +67,13 @@ static void screen_transform(struct screen* s) {
     struct rgbi* pal = s->palettei;
     const unsigned char* attr = s->zx_attr;
     const unsigned char* patt = s->zx_patt;
-    short pt = 0;
-    const char inv = s->inverse ? (char)0xff : 0;
+    int pt = 0;
+    const char inv = s->inverse ? -1 : 0;
 
     for (short i = 0; i < 6144; i++) {
         const short yy = (short)(i >> 5);
         const short xx = (short)(i & 0x1f);
-        short aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38))
+        int aa = (((yy & 0xc0) | ((yy >> 3) & 7) | ((yy << 3) & 0x38))
             ^ ((~(yy << 1) & 0x80) | 0x3f)) << 5;
         pt = *(patt + aa + xx) << 2;
         aa = (23 - (yy >> 3)) << 5;
@@ -125,11 +125,14 @@ static void screen_glinit(struct screen* s) {
     //    glMatrixMode(GL_MODELVIEW);
     //    glLoadIdentity();
 
-    s->scrh = 1.0f - (float)s->yresv / (float)s->height;
-    if (s->bsize > 0.5)
-        s->bsize = 0.4;
-    glPixelZoom((((float)s->width - 2 * s->width * s->bsize) / 256),
-                (((float)s->height - 2 * s->height * s->bsize - s->yresv) / 192));
+    const float width = (float)s->width;
+    const float height = (float)s->height;
+    const float yresv = (float)s->yresv;
+
+    s->scrh = 1.0f - yresv / height;
+    if (s->bsize > 0.5f)
+        s->bsize = 0.4f;
+    glPixelZoom((width - 2 * width * s->bsize) / 256, (height - 2 * height * s->bsize - yresv) / 192);
     glRasterPos2d(s->bsize, s->bsize);
 
     //    glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
@@ -317,7 +320,7 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     on_exit(zx_free_refresh, (void*)s);
     msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", refresh, (1000 / refresh));
 
-    if (!(s->t2 = SDL_AddTimer(s->flash, zx_flash, s))) {
+    if ((s->t2 = SDL_AddTimer(s->flash, zx_flash, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }

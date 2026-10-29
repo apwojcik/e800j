@@ -59,7 +59,7 @@ state:
     1 - wciśnięto
     0 - zwolniono
 */
-static void key_matrix_update(struct keyboard* kb, unsigned char coord, unsigned char state) {
+static void key_matrix_update(struct keyboard* kb, unsigned char coord, const int state) {
     const unsigned char row = (coord >> 4) & 0xf;
     const unsigned char col = 1 << (coord & 0x7);
 
