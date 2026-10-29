@@ -27,6 +27,7 @@
 #include "zx_scrn.h"
 #include <SDL3/SDL_video.h>
 #include "e800j.h"
+#include "e800j_compat.h"
 #include "z80_cpu.h"
 #include "e800j_kbrd.h"
 #include "e800j_fdc.h"

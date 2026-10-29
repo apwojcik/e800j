@@ -15,6 +15,8 @@ find_package(OpenGL REQUIRED)
 add_executable(elwro
         src/e800j.c
         src/e800j.h
+        src/e800j_compat.c
+        src/e800j_compat.h
         src/e800j_fdc.c
         src/e800j_fdc.h
         src/e800j_file.c

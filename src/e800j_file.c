@@ -31,6 +31,7 @@
 #endif
 
 #include "e800j.h"
+#include "e800j_compat.h"
 #include "z80_cpu.h"
 #include "e800j_msg.h"
 #include "e800j_sound.h"
