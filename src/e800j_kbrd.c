@@ -165,7 +165,7 @@ void key_update(struct keyboard* kb, int key, const int state) {
         key_idx = key - '0' + KB_DIG_START;
     if (key_idx >= KB_ALL_CNT)
         return;
-    key_matrix_update(kb, keymap_table[key_idx], state);
+    key_matrix_update(kb, keymap_table[key_idx], (unsigned char)state);
 }
 
 /*
