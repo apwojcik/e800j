@@ -48,13 +48,13 @@ struct screen {
     unsigned char* zx_patt; /* wzory bitowe - 6kB */
     unsigned char* zx_attr; /* kolory kranu - 1kB */
     unsigned char border_color;
-    char refresh;
+    int refresh;
     unsigned int t0;
     unsigned int t2;
     void* glctx; /* SDL_GLContext */
     int flash; /* tempo migania atrybutu flash w ms */
     char inverse;
-    char fscrn;
+    int fscrn;
     int bright;
     int nbrt;
     int bbrt;

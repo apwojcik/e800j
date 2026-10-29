@@ -29,7 +29,7 @@ struct sound {
 
     int head; /* początek bufora kołowego  */
     int tail; // koniec bufora kołowego
-    int volume; // głośność
+    float volume; // głośność (0..128)
     int size; // rozmiar bufora
     int freq; /* ilość sampli / sekundę */
     int length; // długość bufora na karcie, wartość musi być pot 2 i może być skorygowana

@@ -254,7 +254,7 @@ void i8272_rdata(struct i8272* fdc, char mode) {
     /* odczyt bajtu z FDD */
     if (!fdc->err)
         tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0x00);
-    fdc->data = tmp;
+    fdc->data = tmp & 0xff;
     if (tmp < 0)
         fdc->err = tmp;
     /* reakcja na brak dysku */

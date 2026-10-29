@@ -26,7 +26,7 @@
 char msg_stream = 0;
 long msg_level = 0;
 
-static void msg_putchar(const char chr) {
+static void msg_putchar(const int chr) {
     if (msg_stream == 0)
         putchar(chr);
 }
