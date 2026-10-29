@@ -249,8 +249,8 @@
 #define _LDMBC_A	{ LDBMR,  RBC, RA,  RNR,  0x01, 0x02, 0x07,   0x00, 0x00, 0x00 }
 #define _LDMDE_A	{ LDBMR,  RDE, RA,  RNR,  0x01, 0x02, 0x07,   0x00, 0x00, 0x00 }
 #define _LDMCDW_A	{ LDBMNR, MCDW, RA,  RNR,  0x03, 0x04, 0x0d,   0x00, 0x00, 0x00 }
-#define _LDA_I		{ LDB_, RA, R_I,  RNR,  0x02, 0x02, 0x09,   FH+FN, 0x00, ~FC }
-#define _LDA_R		{ LDB_, RA, R_R,  RNR,  0x02, 0x02, 0x09,   FH+FN, 0x00, ~FC }
+#define _LDA_I		{ LDB_, RA, R_I,  RNR,  0x02, 0x02, 0x09,   FH+FN, 0x00, (unsigned char)~FC }
+#define _LDA_R		{ LDB_, RA, R_R,  RNR,  0x02, 0x02, 0x09,   FH+FN, 0x00, (unsigned char)~FC }
 #define _LDI_A		{ LDB, R_I,  RA,  RNR,  0x02, 0x02, 0x09,   0x00, 0x00, 0x00 }
 #define _LDR_A		{ LDB, R_R,  RA,  RNR,  0x02, 0x02, 0x09,   0x00, 0x00, 0x00 }
 
@@ -311,10 +311,10 @@
 #define _LDIR		{  LDBL,PIR, RNR,  RNR,  0x02, 0x05, 0x15, FH+FN+FP, 0x00, F5+FH+F3+FP+FN }
 #define _LDD		{  LDBL, PD, RNR,  RNR,  0x02, 0x04, 0x10, FH+FN, 0x00, F5+FH+F3+FP+FN }
 #define _LDDR		{  LDBL,PDR, RNR,  RNR,  0x02, 0x05, 0x15, FH+FN+FP, 0x00, F5+FH+F3+FP+FN }
-#define _CPI		{  CPBL, PI, RNR,  RNR,  0x02, 0x04, 0x10,   0x00,   FN, ~FC  }
-#define _CPIR		{  CPBL,PIR, RNR,  RNR,  0x02, 0x05, 0x15,   0x00,   FN, ~FC  }
-#define _CPD		{  CPBL, PD, RNR,  RNR,  0x02, 0x04, 0x10,   0x00,   FN, ~FC  }
-#define _CPDR		{  CPBL,PDR, RNR,  RNR,  0x02, 0x05, 0x15,   0x00,   FN, ~FC  }
+#define _CPI		{  CPBL, PI, RNR,  RNR,  0x02, 0x04, 0x10,   0x00,   FN, (unsigned char)~FC  }
+#define _CPIR		{  CPBL,PIR, RNR,  RNR,  0x02, 0x05, 0x15,   0x00,   FN, (unsigned char)~FC  }
+#define _CPD		{  CPBL, PD, RNR,  RNR,  0x02, 0x04, 0x10,   0x00,   FN, (unsigned char)~FC  }
+#define _CPDR		{  CPBL,PDR, RNR,  RNR,  0x02, 0x05, 0x15,   0x00,   FN, (unsigned char)~FC  }
 
 #define _INA		{  INA,   RA,  CDB,  RNR,  0x02, 0x03, 0x0b,   0x00, 0x00, 0x00 }
 #define _IN_B		{  INBC,  RB,  RNR,  RNR,  0x02, 0x03, 0x0c,   FN,   0x00, 0xfe }
@@ -491,8 +491,8 @@
 #define _XORA_MHL	{ XORM, RNR, RHL,  RNR,  0x01, 0x02, 0x07,     FC+FN+FH, 0x00, 0xff }
 #define _XORA_MIX	{ XORM, CDB, RIX,  RNR,  0x01, 0x02, 0x07,     FC+FN+FH, 0x00, 0xff }
 #define _XORA_MIY	{ XORM, CDB, RIY,  RNR,  0x01, 0x02, 0x07,     FC+FN+FH, 0x00, 0xff }
-#define _INCR(r)	{ INC8, RNR, R##r, INC,  0x01, 0x01, 0x04,     FN, 0x00, ~FC }
-#define _INCR_x(r)	{ INC8, RNR, R##r, INC,  0x02, 0x01, 0x04,     FN, 0x00, ~FC }
+#define _INCR(r)	{ INC8, RNR, R##r, INC,  0x01, 0x01, 0x04,     FN, 0x00, (unsigned char)~FC }
+#define _INCR_x(r)	{ INC8, RNR, R##r, INC,  0x02, 0x01, 0x04,     FN, 0x00, (unsigned char)~FC }
 #define _INCB		_INCR(B)
 #define _INCC		_INCR(C)
 #define _INCD		_INCR(D)
@@ -504,12 +504,12 @@
 #define _INCXL		_INCR_x(XL)
 #define _INCYH		_INCR_x(YH)
 #define _INCYL		_INCR_x(YL)
-#define _INCMHL		{ INCM8, RNR, RHL,  INC,  0x01, 0x03, 0x0b,     FN, 0x00, ~FC }
-#define _INCMIX		{ INCM8, CDB, RIX,  INC,  0x03, 0x06, 0x17,     FN, 0x00, ~FC }
-#define _INCMIY		{ INCM8, CDB, RIY,  INC,  0x03, 0x06, 0x17,     FN, 0x00, ~FC }
+#define _INCMHL		{ INCM8, RNR, RHL,  INC,  0x01, 0x03, 0x0b,     FN, 0x00, (unsigned char)~FC }
+#define _INCMIX		{ INCM8, CDB, RIX,  INC,  0x03, 0x06, 0x17,     FN, 0x00, (unsigned char)~FC }
+#define _INCMIY		{ INCM8, CDB, RIY,  INC,  0x03, 0x06, 0x17,     FN, 0x00, (unsigned char)~FC }
 
-#define _DECR(r)	{ DEC8, RNR, R##r, DEC,  0x01, 0x01, 0x04,     0x00, FN, ~FC }
-#define _DECR_x(r)	{ DEC8, RNR, R##r, DEC,  0x02, 0x01, 0x04,     0x00, FN, ~FC }
+#define _DECR(r)	{ DEC8, RNR, R##r, DEC,  0x01, 0x01, 0x04,     0x00, FN, (unsigned char)~FC }
+#define _DECR_x(r)	{ DEC8, RNR, R##r, DEC,  0x02, 0x01, 0x04,     0x00, FN, (unsigned char)~FC }
 #define _DECB		_DECR(B)
 #define _DECC		_DECR(C)
 #define _DECD		_DECR(D)
@@ -521,13 +521,13 @@
 #define _DECXL		_DECR_x(XL)
 #define _DECYH		_DECR_x(YH)
 #define _DECYL		_DECR_x(YL)
-#define _DECMHL		{ DECM8, RNR, RHL,  DEC,  0x01, 0x03, 0x0b,     0x00, FN, ~FC }
-#define _DECMIX		{ DECM8, CDB, RIX,  DEC,  0x03, 0x06, 0x17,     0x00, FN, ~FC }
-#define _DECMIY		{ DECM8, CDB, RIY,  DEC,  0x03, 0x06, 0x17,     0x00, FN, ~FC }
+#define _DECMHL		{ DECM8, RNR, RHL,  DEC,  0x01, 0x03, 0x0b,     0x00, FN, (unsigned char)~FC }
+#define _DECMIX		{ DECM8, CDB, RIX,  DEC,  0x03, 0x06, 0x17,     0x00, FN, (unsigned char)~FC }
+#define _DECMIY		{ DECM8, CDB, RIY,  DEC,  0x03, 0x06, 0x17,     0x00, FN, (unsigned char)~FC }
 
 /*********************** Pomocnicze Rozkazy arytmetyczne 8 bit *************************/
 /*         		   OC,   D,  R0,   R1,    LC,   CC,   TC,     AM,   OM,   CM   */
-#define _DAA		{ DAA, RNR, RNR,  RNR,  0x01, 0x01, 0x04,     0x00, 0x00, ~FN }
+#define _DAA		{ DAA, RNR, RNR,  RNR,  0x01, 0x01, 0x04,     0x00, 0x00, (unsigned char)~FN }
 #define _CPL		{ CPL, RNR, RNR,  RNR,  0x01, 0x01, 0x04,     0x00, FH+FN, F5+FH+F3+FN }
 #define _NEG		{ NEG, RNR, RNR,  RNR,  0x02, 0x02, 0x08,     0x00, FN, 0xff }
 #define _CCF		{ CCF, RNR, RNR,  RNR,  0x01, 0x01, 0x04,     FN, FN, F5+FH+F3+FN+FC }

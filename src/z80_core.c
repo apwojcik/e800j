@@ -37,8 +37,8 @@
 #define ROL_R(reg,bit_0)	((((reg) >> 1) & 0x7f) | ((bit_0) & 0x80))
 #define VGET_REG8(b)		b = *(z->regs8[z->reg80=z->p1]);
 #define VGET_CNS8(b)		b = z->dd=z80_fetch_byte(z);
-#define VSET_REG8(a)		*(z->regs8[z->p1]) = a
-#define VSET_MEM8(a)		z->memory_write(z,z->dd2,a)
+#define VSET_REG8(a)		*(z->regs8[z->p1]) = (unsigned char)(a)
+#define VSET_MEM8(a)		z->memory_write(z,z->dd2,(unsigned char)(a))
 
 #define SET_FLAGSP(reg,flags) \
         ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
@@ -1034,7 +1034,7 @@ void z80_ina(struct cpu* z) {
     TICS_UPDATE;
     z->last_in_data = Ar = z->io_read(z, z->last_in_addr = ((z->dd = z80_fetch_byte(z)) & 0xff) | (Ar << 8));
     if (z->force_in > 0)
-        z->last_in_data = Ar = z->force_in;
+        z->last_in_data = Ar = (unsigned char)z->force_in;
     INST_END;
 }
 
@@ -1043,7 +1043,7 @@ void z80_inbc(struct cpu* z) {
     TICS_UPDATE;
     z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = z->io_read(z, z->last_in_addr = BCr);
     if (z->force_in > 0)
-        z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = z->force_in;
+        z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = (unsigned char)z->force_in;
     INST_END;
 }
 
@@ -1062,7 +1062,7 @@ void z80_add8(struct cpu* z) {
 
     VGET_REG8(b);
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1077,7 +1077,7 @@ void z80_addn8(struct cpu* z) {
 
     VGET_CNS8(b);
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1092,7 +1092,7 @@ void z80_addm8(struct cpu* z) {
 
     VGET_MEM8(b);
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1108,7 +1108,7 @@ void z80_adc8(struct cpu* z) {
     VGET_REG8(b);
     b += Fr & 1;
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1124,7 +1124,7 @@ void z80_adcn8(struct cpu* z) {
     VGET_CNS8(b);
     b += Fr & 1;
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1140,7 +1140,7 @@ void z80_adcm8(struct cpu* z) {
     VGET_MEM8(b);
     b += Fr & 1;
     a = Ar;
-    Ar = a + b;
+    Ar = (unsigned char)(a + b);
     ALU_INDEX_8(Ar, a, b, c);
     SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
 
@@ -1155,7 +1155,7 @@ void z80_sub8(struct cpu* z) {
 
     VGET_REG8(b);
     a = Ar;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1170,7 +1170,7 @@ void z80_subn8(struct cpu* z) {
 
     VGET_CNS8(b);
     a = Ar;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1185,7 +1185,7 @@ void z80_subm8(struct cpu* z) {
 
     VGET_MEM8(b);
     a = Ar;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1201,7 +1201,7 @@ void z80_sbc8(struct cpu* z) {
     VGET_REG8(b);
     a = Ar;
     b += Fr & FC;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1217,7 +1217,7 @@ void z80_sbcn8(struct cpu* z) {
     VGET_CNS8(b);
     a = Ar;
     b += Fr & FC;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1233,7 +1233,7 @@ void z80_sbcm8(struct cpu* z) {
     VGET_MEM8(b);
     a = Ar;
     b += Fr & FC;
-    Ar = a - b;
+    Ar = (unsigned char)(a - b);
     ALU_INDEX_8(Ar, b, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1357,7 +1357,7 @@ void z80_neg(struct cpu* z) {
     z->cmd_type = D_NEG;
     TICS_UPDATE;
 
-    Ar = -(a = Ar);
+    Ar = (unsigned char)(-(a = Ar));
     ALU_INDEX_8(Ar, 0, a, c);
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
@@ -1388,7 +1388,7 @@ void z80_addx(struct cpu* z) {
     d = a + b;
     ALU_INDEX_X(d, a, b, c);
     SET_FLAGSV(d >> 8, __z80_add_cy_tbl[c]);
-    *(z->regs16[z->p0]) = d;
+    *(z->regs16[z->p0]) = (unsigned short)d;
 
     INST_END;
 }
@@ -1403,7 +1403,7 @@ void z80_adcx(struct cpu* z) {
     d = a + b;
     ALU_INDEX_X(d, a, b, c);
     SET_FLAGSV(d >> 8, __z80_add_cy_tbl[c]);
-    *(z->regs16[z->p0]) = d;
+    *(z->regs16[z->p0]) = (unsigned short)d;
 
     INST_END;
 }
@@ -1418,7 +1418,7 @@ void z80_sbcx(struct cpu* z) {
     d = a - b;
     ALU_INDEX_X(d, b, a, c);
     SET_FLAGSVX(d, __z80_sub_cy_tbl[c]);
-    *(z->regs16[z->p0]) = d;
+    *(z->regs16[z->p0]) = (unsigned short)d;
 
     INST_END;
 }
