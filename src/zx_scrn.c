@@ -176,19 +176,19 @@ static Uint32 zx_flash(void* zx, SDL_TimerID timerID, Uint32 interval) {
     return interval;
 }
 
-static void zx_free_rfsh(int n, void* zx) {
+static void zx_free_refresh(const int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t0);
+    SDL_RemoveTimer(((struct screen*)zx)->t0);
 }
 
-static void zx_free_cpu_refresh(int n, void* zx) {
+static void zx_free_cpu_refresh(const int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)((struct elwro*)zx)->t1);
+    SDL_RemoveTimer(((struct elwro*)zx)->t1);
 }
 
-static void zx_free_flash(int n, void* zx) {
+static void zx_free_flash(const int n, void* zx) {
     (void)n;
-    SDL_RemoveTimer((SDL_TimerID)((struct screen*)zx)->t2);
+    SDL_RemoveTimer(((struct screen*)zx)->t2);
 }
 
 char screen_init(struct screen* s, int width, int height, int bpp, const int argc, const char** argv, const int refresh) {
@@ -293,6 +293,7 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &s->rgb_size[2]);
     SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &s->bpp);
     SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &s->dbf);
+
     msg_printf(MSG_MSG, "SDL GL RED SIZE     : %d\n", s->rgb_size[0]);
     msg_printf(MSG_MSG, "SDL GL GREEN SIZE   : %d\n", s->rgb_size[1]);
     msg_printf(MSG_MSG, "SDL GL BLUE SIZE    : %d\n", s->rgb_size[2]);
@@ -312,7 +313,7 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
-    on_exit(zx_free_rfsh, (void*)s);
+    on_exit(zx_free_refresh, (void*)s);
     msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", refresh, (1000 / refresh));
 
     if (!(s->t2 = SDL_AddTimer(s->flash, zx_flash, s))) {

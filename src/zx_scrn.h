@@ -64,7 +64,7 @@ struct screen {
     float scrh;
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
     SDL_Window* window;
-    SDL_Renderer* renderer;
+    SDL_GLContext gl_context;
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
