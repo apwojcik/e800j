@@ -113,7 +113,7 @@ static char* dbg_equalize(char* str, size_t n) {
 }
 
 static void dbg_resolver(const struct cpu* z, const char* code, char* str) {
-    unsigned int j = 0;
+    size_t j = 0;
     char xn[8] = "", kn[8] = "", fn[8] = "";
     if (code == NULL)
         return;
@@ -158,7 +158,7 @@ static void dbg_resolver(const struct cpu* z, const char* code, char* str) {
             case 'm':
                 strcat(str + j, rX[z->regx0]);
                 if ((z->regx0 == RIX) || (z->regx0 == RIY)) {
-                    unsigned int k = z->dd < 0 ? -z->dd : z->dd;
+                    const unsigned char k = (unsigned char)(z->dd < 0 ? -z->dd : z->dd);
                     sprintf(kn, "%s$%s", z->dd < 0 ? "-" : "+", dbg_oc2hexstr(k, fn));
                     strcat(str + j, kn);
                 }
@@ -271,12 +271,14 @@ void dbg_deasm(struct dbg* d) {
     char a[3], b[3], c[32] = "";
     char tmp[256] = "", tmp1[256] = "";
 
-    sprintf(tmp, "%s%s %s", dbg_oc2hexstr(d->z->adrs >> 8, a), dbg_oc2hexstr(d->z->adrs, b), d->mach);
+    sprintf(tmp, "%s%s %s", dbg_oc2hexstr((unsigned char)(d->z->adrs >> 8), a), dbg_oc2hexstr((unsigned char)d->z->adrs, b), d->mach);
     dbg_equalize(tmp, 16);
     dbg_resolver(d->z, ddt[d->z->cmd_type], c);
     dbg_equalize(c, 16);
     snprintf(d->line, sizeof(d->line), "%.100s%.31s%.100s\n", tmp, c, dbg_getregs(d, tmp1));
-    d->z->dd = d->z->nn = d->z->reg80 = 0;
+    d->z->reg80 = 0;
+    d->z->nn = 0;
+    d->z->dd = 0;
     d->z->reg81 = d->z->regx0 = d->z->regx1 = d->z->cmd_type = 0;
 }
 
@@ -323,7 +325,7 @@ void dbg_input(struct dbg* d) {
 
 void dbg_getcmd(struct dbg* d, char* cmd) {
     char* n = d->cmdline;
-    int i, j, k = strlen(n);
+    int i, j, k = (int)strlen(n);
 
     /* znajdź początek wyrazu */
     for (i = 0; i < k && n[i] < '!'; i++);
@@ -611,7 +613,7 @@ void dbg_dbps(struct dbg* d) {
 }
 
 static unsigned char dbg_peek(const struct dbg* d, int addrs) {
-    return d->z->memory_read(d->z, addrs);
+    return d->z->memory_read(d->z, (unsigned short)addrs);
 }
 
 void dbg_memo(struct dbg* d) {
@@ -637,7 +639,7 @@ void dbg_memo(struct dbg* d) {
     for (j = 0; j < d->dline; j++) {
         *tmp2 = '\0';
         *tmp3 = '\0';
-        dbg_xc2hexstr(d->daddr, tmp2);
+        dbg_xc2hexstr((unsigned short)d->daddr, tmp2);
         strcat(tmp2, "  ");
         for (i = 0; i < 16; i++) {
             dbg_oc2hexstr(k = dbg_peek(d, d->daddr + i), tmp0);
@@ -698,14 +700,14 @@ void dbg_stck(struct dbg* d) {
     d->out("Stack:\n");
     for (i = 0; i < lines; i++) {
         t = dbg_peek(d, (*d->z->SP_r) + i * 2 + 1) * 256 + dbg_peek(d, (*d->z->SP_r) + i * 2);
-        dbg_xc2hexstr(t, tmp);
+        dbg_xc2hexstr((unsigned short)t, tmp);
         strcat(tmp, "\n");
         d->out(tmp);
     }
 }
 
 void dbg_pokebyte(struct dbg* d, int addr, unsigned char data) {
-    d->z->memory_write(d->z, addr, data);
+    d->z->memory_write(d->z, (unsigned short)addr, data);
 }
 
 void dbg_poke(struct dbg* d) {
@@ -755,7 +757,7 @@ void dbg_poke(struct dbg* d) {
             d->out("' is out of range 0..255.\n");
             return;
         }
-        dbg_pokebyte(d, addr, data);
+        dbg_pokebyte(d, addr, (unsigned char)data);
         addr++;
         k = i;
     }
@@ -851,108 +853,108 @@ char dbg_setreg(struct dbg* d, char* t) {
     val = strtol(tmp1,NULL, 0);
 
     for (i = 0; i < (int)strlen(tmp0); i++)
-        tmp0[i] = tolower(tmp0[i]);
+        tmp0[i] = (char)tolower((unsigned char)tmp0[i]);
 
     if (!strcmp(tmp0, "a"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "b"))
-        *d->z->B_r = val;
+        *d->z->B_r = (unsigned char)val;
     else if (!strcmp(tmp0, "c"))
-        *d->z->C_r = val;
+        *d->z->C_r = (unsigned char)val;
     else if (!strcmp(tmp0, "d"))
-        *d->z->D_r = val;
+        *d->z->D_r = (unsigned char)val;
     else if (!strcmp(tmp0, "e"))
-        *d->z->E_r = val;
+        *d->z->E_r = (unsigned char)val;
     else if (!strcmp(tmp0, "h"))
-        *d->z->H_r = val;
+        *d->z->H_r = (unsigned char)val;
     else if (!strcmp(tmp0, "l"))
-        *d->z->L_r = val;
+        *d->z->L_r = (unsigned char)val;
     else if (!strcmp(tmp0, "a'")) {
         if (d->z->alt_af)
-            d->z->As0 = val;
+            d->z->As0 = (unsigned char)val;
         else
-            d->z->As1 = val;
+            d->z->As1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "b'")) {
         if (d->z->alt_rg)
-            d->z->Bs0 = val;
+            d->z->Bs0 = (unsigned char)val;
         else
-            d->z->Bs1 = val;
+            d->z->Bs1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "c'")) {
         if (d->z->alt_rg)
-            d->z->Cs0 = val;
+            d->z->Cs0 = (unsigned char)val;
         else
-            d->z->Cs1 = val;
+            d->z->Cs1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "d'")) {
         if (d->z->alt_rg)
-            d->z->Ds0 = val;
+            d->z->Ds0 = (unsigned char)val;
         else
-            d->z->Ds1 = val;
+            d->z->Ds1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "e'")) {
         if (d->z->alt_rg)
-            d->z->Es0 = val;
+            d->z->Es0 = (unsigned char)val;
         else
-            d->z->Es1 = val;
+            d->z->Es1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "h'")) {
         if (d->z->alt_rg)
-            d->z->Hs0 = val;
+            d->z->Hs0 = (unsigned char)val;
         else
-            d->z->Hs1 = val;
+            d->z->Hs1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "l'")) {
         if (d->z->alt_rg)
-            d->z->Ls0 = val;
+            d->z->Ls0 = (unsigned char)val;
         else
-            d->z->Ls1 = val;
+            d->z->Ls1 = (unsigned char)val;
     }
     else if (!strcmp(tmp0, "af"))
-        *d->z->AF_r = val;
+        *d->z->AF_r = (unsigned short)val;
     else if (!strcmp(tmp0, "bc"))
-        *d->z->BC_r = val;
+        *d->z->BC_r = (unsigned short)val;
     else if (!strcmp(tmp0, "de"))
-        *d->z->DE_r = val;
+        *d->z->DE_r = (unsigned short)val;
     else if (!strcmp(tmp0, "hl"))
-        *d->z->HL_r = val;
+        *d->z->HL_r = (unsigned short)val;
     else if (!strcmp(tmp0, "af'")) {
         if (d->z->alt_af)
-            d->z->AFs0 = val;
+            d->z->AFs0 = (unsigned short)val;
         else
-            d->z->AFs1 = val;
+            d->z->AFs1 = (unsigned short)val;
     }
     else if (!strcmp(tmp0, "bc'")) {
         if (d->z->alt_rg)
-            d->z->BCs0 = val;
+            d->z->BCs0 = (unsigned short)val;
         else
-            d->z->BCs1 = val;
+            d->z->BCs1 = (unsigned short)val;
     }
     else if (!strcmp(tmp0, "de'")) {
         if (d->z->alt_rg)
-            d->z->DEs0 = val;
+            d->z->DEs0 = (unsigned short)val;
         else
-            d->z->DEs1 = val;
+            d->z->DEs1 = (unsigned short)val;
     }
     else if (!strcmp(tmp0, "hl'")) {
         if (d->z->alt_rg)
-            d->z->HLs0 = val;
+            d->z->HLs0 = (unsigned short)val;
         else
-            d->z->HLs1 = val;
+            d->z->HLs1 = (unsigned short)val;
     }
     else if (!strcmp(tmp0, "ix"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "iy"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "sp"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "pc"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "i"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else if (!strcmp(tmp0, "r"))
-        *d->z->A_r = val;
+        *d->z->A_r = (unsigned char)val;
     else {
         d->out("Unknown register name.\n");
         return 1;
@@ -1047,7 +1049,7 @@ void dbg_trace(struct dbg* d) {
     }
     d->icnt = cnt;
     d->noregs = 0;
-    d->deasm = d->icnt ? outs : 1;
+    d->deasm = (char)(d->icnt ? outs : 1);
     d->trace = 1;
     d->console = 0;
 }
@@ -1075,7 +1077,7 @@ void dbg_proc(struct dbg* d) {
     }
     d->icnt = cnt;
     d->noregs = 0;
-    d->deasm = d->icnt ? outs : 1;
+    d->deasm = (char)(d->icnt ? outs : 1);
     d->trace = 1;
     d->console = 0;
     /************** dodać ******************/
@@ -1101,7 +1103,7 @@ static unsigned char dbg_dummy_io_read(const void* z, unsigned short addr) {
 }
 
 static void dbg_debug(const void* z, int mode, unsigned char data) {
-    dbg_call(((struct cpu*)z)->ptx, mode, data);
+    dbg_call(((struct cpu*)z)->ptx, (unsigned char)mode, data);
 }
 
 void dbg_deasembly(struct dbg* d) {
@@ -1118,7 +1120,7 @@ void dbg_deasembly(struct dbg* d) {
     z.ptr = d->z->ptr;
     z.debug = dbg_debug;
     z.jmp_off = 1;
-    *z.PC_r = d->zaddr;
+    *z.PC_r = (unsigned short)d->zaddr;
     memset(&dr, 0, sizeof(struct dbg));
     dr.noregs = 1;
     dr.deasm = 1;
@@ -1176,7 +1178,7 @@ void dbg_iout(struct dbg* d) {
         return;
     }
 
-    d->z->io_write(d->z, addr, value);
+    d->z->io_write(d->z, (unsigned short)addr, (unsigned char)value);
 }
 
 void dbg_iin(struct dbg* d) {
