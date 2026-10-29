@@ -100,19 +100,19 @@ enum {
     1 - dla akcji VFDD_WR_SEC
     2 - dla akcji VFDD_LOAD
 */
-int vfdd_dsk_floppy(
+unsigned char vfdd_dsk_floppy(
     struct vfdd_disk*,
     char action,
-    char parm0, /* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
-    char parm1, /* sektor  | 2-typ emulacji */
-    char parm2, /* głowica */
+    unsigned char parm0, /* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
+    unsigned char parm1, /* sektor  | 2-typ emulacji */
+    unsigned char parm2, /* głowica */
     const char* path /* ścieżka do pliku/katalogu */
 );
 
 /*
     Emulacja napędu
 */
-int vfdd_drive(
+unsigned char vfdd_drive(
     const void* ptr, /* wskaźnik nadrzędnej struktury danych */
     void* dsk, /* vfdd_disk */
     unsigned char action, /* rodzaj akcji - zdefiniowane w  i8272_fdc.h */

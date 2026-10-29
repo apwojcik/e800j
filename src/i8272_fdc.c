@@ -21,14 +21,16 @@
 #include "e800j_msg.h"
 #include "i8272_fdc.h"
 
+#include <string.h>
+
 /* tablica dekodująca instrukcje */
 static const struct i8272opc opcodes_tabl[32] = i8272_CMD_TABLE;
 
-void i8272_command(struct i8272* fdc, char plc);
-void i8272_result(struct i8272* fdc, char plc);
-void i8272_write_data(struct i8272* fdc, char mode);
+static void i8272_command(struct i8272* fdc, char plc);
+static void i8272_result(struct i8272* fdc, char plc);
+static void i8272_write_data(struct i8272* fdc, char mode);
 
-int i8272_dummy_drive(const void* f, void* param, unsigned char action, unsigned char wdata) {
+static unsigned char i8272_dummy_drive(const void* f, void* param, const unsigned char action, const unsigned char wdata) {
     (void)f;
     (void)param;
     (void)action;
@@ -38,7 +40,7 @@ int i8272_dummy_drive(const void* f, void* param, unsigned char action, unsigned
 
 /**************************************************************************************************/
 
-void i8272_fdd_connect(struct i8272* fdc, int (*drive)(const void*, void*, unsigned char, unsigned char), void* f0,
+void i8272_fdd_connect(struct i8272* fdc, unsigned char (*drive)(const void*, void*, unsigned char, unsigned char), void* f0,
     void* f1, void* f2, void* f3)
 {
     fdc->drive = drive;
@@ -51,28 +53,27 @@ void i8272_fdd_connect(struct i8272* fdc, int (*drive)(const void*, void*, unsig
 void i8272_init(struct i8272* fdc) {
     fdc->msr = 0x80;
     fdc->st0 = 0x80;
-    fdc->st1 = 0x00;
-    fdc->st2 = 0x00;
-    fdc->st3 = 0x00;
-
-    fdc->srt = 0x00;
-    fdc->hut = 0x00;
-    fdc->hlt = 0x00;
-    fdc->hds = 0x00;
-    fdc->pcn = 0x00;
-    fdc->ds = 0x00;
-
-    fdc->icntr = 0x00;
+    fdc->st1 = 0;
+    fdc->st2 = 0;
+    fdc->st3 = 0;
+    fdc->srt = 0;
+    fdc->hut = 0;
+    fdc->hlt = 0;
+    fdc->hds = 0;
+    fdc->pcn = 0;
+    fdc->ds  = 0;
+    fdc->icntr = 0;
     fdc->phase = FDC_COMMAND;
-    fdc->data = 0x00;
+    fdc->data = 0;
     for (int i = 0; i < 16; i++)
-        fdc->buffer[i] = 0x00;
-    fdc->idx_0 = fdc->idx_1 = 0;
-    fdc->opcode = (void*)0;
-    fdc->parameter[0] = (void*)0;
-    fdc->parameter[1] = (void*)0;
-    fdc->parameter[2] = (void*)0;
-    fdc->parameter[3] = (void*)0;
+        fdc->buffer[i] = 0;
+    fdc->idx_0 = 0;
+    fdc->idx_1 = 0;
+    fdc->opcode = NULL;
+    fdc->parameter[0] = NULL;
+    fdc->parameter[1] = NULL;
+    fdc->parameter[2] = NULL;
+    fdc->parameter[3] = NULL;
     fdc->drive = i8272_dummy_drive;
     fdc->int_line = 0;
     fdc->rw = 0;
@@ -80,75 +81,73 @@ void i8272_init(struct i8272* fdc) {
 }
 
 /* reakcja na stan linii RESET */
-void i8272_reset(struct i8272* fdc, unsigned char reset) {
-    if (!reset)
-        return;
-
-    fdc->msr = (fdc->msr & FDC_NDM) | 0x80;
-    fdc->st0 = 0x80;
-    fdc->st1 = 0x00;
-    fdc->st2 = 0x00;
-    fdc->st3 = 0x00;
-    fdc->err = 0;
-
-    fdc->hds = 0x00;
-    fdc->pcn = 0x00;
-    fdc->ds = 0x00;
-
-    fdc->icntr = 0x00;
-    fdc->phase = FDC_COMMAND;
-    fdc->data = 0x00;
-    for (int i = 0; i < 16; i++)
-        fdc->buffer[i] = 0x00;
-    fdc->idx_0 = fdc->idx_1 = 0;
-    fdc->opcode = (void*)0;
-    fdc->int_line = 0;
-    fdc->rw = 0;
-    msg_printf(MSG_MSG, "FDC i8272A reset\n");
+void i8272_reset(struct i8272* fdc, const unsigned char reset) {
+    if (reset != 0) {
+        fdc->msr = (fdc->msr & FDC_NDM) | 0x80;
+        fdc->st0 = 0x80;
+        fdc->st1 = 0;
+        fdc->st2 = 0;
+        fdc->st3 = 0;
+        fdc->err = 0;
+        fdc->hds = 0;
+        fdc->pcn = 0;
+        fdc->ds  = 0;
+        fdc->icntr = 0;
+        fdc->phase = FDC_COMMAND;
+        fdc->data = 0;
+        for (int i = 0; i < 16; i++) {
+            fdc->buffer[i] = 0;
+        }
+        fdc->idx_0 = 0;
+        fdc->idx_1 = 0;
+        fdc->opcode = NULL;
+        fdc->int_line = 0;
+        fdc->rw = 0;
+        msg_printf(MSG_MSG, "FDC i8272A reset\n");
+    }
 }
 
 /* reakcja na stan linii TC, zakończenie bieżącej komendy jeśli tc=1 */
-void i8272_tc(struct i8272* fdc, unsigned char tc) {
-    if (!tc)
-        return;
-    if (!fdc->rw) {
-        fdc->phase = FDC_COMMAND;
-        fdc->opcode = (void*)0;
-        fdc->icntr = 0;
-        fdc->msr &= ~(FDC_DIO | FDC_RQM);
-        fdc->msr |= FDC_RQM;
-        fdc->int_line = 0;
+void i8272_tc(struct i8272* fdc, const unsigned char tc) {
+    if (tc != 0) {
+        if (fdc->rw == 0) {
+            fdc->phase = FDC_COMMAND;
+            fdc->opcode = NULL;
+            fdc->icntr = 0;
+            fdc->msr &= ~(FDC_DIO | FDC_RQM);
+            fdc->msr |= FDC_RQM;
+            fdc->int_line = 0;
+        }
+        else {
+            fdc->rw = 2;
+            fdc->msr |= FDC_RQM | FDC_DIO;
+        }
+        msg_printf(MSG_NVERB_MSG, "FDC i8272A TC received\n");
     }
-    else {
-        fdc->rw = 2;
-        fdc->msr |= FDC_RQM | FDC_DIO;
-    }
-    msg_printf(MSG_NVERB_MSG, "FDC i8272A TC received\n");
 }
 
-void i8272_call(struct i8272* fdc, char plc) {
+static void i8272_call(struct i8272* fdc, const char plc) {
     fdc->call = plc;
     if (fdc->opcode)
         fdc->opcode->command(fdc);
 }
 
 /* odczyt rejestru */
-unsigned char i8272_in(struct i8272* fdc, unsigned char a0) {
+unsigned char i8272_in(struct i8272* fdc, const unsigned char address_bit) {
     unsigned char tmp = 0xff;
-
     fdc->int_line = 0;
-    if (!(a0 & 1)) {
-        msg_printf(MSG_UNVERB_MSG, "FDC IN MSR %x\n", (unsigned char)fdc->msr);
+    if ((address_bit & 1) == 0) {
+        msg_printf(MSG_UNVERB_MSG, "FDC IN MSR %x\n", fdc->msr);
         return fdc->msr;
     }
-
-    if ((fdc->msr & (FDC_RQM | FDC_DIO)) != (FDC_RQM | FDC_DIO))
+    if ((fdc->msr & (FDC_RQM | FDC_DIO)) != (FDC_RQM | FDC_DIO)) {
         return 0xff;
-
-    if (fdc->rw)
+    }
+    if (fdc->rw != 0) {
         i8272_result(fdc, FDC_IN_DATA_1);
+    }
     tmp = fdc->data;
-    if (!fdc->rw) {
+    if (fdc->rw == 0) {
         fdc->msr &= ~FDC_RQM;
         i8272_result(fdc, FDC_IN_DATA_1);
     }
@@ -157,27 +156,29 @@ unsigned char i8272_in(struct i8272* fdc, unsigned char a0) {
 }
 
 /* zapis bajtu do rejestru */
-void i8272_out(struct i8272* fdc, unsigned char address_bit, unsigned char data) {
+void i8272_out(struct i8272* fdc, const unsigned char address_bit, const unsigned char data) {
     fdc->int_line = 0;
-    if (!(address_bit & 1)) {
+    if ((address_bit & 1) != 0) {
+        if ((fdc->msr & FDC_RQM) == FDC_RQM) {
+            if (fdc->rw == 0) {
+                i8272_command(fdc, FDC_OUT_DATA_0);
+            }
+            fdc->data = data;
+            fdc->msr &= ~FDC_RQM;
+            if (fdc->rw == 0) {
+                i8272_command(fdc, FDC_OUT_DATA_1);
+            } else {
+                i8272_call(fdc, FDC_OUT_DATA_1);
+            }
+            msg_printf(MSG_UNVERB_MSG, "FDC OUT PORT %x\n", data);
+        }
+    } else {
         msg_printf(MSG_ERROR, "FDC Illegal port operation! \n");
-        return;
     }
-    if ((fdc->msr & FDC_RQM) != FDC_RQM)
-        return;
-    if (!fdc->rw)
-        i8272_command(fdc, FDC_OUT_DATA_0);
-    fdc->data = data;
-    fdc->msr &= ~FDC_RQM;
-    if (!fdc->rw)
-        i8272_command(fdc, FDC_OUT_DATA_1);
-    else
-        i8272_call(fdc, FDC_OUT_DATA_1);
-    msg_printf(MSG_UNVERB_MSG, "FDC OUT PORT %x\n", data);
 }
 
 /* wystawienie przerwania */
-void i8272_int(struct i8272* fdc, unsigned char icode) {
+static void i8272_int(struct i8272* fdc, unsigned char icode) {
     fdc->int_line = 1;
     fdc->msr |= FDC_RQM;
     fdc->st0 &= ~FDC_IC;
@@ -185,7 +186,7 @@ void i8272_int(struct i8272* fdc, unsigned char icode) {
 }
 
 /* zakończenie komendy */
-void i8272_end_cmd(struct i8272* fdc) {
+static void i8272_end_cmd(struct i8272* fdc) {
     msg_printf(MSG_NVERB_MSG, "FDC end command\n");
     fdc->opcode = 0;
     fdc->phase = FDC_COMMAND;
@@ -245,18 +246,16 @@ void i8272_result(struct i8272* fdc, char plc) {
 
 void i8272_rdata(struct i8272* fdc, char mode) {
     (void)mode;
-    int tmp = 0;
-
+    unsigned char tmp = 0;
     fdc->st0 = 0;
     fdc->st1 = 0;
     fdc->st2 = 0;
     fdc->st3 = FDC_RDY;
     /* odczyt bajtu z FDD */
-    if (!fdc->err)
-        tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0x00);
-    fdc->data = tmp & 0xff;
-    if (tmp < 0)
-        fdc->err = tmp;
+    if (!fdc->err) {
+        tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0);
+    }
+    fdc->data = tmp;
     /* reakcja na brak dysku */
     if (fdc->err == FDD_ERR_NODISK) {
         fdc->st0 = FDC_NR | (fdc->ds & 0x03) | 0x40;
@@ -281,58 +280,57 @@ void i8272_rdata(struct i8272* fdc, char mode) {
         fdc->rec = 1;
 }
 
-void i8272_read_data(struct i8272* fdc, char mode) {
+static void i8272_read_data(struct i8272* fdc, char mode) {
     if (fdc->rw == 1) {
         i8272_rdata(fdc, mode);
-        return;
+    } else {
+        if (fdc->rw == 2) {
+            fdc->idx_0 = 0;
+            fdc->idx_1 = fdc->opcode->res_len;
+            fdc->opcode = (void*)0;
+            fdc->buffer[0] = fdc->st0;
+            fdc->buffer[1] = fdc->st1;
+            fdc->buffer[2] = fdc->st2;
+            fdc->buffer[3] = fdc->cn;
+            fdc->buffer[4] = fdc->ha;
+            fdc->buffer[5] = fdc->rec;
+            fdc->buffer[6] = fdc->nb;
+            fdc->phase = FDC_RESULT;
+            fdc->rw = 0;
+            i8272_result(fdc, FDC_CMD);
+            i8272_int(fdc, FDC_IC_IC);
+        } else {
+            if (fdc->phase == FDC_EXEC) {
+                fdc->ds = fdc->buffer[1] & 0x03;
+                fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
+                fdc->cn = fdc->buffer[2];
+                fdc->ha = fdc->buffer[3];
+                fdc->rec = fdc->buffer[4];
+                fdc->nb = fdc->buffer[5];
+                fdc->eot = fdc->buffer[6];
+                fdc->gpl = fdc->buffer[7];
+                fdc->dtl = fdc->buffer[8];
+                fdc->rw = 1;
+                /* wyzerowanie licznika bajtów w sektorze */
+                fdc->sbyte = 0;
+                /* obliczenie długości sektora w bajtach */
+                fdc->slen = 0x80 << fdc->nb;
+                if (fdc->nb == 0) {
+                    fdc->slen = fdc->dtl;
+                }
+                /* obliczenie długości ścieżki */
+                fdc->trlen = fdc->eot * fdc->slen;
+                /* ustawienie flag odbioru danej, dana będzie wstawiona dopiero po wywołaniu in(),
+                   ale inaczej by do niej nie weszła
+                 */
+                fdc->msr |= FDC_RQM | FDC_DIO;
+                fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
+
+                msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
+                           fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
+            }
+        }
     }
-
-    if (fdc->rw == 2) {
-        fdc->idx_0 = 0;
-        fdc->idx_1 = fdc->opcode->res_len;
-        fdc->opcode = (void*)0;
-        fdc->buffer[0] = fdc->st0;
-        fdc->buffer[1] = fdc->st1;
-        fdc->buffer[2] = fdc->st2;
-        fdc->buffer[3] = fdc->cn;
-        fdc->buffer[4] = fdc->ha;
-        fdc->buffer[5] = fdc->rec;
-        fdc->buffer[6] = fdc->nb;
-        fdc->phase = FDC_RESULT;
-        fdc->rw = 0;
-        i8272_result(fdc, FDC_CMD);
-        i8272_int(fdc, FDC_IC_IC);
-        return;
-    }
-
-    if (fdc->phase != FDC_EXEC)
-        return;
-    fdc->ds = fdc->buffer[1] & 0x03;
-    fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
-    fdc->cn = fdc->buffer[2];
-    fdc->ha = fdc->buffer[3];
-    fdc->rec = fdc->buffer[4];
-    fdc->nb = fdc->buffer[5];
-    fdc->eot = fdc->buffer[6];
-    fdc->gpl = fdc->buffer[7];
-    fdc->dtl = fdc->buffer[8];
-    fdc->rw = 1;
-    /* wyzerowanie licznika bajtów w sektorze */
-    fdc->sbyte = 0;
-    /* obliczenie długości sektora w bajtach */
-    fdc->slen = 0x80 << fdc->nb;
-    if (!fdc->nb)
-        fdc->slen = fdc->dtl;
-    /* obliczenie długości ścieżki */
-    fdc->trlen = fdc->eot * fdc->slen;
-    /* ustawienie flag odbioru danej, dana będzie wstawiona dopiero po wywołaniu in(),
-       ale inaczej by do niej nie weszła
-     */
-    fdc->msr |= FDC_RQM | FDC_DIO;
-    fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
-
-    msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
-               fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
 }
 
 void i8272_rd_cmd(struct i8272* fdc) {
@@ -356,94 +354,92 @@ void i8272_rt_cmd(struct i8272* fdc) {
 }
 
 void i8272_sis_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-
-    fdc->idx_0 = 0;
-    fdc->idx_1 = fdc->opcode->res_len;
-    fdc->opcode = (void*)0;
-    fdc->buffer[0] = fdc->st0;
-    fdc->buffer[1] = fdc->pcn;
-    fdc->phase = FDC_RESULT;
-    fdc->st0 &= ~FDC_SE;
-    i8272_result(fdc, FDC_CMD);
-    i8272_int(fdc, FDC_IC_IC);
+    if (fdc->phase != FDC_COMMAND) {
+        fdc->idx_0 = 0;
+        fdc->idx_1 = fdc->opcode->res_len;
+        fdc->opcode = (void*)0;
+        fdc->buffer[0] = fdc->st0;
+        fdc->buffer[1] = fdc->pcn;
+        fdc->phase = FDC_RESULT;
+        fdc->st0 &= ~FDC_SE;
+        i8272_result(fdc, FDC_CMD);
+        i8272_int(fdc, FDC_IC_IC);
+    }
 }
 
 void i8272_specify_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-    fdc->srt = fdc->buffer[1];
-    fdc->hut = fdc->srt & 0x0f;
-    fdc->srt >>= 4;
-    fdc->hlt = fdc->buffer[2];
-    fdc->msr &= ~FDC_NDM;
-    fdc->msr |= (fdc->hlt & 1) ? FDC_NDM : 0;
-    fdc->hlt >>= 1;
-
-    i8272_end_cmd(fdc);
-    i8272_int(fdc, FDC_IC_NT);
+    if (fdc->phase != FDC_COMMAND) {
+        fdc->srt = fdc->buffer[1];
+        fdc->hut = fdc->srt & 0x0f;
+        fdc->srt >>= 4;
+        fdc->hlt = fdc->buffer[2];
+        fdc->msr &= ~FDC_NDM;
+        fdc->msr |= (fdc->hlt & 1) ? FDC_NDM : 0;
+        fdc->hlt >>= 1;
+        i8272_end_cmd(fdc);
+        i8272_int(fdc, FDC_IC_NT);
+    }
 }
 
 void i8272_seek_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-    fdc->ds = fdc->buffer[1] & 0x03;
-    fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
-    fdc->pcn = fdc->buffer[2];
-    fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK, 0x00);
-
-    i8272_end_cmd(fdc);
-    i8272_int(fdc, FDC_IC_NT);
+    if (fdc->phase != FDC_COMMAND) {
+        fdc->ds = fdc->buffer[1] & 0x03;
+        fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
+        fdc->pcn = fdc->buffer[2];
+        fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK, 0x00);
+        i8272_end_cmd(fdc);
+        i8272_int(fdc, FDC_IC_NT);
+    }
 }
 
 void i8272_rec_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-    fdc->ds = fdc->buffer[1] & 0x03;
-    fdc->pcn = 0;
-    fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK, 0x00);
-
-    i8272_end_cmd(fdc);
-    i8272_int(fdc, FDC_IC_NT);
+    if (fdc->phase != FDC_COMMAND) {
+        fdc->ds = fdc->buffer[1] & 0x03;
+        fdc->pcn = 0;
+        fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK, 0x00);
+        i8272_end_cmd(fdc);
+        i8272_int(fdc, FDC_IC_NT);
+    }
 }
 
 void i8272_sds_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-    fdc->ds = fdc->buffer[1] & 0x03;
-    fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
-    fdc->idx_0 = 0;
-    fdc->idx_1 = fdc->opcode->res_len;
-    fdc->opcode = (void*)0;
-    fdc->buffer[0] = fdc->st3;
-    fdc->phase = FDC_RESULT;
-    i8272_result(fdc, FDC_CMD);
-    i8272_int(fdc, FDC_IC_NT);
+    if (fdc->phase != FDC_COMMAND) {
+        fdc->ds = fdc->buffer[1] & 0x03;
+        fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
+        fdc->idx_0 = 0;
+        fdc->idx_1 = fdc->opcode->res_len;
+        fdc->opcode = (void*)0;
+        fdc->buffer[0] = fdc->st3;
+        fdc->phase = FDC_RESULT;
+        i8272_result(fdc, FDC_CMD);
+        i8272_int(fdc, FDC_IC_NT);
+    }
 }
 
 void i8272_invalid_cmd(struct i8272* fdc) {
-    if (fdc->phase == FDC_COMMAND)
-        return;
-    fdc->idx_0 = 0;
-    fdc->idx_1 = fdc->opcode->res_len;
-    fdc->opcode = (void*)0;
-    fdc->buffer[0] = fdc->st0;
-    fdc->phase = FDC_RESULT;
-    i8272_result(fdc, FDC_CMD);
-    fdc->msr |= FDC_RQM | FDC_DIO;
-    fdc->st0 = 0x80;
+    if (fdc->phase == FDC_COMMAND) {
+        fdc->idx_0 = 0;
+        fdc->idx_1 = fdc->opcode->res_len;
+        fdc->opcode = (void*)0;
+        fdc->buffer[0] = fdc->st0;
+        fdc->phase = FDC_RESULT;
+        i8272_result(fdc, FDC_CMD);
+        fdc->msr |= FDC_RQM | FDC_DIO;
+        fdc->st0 = 0x80;
+    }
 }
 
-void i8272_wdata(struct i8272* fdc, char mode) {
+static void i8272_wdata(struct i8272* fdc, const char mode) {
+    (void)mode;
     (void)mode;
     /* odczyt bajtu z FDD */
     fdc->st0 = 0;
     fdc->st1 = 0;
     fdc->st2 = 0;
     fdc->st3 = FDC_RDY;
-    if (!fdc->err)
+    if (!fdc->err) {
         fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_WRITE_TRACK, fdc->data);
+    }
     /* reakcja na blokadę zapisu */
     if (fdc->err == FDD_ERR_WPROT) {
         fdc->st0 = FDC_NR | (fdc->ds & 0x03) | 0x40;
@@ -474,57 +470,55 @@ void i8272_wdata(struct i8272* fdc, char mode) {
         fdc->rec = 1;
 }
 
-void i8272_write_data(struct i8272* fdc, char mode) {
+void i8272_write_data(struct i8272* fdc, const char mode) {
     if (fdc->rw == 1) {
         i8272_wdata(fdc, mode);
-        return;
+    } else {
+        if (fdc->rw == 2) {
+            fdc->idx_0 = 0;
+            fdc->idx_1 = fdc->opcode->res_len;
+            fdc->opcode = (void*)0;
+            fdc->buffer[0] = fdc->st0;
+            fdc->buffer[1] = fdc->st1;
+            fdc->buffer[2] = fdc->st2;
+            fdc->buffer[3] = fdc->cn;
+            fdc->buffer[4] = fdc->ha;
+            fdc->buffer[5] = fdc->rec;
+            fdc->buffer[6] = fdc->nb;
+            fdc->phase = FDC_RESULT;
+            fdc->rw = 0;
+            i8272_result(fdc, FDC_CMD);
+            i8272_int(fdc, FDC_IC_IC);
+        } else {
+            if (fdc->phase == FDC_EXEC) {
+                fdc->ds = fdc->buffer[1] & 0x03;
+                fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
+                fdc->cn = fdc->buffer[2];
+                fdc->ha = fdc->buffer[3];
+                fdc->rec = fdc->buffer[4];
+                fdc->nb = fdc->buffer[5];
+                fdc->eot = fdc->buffer[6];
+                fdc->gpl = fdc->buffer[7];
+                fdc->dtl = fdc->buffer[8];
+                fdc->rw = 1;
+                /* wyzerowanie licznika bajtów w sektorze */
+                fdc->sbyte = 0;
+                /* obliczenie długości sektora w bajtach */
+                fdc->slen = 0x80 << fdc->nb;
+                if (!fdc->nb)
+                    fdc->slen = fdc->dtl;
+                /* obliczenie długości ścieżki */
+                fdc->trlen = fdc->eot * fdc->slen;
+                /* ustawienie flag możliwości zapisu danej  */
+                fdc->msr |= FDC_RQM;
+                fdc->msr &= ~FDC_DIO;
+                fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
+
+                msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
+                           fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
+            }
+        }
     }
-
-    if (fdc->rw == 2) {
-        fdc->idx_0 = 0;
-        fdc->idx_1 = fdc->opcode->res_len;
-        fdc->opcode = (void*)0;
-        fdc->buffer[0] = fdc->st0;
-        fdc->buffer[1] = fdc->st1;
-        fdc->buffer[2] = fdc->st2;
-        fdc->buffer[3] = fdc->cn;
-        fdc->buffer[4] = fdc->ha;
-        fdc->buffer[5] = fdc->rec;
-        fdc->buffer[6] = fdc->nb;
-        fdc->phase = FDC_RESULT;
-        fdc->rw = 0;
-        i8272_result(fdc, FDC_CMD);
-        i8272_int(fdc, FDC_IC_IC);
-        return;
-    }
-
-    if (fdc->phase != FDC_EXEC)
-        return;
-    fdc->ds = fdc->buffer[1] & 0x03;
-    fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
-    fdc->cn = fdc->buffer[2];
-    fdc->ha = fdc->buffer[3];
-    fdc->rec = fdc->buffer[4];
-    fdc->nb = fdc->buffer[5];
-    fdc->eot = fdc->buffer[6];
-    fdc->gpl = fdc->buffer[7];
-    fdc->dtl = fdc->buffer[8];
-    fdc->rw = 1;
-    /* wyzerowanie licznika bajtów w sektorze */
-    fdc->sbyte = 0;
-    /* obliczenie długosci sektora w bajtach */
-    fdc->slen = 0x80 << fdc->nb;
-    if (!fdc->nb)
-        fdc->slen = fdc->dtl;
-    /* obliczenie długości ścieżki */
-    fdc->trlen = fdc->eot * fdc->slen;
-    /* ustawienie flag możliwości zapisu danej  */
-    fdc->msr |= FDC_RQM;
-    fdc->msr &= ~FDC_DIO;
-    fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
-
-    msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
-               fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
 }
 
 /************************************************************************************************/

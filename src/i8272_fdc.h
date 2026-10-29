@@ -55,11 +55,11 @@ struct i8272 {
 
     /* sprzęgnięcie z emulacją napędu */
     void* parameter[4]; // parametr wywołania funkcji napędu
-    int (*drive)( // funkcja obsługi napędu
-        const void* i8272, //      struktura FDC
-        void* fdd, //      parametr napędu (struktura opisu dyskietki)
-        unsigned char action, //      kod operacji
-        unsigned char wdata //      dane do zapisu
+    unsigned char (*drive)(  // funkcja obsługi napędu
+        const void* i8272,   //      struktura FDC
+        void* fdd,           //      parametr napędu (struktura opisu dyskietki)
+        unsigned char action,//      kod operacji
+        unsigned char wdata  //      dane do zapisu
     ); // zwracana wartość to dana odczytu lub kod błędu */
 
     /* sprzęg z CPU */
@@ -121,7 +121,7 @@ unsigned char i8272_in(struct i8272* fdc, unsigned char address_bit);
 */
 void i8272_fdd_connect(
     struct i8272* fdc, /* struktura FDC */
-    int (*drive)(const void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
+    unsigned char (*drive)(const void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
     void*, void*, void*, void* /* struktury napędów 0,1,2,3 */
 );
 
@@ -256,10 +256,10 @@ enum {
     FDD_WRITE_TRACK,
     FDD_SEEK_SECTOR,
     // Wartości zwracane przez FDD
-    FDD_ERR_WPROT = -1,
-    FDD_ERR_NODISK = -2,
-    FDD_ERR_OVER = -3,
     FDD_OK = 0,
+    FDD_ERR_WPROT = 0x81,
+    FDD_ERR_NODISK = 0x82,
+    FDD_ERR_OVER = 0x83
 };
 
 /* kody przerwania dla rejestru ST0 */
