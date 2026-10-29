@@ -63,7 +63,7 @@ void msg_printf(char level, const char* fmt, ...) {
             break;
         case 'c':
             ival = va_arg(ap, int);
-            msg_putchar(ival);
+            msg_putchar((char)ival);
             break;
         case 'i':
             ival = va_arg(ap, int);
