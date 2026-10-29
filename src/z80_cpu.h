@@ -46,6 +46,14 @@ typedef void (*io_write_t)(void*, unsigned short, unsigned char);
 typedef unsigned char (*io_read_t)(const void*, unsigned short);
 
 struct cpu {
+    /* celowe użycie anonimowych struct/union, by rzutować cały stan CPU na płaski bufor bajtowy (z80_data) */
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#elif defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
     union {
         struct {
             /* rejestry p-value */
@@ -138,6 +146,11 @@ struct cpu {
         }; // koniec struktury
         char z80_data[Z80_DATA_SIZE]; // maksymalny dopuszczalny rozmiar pola danych
     }; // koniec unii
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#elif defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
     /* funkcje zewnętrzne */
     debug_t debug;               // funkcja debuggera
