@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -259,7 +260,7 @@ char* file_find_cfg_option(const char* cfg, const char* name, char* str, const c
                     ((char*)str)[len - 1] = 0;
                 }
                 else
-                    return (void*)((long)line);
+                    return (void*)(intptr_t)line;
                 return (char*)ptr + len;
             }
             if (file_is_letter(a) == 0 && !qt && !bs && len > 0)
