@@ -90,7 +90,7 @@ int main(int argc, const char** argv) {
 
     /* odczyt konfiguracji i na tej podstawie ustawienie e800 */
 
-    if (file_init(&e, "./e800j.cfg", argc, argv))
+    if (file_init(&e, "e800j.cfg", argc, argv) != 0)
         return -1;
 
     screen.zx_patt = e.ram + 16384;

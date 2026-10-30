@@ -101,13 +101,13 @@ void io_write(void* p, const unsigned short addr, unsigned char data) {
         e->mem_mask = (data & 0xc0) | ((data & 0x20) << 3);
 
         if (data & RELOK_R175) {
-            if (!(e->port_f7 & RELOK_R175))
+            if ((e->port_f7 & RELOK_R175) == 0)
                 msg_printf(MSG_MSG, "Relocate screen at 0xE000 address\n");
             e->scn->zx_patt = e->ram + 0xE000;
             e->scn->zx_attr = e->ram + 0xF800;
         }
         else {
-            if (e->port_f7 & RELOK_R175)
+            if ((e->port_f7 & RELOK_R175) != 0)
                 msg_printf(MSG_MSG, "Relocate screen at 0x4000 address\n");
             e->scn->zx_patt = e->ram + 0x4000;
             e->scn->zx_attr = e->ram + 0x5800;

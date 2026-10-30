@@ -308,7 +308,7 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     */
     screen_glinit(s);
 
-    if (!(s->t0 = SDL_AddTimer(refresh, zx_refresh, s))) {
+    if ((s->t0 = SDL_AddTimer(refresh, zx_refresh, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
