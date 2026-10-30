@@ -748,6 +748,13 @@ char file_init(struct elwro* e, const char* config_path, const int argc, const c
         config_path = argv[i + 1];
     }
 
+    struct stat st;
+    if (stat(config_path, &st) != 0) {
+        msg_printf(MSG_ERROR, "Error opening config file: %s\n", config_path);
+        return 1;
+    }
+    const size_t cfglen = (size_t)st.st_size;
+
     FILE* f = fopen(config_path, "r");
     if (!f) {
         msg_printf(MSG_ERROR, "Error opening config file: %s\n", config_path);
@@ -755,9 +762,6 @@ char file_init(struct elwro* e, const char* config_path, const int argc, const c
     }
 
     msg_printf(MSG_MSG, "Opened config file: %s\n", config_path);
-    fseek(f, 0L,SEEK_END);
-    long cfglen = ftell(f);
-    fseek(f, 0L,SEEK_SET);
 
     char* cfg = (char*)malloc(cfglen + 1);
     if (!cfg) {
@@ -765,7 +769,9 @@ char file_init(struct elwro* e, const char* config_path, const int argc, const c
         return 1;
     }
 
-    if (fread(cfg, cfglen, 1, f) != 1) {
+    const size_t r = fread(cfg, 1, cfglen, f);
+    cfg[r] = '\0';
+    if (r == 0) {
         msg_printf(MSG_ERROR, "Error reading config file, possibly filesystem or disk problem.\n");
         return 1;
     }
