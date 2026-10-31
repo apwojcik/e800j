@@ -26,56 +26,92 @@
 char msg_stream = 0;
 long msg_level = 0;
 
-static void msg_putchar(const int chr) {
-    if (msg_stream == 0)
+static void msg_putchar(const char chr) {
+    if (msg_stream == 0) {
         putchar(chr);
+    }
 }
 
 static void msg_putstr(const char* str) {
-    msg_putchar(*str);
+    while (*str != 0) {
+        msg_putchar(*str++);
+    }
 }
 
-static const char* msg[] = {"(E!)", "(EE)", "(WW)", "(II)", "(VI)", "(NI)", "(UI)"};
+static void msg_putfloat(const float value) {
+    char t[16] = "";
+    sprintf(t, "%f", value);
+    msg_putstr(t);
+}
 
-void msg_printf(char level, const char* fmt, ...) {
-    va_list ap;
-    char* p;
-    int ival;
-    char tabl[16] = "";
+static void msg_putint(const int value) {
+    char t[16] = "";
+    sprintf(t, "%i", value);
+    msg_putstr(t);
+}
 
-    if (level > msg_level)
-        return;
-    if (level > 6)
-        level = 6;
-    msg_putstr((char*)msg[(int)level]);
+static void msg_putuint(const unsigned int value) {
+    char t[16] = "";
+    sprintf(t, "%u", value);
+    msg_putstr(t);
+}
 
-    va_start(ap, fmt);
+static void msg_puthex(const unsigned int value) {
+    char t[16] = "";
+    sprintf(t, "%x", value);
+    msg_putstr(t);
+}
 
-    for (p = (char*)fmt; *p; p++) {
-        if (*p != '%') {
-            msg_putchar(*p);
-            continue;
+static void msg_putaddr(const unsigned int value) {
+    char t[16] = "";
+    sprintf(t, "%04x", value);
+    msg_putstr(t);
+}
+
+static const char* msg[] = {
+    "(E!) ", "(EE) ", "(WW) ", "(II) ", "(VI) ", "(NI) ", "(UI) "
+};
+
+void msg_printf(int level, const char* fmt, ...) {
+    if (level <= msg_level) {
+        va_list ap;
+        if (level > 6) {
+            level = 6;
         }
-        switch (*(++p)) {
-        case 's':
-            for (char* sval = va_arg(ap, char*); *sval; sval++)
-                msg_putchar(*sval);
-            break;
-        case 'c':
-            ival = va_arg(ap, int);
-            msg_putchar((char)ival);
-            break;
-        case 'i':
-            ival = va_arg(ap, int);
-            sprintf(tabl, "%i", ival);
-            msg_putstr(tabl);
-            break;
-        case 'x':
-            ival = va_arg(ap, int);
-            sprintf(tabl, "0x%x", ival);
-            msg_putstr(tabl);
-            break;
+        msg_putstr(msg[level]);
+        va_start(ap, fmt);
+        for (const char* p = (char*)fmt; *p; ++p) {
+            if (*p != '%') {
+                msg_putchar(*p);
+                continue;
+            }
+            switch (*(++p)) {
+            case 's':
+                msg_putstr(va_arg(ap, const char *));
+                break;
+            case 'c':
+                msg_putchar(va_arg(ap, int));
+                break;
+            case 'i':
+                msg_putint(va_arg(ap, int));
+                break;
+            case 'u':
+                msg_putuint(va_arg(ap, unsigned int));
+                break;
+            case 'x':
+                msg_puthex(va_arg(ap, unsigned int));
+                break;
+            case 'X':
+                msg_putaddr(va_arg(ap, unsigned int));
+                break;
+            case 'f':
+                msg_putfloat(va_arg(ap, double));
+                break;
+            default:
+                break;
+            }
         }
+        va_end(ap);
+        fflush(stdout);
     }
-    va_end(ap);
 }

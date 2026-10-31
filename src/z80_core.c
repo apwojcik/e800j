@@ -1718,8 +1718,8 @@ void z80_step(struct cpu* z)
         z->debug(z, D_FLUSH, 0);
 }
 
-void z80_init(struct cpu* z, memory_read_t memory_read, memory_write_t memory_write,
-    io_read_t io_read, io_write_t io_write, void* ptr, void* ptx)
+void z80_init(struct cpu* z, const memory_read_t memory_read, const memory_write_t memory_write,
+    const io_read_t io_read, const io_write_t io_write, void* ptr, void* ptx)
 {
     z->memory_read = memory_read;
     z->memory_write = memory_write;

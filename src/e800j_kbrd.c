@@ -72,9 +72,8 @@ static void key_matrix_update(struct keyboard* kb, unsigned char coord, const in
     }
 }
 
-void key_update(struct keyboard* kb, int key, const int state) {
-    int key_idx = 0xff;
-
+void key_update(struct keyboard* kb, unsigned int key, const int state) {
+    unsigned int key_idx = 0xff;
     if (kb->mode == KB_MODE_PC) {
         if (key < KEY_CONTROL_CNT)
             key_idx = key;
@@ -190,7 +189,7 @@ unsigned int key_joymap(struct keyboard *kb,  unsigned int key, unsigned int nke
 }
 */
 
-void key_set(struct keyboard* kb, int key, const int state) {
+void key_set(struct keyboard* kb, unsigned int key, const int state) {
     //    int nkey=key;
     //kb->joy_mode = JOY_KEM;
     /* mapowanie klawiszy specjalnych */

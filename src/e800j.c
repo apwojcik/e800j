@@ -56,6 +56,7 @@ static void disk_vlookup(int argc, const char** argv, char* dparm, char* mode, s
 
 int main(int argc, const char** argv) {
     struct elwro e;
+    int tmp;
     struct fdc fdc;
     struct cpu cpu;
     struct dbg dbg;
@@ -72,15 +73,16 @@ int main(int argc, const char** argv) {
     e.junet_addr = 0xf3;
     e.debug = 0;
 
-    if (file_lookup_option(argc, argv, "-help"))
+    if (file_lookup_option(argc, argv, "-help") ||
+        file_lookup_option(argc, argv, "-h") ||
+        file_lookup_option(argc, argv, "--help"))
+    {
         file_help();
-    if (file_lookup_option(argc, argv, "-h"))
-        file_help();
-    if (file_lookup_option(argc, argv, "--help"))
-        file_help();
-    const int tmp = file_lookup_option(argc, argv, "-msg_lvl");
-    if (tmp)
+    }
+
+    if ((tmp = file_lookup_option(argc, argv, "-msg_lvl")) != 0) {
         msg_level = strtol(argv[tmp + 1], NULL, 0);
+    }
 
     vfdd_floppy(&disk_a, VFDD_INIT, 0, 0, 0, 0);
     vfdd_floppy(&disk_b, VFDD_INIT, 0, 0, 0, 0);
@@ -90,8 +92,9 @@ int main(int argc, const char** argv) {
 
     /* odczyt konfiguracji i na tej podstawie ustawienie e800 */
 
-    if (file_init(&e, "e800j.cfg", argc, argv) != 0)
+    if (file_init(&e, "e800j.cfg", argc, argv) == false) {
         return -1;
+    }
 
     screen.zx_patt = e.ram + 16384;
     screen.zx_attr = e.ram + 16384 + 6 * 1024;
@@ -104,7 +107,9 @@ int main(int argc, const char** argv) {
     fdc_init(&fdc);
     i8272_fdd_connect(&fdc.i8272, vfdd_drive, &disk_a, &disk_b, 0, 0);
 
-    screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, 20);
+    if (screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, 20) == false) {
+        return -1;
+    }
 
     snd_init(&snd, &cpu);
     file_get_cline(argc, argv, &e, e.ram, &e.scn->border_color, 0);

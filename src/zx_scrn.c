@@ -152,25 +152,25 @@ static void screen_glinit(struct screen* s) {
 
 static Uint32 zx_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
     (void)timerID;
-    SDL_Event event;
     struct screen* s = userdata;
-    if (s->refresh == 1)
-        return interval;
-    s->refresh = 1;
-    event.type = SDL_EVENT_USER;
-    SDL_PushEvent(&event);
+    if (!s->refresh) {
+        SDL_Event event;
+        event.type = SDL_EVENT_USER;
+        s->refresh = true;
+        SDL_PushEvent(&event);
+    }
     return interval;
 }
 
 static Uint32 zx_cpu_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
     (void)timerID;
-    SDL_Event event;
     struct elwro* e = userdata;
-    if (e->tcpu == 1)
-        return interval;
-    e->tcpu = 1;
-    event.type = SDL_EVENT_USER;
-    SDL_PushEvent(&event);
+    if (!e->tcpu) {
+        SDL_Event event;
+        event.type = SDL_EVENT_USER;
+        e->tcpu = true;
+        SDL_PushEvent(&event);
+    }
     return interval;
 }
 
@@ -195,7 +195,7 @@ static void zx_free_flash(const int n, void* zx) {
     SDL_RemoveTimer(((struct screen*)zx)->t2);
 }
 
-char screen_init(struct screen* s, int width, int height, int bpp, const int argc, const char** argv, const int refresh) {
+bool screen_init(struct screen* s, int width, int height, int bpp, const int argc, const char** argv, const int refresh) {
     int i = file_lookup_option(argc, argv, "-bpp");
     if (i)
         file_option_param(argc, argv, i, 0, 32, &bpp);
@@ -211,17 +211,17 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     /* zainicjowanie ekranu SDL */
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't initialise SDL: %s\n", SDL_GetError());
-        return 1;
+        return false;
     }
 
     msg_printf(MSG_MSG, "SDL initialized\n");
     const int compiled = SDL_VERSION;
-    msg_printf(MSG_MSG, "SDL compiled version: %d.%d.%d\n",
+    msg_printf(MSG_MSG, "SDL compiled version: %i.%i.%i\n",
         SDL_VERSIONNUM_MAJOR(compiled),
         SDL_VERSIONNUM_MINOR(compiled),
         SDL_VERSIONNUM_MICRO(compiled));
     const int linked = SDL_GetVersion();
-    msg_printf(MSG_MSG, "SDL linked version: %d.%d.%d\n",
+    msg_printf(MSG_MSG, "SDL linked version: %i.%i.%i\n",
         SDL_VERSIONNUM_MAJOR(linked),
         SDL_VERSIONNUM_MINOR(linked),
         SDL_VERSIONNUM_MICRO(linked));
@@ -298,10 +298,10 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &s->bpp);
     SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &s->dbf);
 
-    msg_printf(MSG_MSG, "SDL GL RED SIZE     : %d\n", s->rgb_size[0]);
-    msg_printf(MSG_MSG, "SDL GL GREEN SIZE   : %d\n", s->rgb_size[1]);
-    msg_printf(MSG_MSG, "SDL GL BLUE SIZE    : %d\n", s->rgb_size[2]);
-    msg_printf(MSG_MSG, "SDL GL DEPTH SIZE   : %d\n", s->bpp);
+    msg_printf(MSG_MSG, "SDL GL RED SIZE: %i\n", s->rgb_size[0]);
+    msg_printf(MSG_MSG, "SDL GL GREEN SIZE: %i\n", s->rgb_size[1]);
+    msg_printf(MSG_MSG, "SDL GL BLUE SIZE: %i\n", s->rgb_size[2]);
+    msg_printf(MSG_MSG, "SDL GL DEPTH SIZE: %i\n", s->bpp);
     msg_printf(MSG_MSG, "SDL GL DOUBLE BUFFER: %s\n", s->dbf ? "Yes" : "No");
     /*
         SDL_VERSION(&(info.version));
@@ -313,6 +313,8 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     */
     screen_glinit(s);
 
+    /* w konfiguracji rfsh było wczytane do flagi - zerujemy, inaczej timer nigdy nie wyśle zdarzenia */
+    s->refresh = false;
     if ((s->t0 = SDL_AddTimer(refresh, zx_refresh, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
@@ -327,12 +329,7 @@ char screen_init(struct screen* s, int width, int height, int bpp, const int arg
     on_exit(zx_free_flash, (void*)s);
     msg_printf(MSG_MSG, "Set flash time         : %ims ( %iHz )\n", s->flash, (1000 / s->flash));
 
-    return 0;
-}
-
-void zx_kbrd_(int key, int state, void* a) {
-    //    if(key == 316) ((elwro*)a)->cpu->dbg_on = state;
-    key_set(((struct elwro*)a)->kbd, key, state);
+    return true;
 }
 
 void zx_quit() {
@@ -342,30 +339,36 @@ void zx_quit() {
     SDL_PushEvent(&event);
 }
 
-void (*zx_kbrd)(int, int, void*) = zx_kbrd_;
-
-void time_int(struct cpu* z, void* ptr) {
-    (void)ptr;
-    z80_int(z, nullptr);
+static void zx_kbrd_(const unsigned int key, const int state, void* a) {
+//   if(key == 316) {
+//       ((elwro*)a)->cpu->dbg_on = state;
+//   }
+    key_set(((struct elwro*)a)->kbd, key, state);
 }
 
-void zx_main(struct elwro* e) {
-    SDL_Event event;
-    static char ik = 1;
+static void (*zx_kbrd)(unsigned int, int, void*) = zx_kbrd_;
 
-    if (ik != 0) {
-        ik = 0;
-        e->t1 = SDL_AddTimer(e->cpu_rfsh, zx_cpu_refresh, e);
-        if (e->t1 == 0) {
-            msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
-            exit(0);
-        }
-        on_exit(zx_free_cpu_refresh, (void*)e);
-        msg_printf(MSG_MSG, "Set cpu refresh to     : %ims ( %iHz )\n", e->cpu_rfsh, (1000 / e->cpu_rfsh));
-        msg_printf(MSG_MSG, "Set cpu tics/refresh to: %i\n", e->tr);
-        msg_printf(MSG_MSG, "Set cpu interrupt to   : %i tics\n", e->ifreq);
-        msg_printf(MSG_MSG, "Emulated CPU frequency : %fMHz\n", ((1000 / e->cpu_rfsh) * e->tr) / 1000000.0);
+static void time_int(struct cpu* z, void* ptr) {
+    (void)ptr;
+    z80_int(z, NULL);
+}
+
+int zx_main(struct elwro* e) {
+    e->tcpu = false;
+    e->t1 = SDL_AddTimer(e->cpu_refresh, zx_cpu_refresh, e);
+    if (e->t1 == 0) {
+        msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
+        return -1;
     }
+    on_exit(zx_free_cpu_refresh, e);
+    const float refresh = 1000.f / (float)e->cpu_refresh;
+    msg_printf(MSG_MSG, "CPU refresh: %ims (%iHz)\n", e->cpu_refresh, (int)refresh);
+    msg_printf(MSG_MSG, "CPU ticks/refresh: %i\n", e->tr);
+    msg_printf(MSG_MSG, "CPU interrupt: %i ticks\n", e->ifreq);
+    const float frequency = refresh * (float)e->tr;
+    msg_printf(MSG_MSG, "CPU frequency: %fMHz\n", frequency / 1000000.0);
+
+    SDL_Event event;
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
@@ -376,8 +379,7 @@ void zx_main(struct elwro* e) {
             zx_kbrd(event.key.key, 0, e);
             break;
         case SDL_EVENT_QUIT:
-            msg_printf(MSG_MSG, "bye...\n");
-            return;
+            return 0;
         case SDL_EVENT_USER:
             if (e->scn->refresh) {
                 screen_refresh(e->scn);
@@ -393,4 +395,5 @@ void zx_main(struct elwro* e) {
             break;
         }
     }
+    return 0;
 }

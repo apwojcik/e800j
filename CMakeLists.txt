@@ -32,6 +32,8 @@ add_executable(elwro
         src/e800j_prom.h
         src/e800j_sound.c
         src/e800j_sound.h
+        #src/e800j_string.h
+        #src/e800j_string.c
         src/i8272_fdc.c
         src/i8272_fdc.h
         src/virt_fdd.c
@@ -50,8 +52,6 @@ if(DEBUG_FDC)
 endif()
 
 target_link_libraries(elwro PRIVATE SDL3::SDL3 PkgConfig::libspectrum OpenGL::GL OpenGL::GLU)
-target_compile_definitions(elwro PRIVATE _USE_SDL)
-
 if(WIN32)
     target_compile_definitions(elwro PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX)
 endif()
