@@ -35,7 +35,7 @@ extern long msg_level;
 /*
     wysłanie komunikatu
 */
-void msg_printf(char level, const char *fmt, ...);
+void msg_printf(int level, const char *fmt, ...);
 
 /* poziomy komunikatów */
 enum {

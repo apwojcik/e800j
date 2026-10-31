@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 struct screen;
 struct cpu;
 struct keyboard;
@@ -40,9 +42,9 @@ struct elwro {
     int ram_size;
     int rom_size;
 
-    char tcpu;
+    bool tcpu;
     unsigned int t1;
-    int cpu_rfsh;
+    unsigned int cpu_refresh;
     int ifreq; /* co ile taktów CPU ma zostać wywołane przerwanie */
     int tr; /* ilość taktów/wywołanie   */
 
@@ -59,4 +61,4 @@ struct elwro {
     char debug; /* true -> uruchamia w trybie komend */
 };
 
-void zx_main(struct elwro*);
+int zx_main(struct elwro*);

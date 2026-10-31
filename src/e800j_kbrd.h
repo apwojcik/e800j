@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <SDL3/SDL_keyboard.h>
+
 #define KB_MODE_ZX	    0 // Mapowanie ZX_SPECTRUM
 #define KB_MODE_E800J	1 // Mapowanie Elwro 800 Junior
 #define KB_MODE_PC	    2 // Mapowanie klawiatury PC (programisty) na E800J
@@ -75,7 +77,7 @@ void key_init(struct keyboard*);
         mode - tryb mapowania klawiatury
 */
 /*********************************************/
-void key_set(struct keyboard*, int key, int state);
+void key_set(struct keyboard*, unsigned int key, int state);
 /*
     ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
     key - kod SDL klawisza
@@ -91,7 +93,7 @@ unsigned char key_matrix(const struct keyboard*, unsigned short int addr);
 */
 
 /*******************************************************************/
-void key_update(struct keyboard*, int key, int state);
+void key_update(struct keyboard*, unsigned int key, int state);
 
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
         key   - kod klawisza

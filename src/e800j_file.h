@@ -20,13 +20,15 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 struct elwro;
 
 /*
  Czyta parametry wejściowe programu poszukując opcji -f, po jej znalezieniu jako
   nazwę snapshotu uznaje następny parametr, a następnie wczytuje snapshot
 */
-void file_get_cline(int argc, const char** argv, struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
+void file_get_cline(int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
 
 /*
  Wczytuje snapshot:
@@ -36,7 +38,7 @@ void file_get_cline(int argc, const char** argv, struct elwro* e, unsigned char*
  rest - jeśli TRUE, to niezgodnosć sprzętu emulowanego przerwie spowoduje wyjście z funkcji,
         wartość FALSE wygeneruje jedynie ostrzeżenie na konsoli
 */
-int file_snap_load(const char* filename, struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
+int file_snap_load(const char* filename, const struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
 
 //int file_snap_save(const char *filename, struct elwro *e, unsigned char *ram, unsigned char *reg373);
 // xx - jeśli 1 to brak opcji nie generuje błędu
@@ -47,7 +49,7 @@ char* file_get_profile(const char* cfg, char* profile);
 
 int file_bios_load(const char* cfg, const unsigned char* rom, const char* profile, int rom_size);
 
-char file_init(struct elwro*, const char* config_path, int argc, const char** argv);
+bool file_init(struct elwro*, const char* config_path, int argc, const char** argv);
 
 /*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji,
     jeśli znajdzie zwraca jej numer, inaczej zwraca 0

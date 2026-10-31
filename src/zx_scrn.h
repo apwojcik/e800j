@@ -48,12 +48,12 @@ struct screen {
     unsigned char* zx_patt; /* wzory bitowe - 6kB */
     unsigned char* zx_attr; /* kolory kranu - 1kB */
     unsigned char border_color;
-    int refresh;
+    bool refresh;
     unsigned int t0;
     unsigned int t2;
     void* glctx; /* SDL_GLContext */
     int flash; /* tempo migania atrybutu flash w ms */
-    char inverse;
+    bool inverse;
     int fscrn;
     int bright;
     int nbrt;
@@ -72,10 +72,8 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
 void screen_refresh(struct screen* s);
 
 /* argv -> -fullscreen, -noframe */
-char screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
+bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
 
 void screen_border(struct screen* s, unsigned char color);
-
-extern void (*zx_kbrd)(int key, int state, void* kbptr);
 
 void zx_quit();
