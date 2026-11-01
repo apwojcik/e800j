@@ -104,7 +104,7 @@ int file_snap_load(const char *fname, z80 *cp, char *ram, char *r373, char rest)
 #endif    
     }
 
-    if((error=libspectrum_snap_alloc(&snap))){
+    if((snap=libspectrum_snap_alloc()) == NULL){
 #ifdef __cplusplus
 	throw (string)"Error loading snapshot " + fname;
 #else
