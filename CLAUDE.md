@@ -32,6 +32,9 @@ Key CMake options (`CMakeLists.txt`):
 - `USE_SDL` (default ON)
 - `DEBUG_FDC` (default OFF) — enables verbose floppy controller debug output via `DEBUG_FDC` define
 
+Warnings are enabled (`-Wall -Wextra -pedantic` on GCC/Clang, `/W4` on MSVC) and the code is kept
+warning-free on both toolchains; Windows/MSVC builds are supported, so keep changes portable.
+
 There is no test suite in this repository.
 
 ## Running
@@ -57,7 +60,7 @@ buffers and global timing state.
   loading in `e800j_file.c`). The CPU knows nothing about memory or I/O directly — it's handed function
   pointers (`memory_read_t`, `memory_write_t`, `io_read_t`, `io_write_t`) at `z80_init()` time, which is
   how `e800j_mem.c`/`e800j_io.c` get hooked in. `z80_loop()` runs a fixed number of T-states per call and
-  invokes a callback (interrupt timing) partway through; the outer SDL timer (`zx_cpu_rfsh`, added via
+  invokes a callback (interrupt timing) partway through; the outer SDL timer (`zx_cpu_refresh`, added via
   `SDL_AddTimer` in `zx_main`) decides how often that loop runs, not the CPU itself.
 - **Memory** (`e800j_mem.c`): implements paging/mapping differences between plain ZX Spectrum 48K
   (`mem_zx48_*`), ZX Spectrum 128 (`mem_zx128_*`, not fully wired up yet per `doc/ToDo`), and the Elwro's
@@ -83,6 +86,9 @@ buffers and global timing state.
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/
   joystick profiles), plus `.sna`/snapshot loading that restores CPU + RAM state directly from the raw
   `struct cpu` byte layout.
+- **Portability shims** (`e800j_compat.c`/`.h`): MSVC/Windows replacement for glibc's `on_exit()` (backed by
+  `atexit()`). `e800j_string.c`/`.h` is a placeholder for string helpers and is currently commented out of
+  `CMakeLists.txt` (not built).
 - **Messages/logging** (`e800j_msg.c`/`e800j_msg.h`): all diagnostic output goes through `msg_printf`
   with a severity level (`MSG_CRITICAL_ERROR` .. `MSG_UNVERB_MSG`); verbosity is controlled globally by
   `msg_level` (settable via `-msg_lvl`). Don't use `printf`/`fprintf` directly for emulator diagnostics —

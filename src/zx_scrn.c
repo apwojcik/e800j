@@ -55,7 +55,7 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
 }
 
 static void screen_draw(struct screen* s) {
-    glDrawPixels(256, 192, GL_RGB,GL_UNSIGNED_BYTE, s->scr_buffer);
+    glDrawPixels(256, 192, GL_RGB, GL_UNSIGNED_BYTE, s->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
@@ -63,7 +63,7 @@ static void screen_draw(struct screen* s) {
         fb +=3;
 
 static void screen_transform(struct screen* s) {
-    char* fb = s->scr_buffer;
+    unsigned char* fb = s->scr_buffer;
     struct rgbi* pal = s->palettei;
     const unsigned char* attr = s->zx_attr;
     const unsigned char* patt = s->zx_patt;
@@ -150,7 +150,7 @@ static void screen_glinit(struct screen* s) {
     SDL_GL_SwapWindow(s->window);
 }
 
-static Uint32 zx_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
+static Uint32 zx_screen_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
     (void)timerID;
     struct screen* s = userdata;
     if (!s->refresh) {
@@ -315,19 +315,19 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
 
     /* w konfiguracji rfsh było wczytane do flagi - zerujemy, inaczej timer nigdy nie wyśle zdarzenia */
     s->refresh = false;
-    if ((s->t0 = SDL_AddTimer(refresh, zx_refresh, s)) == 0) {
+    if ((s->t0 = SDL_AddTimer(refresh, zx_screen_refresh, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
     on_exit(zx_free_refresh, (void*)s);
-    msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", refresh, (1000 / refresh));
+    msg_printf(MSG_MSG, "Screen refresh: %ims (%iHz)\n", refresh, (1000 / refresh));
 
     if ((s->t2 = SDL_AddTimer(s->flash, zx_flash, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
     on_exit(zx_free_flash, (void*)s);
-    msg_printf(MSG_MSG, "Set flash time         : %ims ( %iHz )\n", s->flash, (1000 / s->flash));
+    msg_printf(MSG_MSG, "Flash time: %ims ( %iHz )\n", s->flash, (1000 / s->flash));
 
     return true;
 }
@@ -383,11 +383,11 @@ int zx_main(struct elwro* e) {
         case SDL_EVENT_USER:
             if (e->scn->refresh) {
                 screen_refresh(e->scn);
-                e->scn->refresh = 0;
+                e->scn->refresh = false;
             }
             if (e->tcpu) {
-                e->tcpu = 0;
                 z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);
+                e->tcpu = false;
             }
             fdc_clk(e->fdc);
             break;

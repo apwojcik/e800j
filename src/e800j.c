@@ -107,7 +107,7 @@ int main(int argc, const char** argv) {
     fdc_init(&fdc);
     i8272_fdd_connect(&fdc.i8272, vfdd_drive, &disk_a, &disk_b, 0, 0);
 
-    if (screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, 20) == false) {
+    if (screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, e.scn->rfsh) == false) {
         return -1;
     }
 

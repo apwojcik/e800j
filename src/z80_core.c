@@ -213,8 +213,9 @@ void z80_nop(struct cpu* z) {
 void z80_halt(struct cpu* z) {
     z->cmd_type = D_HALT;
     TICS_UPDATE;
-    if (!z->int_off)
+    if (z->int_off == false) {
         z->halt = 1;
+    }
     INST_END;
 }
 
@@ -280,8 +281,9 @@ void z80_jr(struct cpu* z) {
     z->ticks += 5;
     z->_tic += 5;
     z->cycles++;
-    if (!z->jmp_off)
+    if (z->jmp_off == false) {
         PCr = z->nn;
+    }
     INST_END;
 }
 
@@ -297,8 +299,9 @@ void z80_jp(struct cpu* z) {
         INST_END;
         return;
     }
-    if (!z->jmp_off)
+    if (z->jmp_off == false) {
         PCr = z->nn;
+    }
     INST_END;
 }
 
@@ -309,8 +312,9 @@ void z80_jphl(struct cpu* z) {
     z->_tic = 4;
     z->reg80 = z->p1;
     z->nn = z->dd2;
-    if (!z->jmp_off)
+    if (z->jmp_off == false) {
         PCr = *(z->regs16[z->regx0 = z->p0]);
+    }
     INST_END;
 }
 
@@ -330,7 +334,7 @@ void z80_djnz(struct cpu* z) {
     z->ticks += 5;
     z->_tic += 5;
     z->cycles++;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = z->nn;
     TICS_UPDATE;
     INST_END;
@@ -355,7 +359,7 @@ void z80_call(struct cpu* z) {
     SPr -= 2;
     z->memory_write(z, SPr, PCr & 0xff);
     z->memory_write(z, SPr + 1, PCr >> 8);
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
@@ -367,7 +371,7 @@ void z80_rst(struct cpu* z) {
     z->memory_write(z, --SPr, PCr & 0xff);
     z->dd = z->p0;
     z->nested++;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = (unsigned short)z->p0;
     TICS_UPDATE;
     INST_END;
@@ -390,7 +394,7 @@ void z80_ret(struct cpu* z) {
     z->dd2 = z->memory_read(z, SPr);
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
@@ -402,7 +406,7 @@ void z80_reti(struct cpu* z) {
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
     z->nested--;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
@@ -413,7 +417,7 @@ void z80_retn(struct cpu* z) {
     z->dd2 = z->memory_read(z, SPr);
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         PCr = z->dd2;
     z->nested--;
     z->iff1 = z->iff2;
@@ -1428,7 +1432,7 @@ void z80_ldbl(struct cpu* z) {
     TICS_UPDATE;
     z->dd = z->p0;
     Fr &= ~(FH | FP | FN | F5 | F3);
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         do {
             z->memory_write(z,DEr, z->dd3 = z->memory_read(z,HLr));
             if (z->p0 == PI || z->p0 == PIR)
@@ -1457,7 +1461,7 @@ void z80_cpbl(struct cpu* z) {
     TICS_UPDATE;
     z->dd = z->p0;
     e = Fr;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         do {
             a = Ar;
             b = z->memory_read(z,HLr);
@@ -1490,7 +1494,7 @@ void z80_inbl(struct cpu* z) {
     TICS_UPDATE;
     z->dd = z->p0;
     Fr |= FN | FZ;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         do {
             z->memory_write(z,HLr, z->last_in_data = z->dd3 = z->io_read(z, z->last_in_addr = Cr));
             if (z->p0 == PI || z->p0 == PIR)
@@ -1514,7 +1518,7 @@ void z80_outbl(struct cpu* z) {
     TICS_UPDATE;
     z->dd = z->p0;
     Fr |= FN | FZ;
-    if (!z->jmp_off)
+    if (z->jmp_off == false)
         do {
             z->io_write(z, z->last_out_addr = Cr, z->last_out_data = z->memory_read(z,HLr));
             if (z->p0 == PI || z->p0 == PIR)
@@ -1549,42 +1553,41 @@ void z80_reset(struct cpu* z) {
 }
 
 void z80_nmi(struct cpu* z) {
-    if (z->int_off)
-        return;
-    z->inmi = 1;
+    if (z->int_off == false) {
+        z->inmi = 1;
+    }
 }
 
-void z80_int(struct cpu* z, unsigned char* bus) {
-    int i;
-
-    if (z->int_off)
-        return;
-    z->intr = 1;
-    if (bus)
-        for (i = 0; i < 8; i++)
-            z->bus[i] = bus[i];
-    else
-        for (i = 0; i < 8; i++)
-            z->bus[i] = 0xff;
+void z80_int(struct cpu* z, const unsigned char* bus) {
+    if (z->int_off == false) {
+        z->intr = 1;
+        if (bus) {
+            for (int i = 0; i < 8; ++i) {
+                z->bus[i] = bus[i];
+            }
+        } else {
+            for (int i = 0; i < 8; ++i) {
+                z->bus[i] = 0xff;
+            }
+        }
+    }
 }
 
-void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, void*), void* param)
+void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, void*), void* callback_param)
 {
-    unsigned char d;
-    int i;
-    struct z80dt xf;
-    if (z->cpu_off)
+    if (z->cpu_off) {
         return;
-    for (i = 0; i < cnt; i++) {
+    }
+    unsigned char d;
+    for (int i = 0; i < cnt; i++) {
         if (!z->exit) {
             z->call_cnt += z->_tic;
-
             if (z->call_cnt >= call) {
-                if (callback)
-                    callback(z, param);
+                if (callback) {
+                    callback(z, callback_param);
+                }
                 z->call_cnt = z->call_cnt - call;;
             }
-
             if (z->_tic) {
                 i += z->_tic;
                 z->_tic = 0;
@@ -1594,23 +1597,23 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                 }
             }
         }
-
-        if (z->debug_on && z->debug)
+        if (z->debug_on && z->debug) {
             z->debug(z, D_PRE, 0);
-
-        if (z->exit)
-            return;
-        *z->R_r = ((*z->R_r) + 1) & 0x7f;
-
-        if (!z->halt) {
-            if (!z->ipend)
-                z->adrs = *z->PC_r;
-            d = z80_fetch_byte(z);
         }
-        else
+        if (z->exit) {
+            return;
+        }
+        *z->R_r = ((*z->R_r) + 1) & 0x7f;
+        if (!z->halt) {
+            if (!z->ipend) {
+                z->adrs = *z->PC_r;
+            }
+            d = z80_fetch_byte(z);
+        } else {
             d = 0;
+        }
 
-        xf = __z80_decoder__[d + z->pref_dd_fd + z->pref_cb_ed];
+        struct z80dt xf = __z80_decoder__[d + z->pref_dd_fd + z->pref_cb_ed];
         z->p0 = xf.reg0;
         z->b = xf.bytes;
         z->a = xf.f_mask_and;
@@ -1649,32 +1652,30 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                 }
             }
         }
-        if (!z->halt && z->debug_on && z->debug)
+        if (!z->halt && z->debug_on && z->debug) {
             z->debug(z, D_FLUSH, 0);
+        }
     }
 }
 
 void z80_step(struct cpu* z)
 {
-    unsigned char d;
-    struct z80dt xf;
-    if (z->cpu_off)
+    if (z->cpu_off == 0) {
         return;
-
-    if (z->debug_on && z->debug)
+    }
+    if (z->debug_on && z->debug) {
         z->debug(z, D_PRE, 0);
-
+    }
     *z->R_r = ((*z->R_r) + 1) & 0x7f;
-
+    unsigned char d = 0;
     if (!z->halt) {
-        if (!z->ipend)
+        if (!z->ipend) {
             z->adrs = *z->PC_r;
+        }
         d = z80_fetch_byte(z);
     }
-    else
-        d = 0;
 
-    xf = __z80_decoder__[d + z->pref_dd_fd + z->pref_cb_ed];
+    const struct z80dt xf = __z80_decoder__[d + z->pref_dd_fd + z->pref_cb_ed];
     z->p0 = xf.reg0;
     z->b = xf.bytes;
     z->a = xf.f_mask_and;

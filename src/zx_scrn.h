@@ -37,7 +37,7 @@ struct rgbf {
 
 struct screen {
     char msg[256];
-    char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
+    unsigned char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
     struct rgbi palettei[16];
     struct rgbf palettef[16];
     int width;
@@ -48,7 +48,8 @@ struct screen {
     unsigned char* zx_patt; /* wzory bitowe - 6kB */
     unsigned char* zx_attr; /* kolory kranu - 1kB */
     unsigned char border_color;
-    bool refresh;
+    int rfsh;
+    bool refresh; // screen refresh pending
     unsigned int t0;
     unsigned int t2;
     void* glctx; /* SDL_GLContext */

@@ -1119,7 +1119,7 @@ void dbg_deasembly(struct dbg* d) {
     z.ptx = &dr;
     z.ptr = d->z->ptr;
     z.debug = dbg_debug;
-    z.jmp_off = 1;
+    z.jmp_off = true;
     *z.PC_r = (unsigned short)d->zaddr;
     memset(&dr, 0, sizeof(struct dbg));
     dr.noregs = 1;

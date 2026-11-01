@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #ifndef BIG_ENDIAN
 #define LITTLE_ENDIAN
 #endif
@@ -121,8 +123,8 @@ struct cpu {
             unsigned char dd0, dd1, dd3;
             unsigned short dd2;
             /* dodatkowe informacje dla debuggera i flagi sterujące */
-            unsigned char int_off; /* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
-            unsigned char jmp_off; /* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
+            bool int_off; /* jeśli ustawiona ignorowane są przerwania i instrukcja HALT */
+            bool jmp_off; /* jeśli ustawione nie wykonywane są skoki przez jp, djnz, jr, call, ret */
             unsigned char debug_on; /* załączenie debuggera */
             unsigned char cpu_off; /* ustawienie ignoruje wywołanie funkcji CPU */
             unsigned char djnz; /* cpu wykonuje instrukcję DJNZ */
@@ -200,4 +202,4 @@ void z80_step(struct cpu*);
 */
 void z80_loop(struct cpu*, int cnt, int icall, void (*callback)(struct cpu*, void*), void* callback_param);
 void z80_nmi(struct cpu*);
-void z80_int(struct cpu*, unsigned char* bus);
+void z80_int(struct cpu*, const unsigned char* bus);
