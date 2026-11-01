@@ -6,7 +6,7 @@ CFLAGS = -Wall -O2
 
 OBJS = z80_core.o e800j.o z80_debug.o zx_scrn.o e800j_kbrd.o e800j_file.o e800j_sound.o\
        e800j_mem.o e800j_io.o i8272_fdc.o e800j_fdc.o virt_fdd.o e800j_msg.o
-LIBS = -lSDL -lGL -lspectrum
+LIBS = -lSDL -lGL -lspectrum -lm
 
 #----------------------------------------------------------------------------
 ALL:$(P_NAME)
