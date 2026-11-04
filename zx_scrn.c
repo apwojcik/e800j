@@ -20,11 +20,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
-#include <SDL/SDL_syswm.h>
-#include <SDL/SDL_version.h>
+#include <stdint.h>
 #include <string.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 #include "zx_scrn.h"
 #include "e800j.h"
 #include "z80_cpu.h"
@@ -107,7 +106,7 @@ void zx_scr_rfsh(zx_scrn* zx) {
     }
     zx_trans_scr(zx);
     zx_draw_zxscreen(zx);
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(zx->window);
 }
 
 void zx_glinit(zx_scrn* zx) {
@@ -142,51 +141,51 @@ void zx_glinit(zx_scrn* zx) {
 
     zx_draw_zxscreen(zx);
     zx_draw_border(zx, 1);
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(zx->window);
 }
 
-Uint32 zx_refresh(Uint32 interval, void* zx) {
+Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
     SDL_Event event;
+    SDL_zero(event);
     if (((zx_scrn*)zx)->rfsh == 1)
         return interval;
     ((zx_scrn*)zx)->rfsh = 1;
-    event.type = SDL_USEREVENT;
+    event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
 }
 
-Uint32 zx_cpu_rfsh(Uint32 interval, void* z) {
+Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
     SDL_Event event;
+    SDL_zero(event);
     if (((elwro*)z)->tcpu == 1)
         return interval;
     ((elwro*)z)->tcpu = 1;
-    event.type = SDL_USEREVENT;
+    event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
 }
 
-Uint32 zx_flash(Uint32 interval, void* zx) {
+Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
     ((zx_scrn*)zx)->inverse = !((zx_scrn*)zx)->inverse;
     return interval;
 }
 
 void zx_free_rfsh(int n, void* zx) {
-    SDL_RemoveTimer((SDL_TimerID)((zx_scrn*)zx)->t0);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((zx_scrn*)zx)->t0);
 }
 
 void zx_free_cpu_rfsh(int n, void* zx) {
-    SDL_RemoveTimer((SDL_TimerID)((elwro*)zx)->t1);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((elwro*)zx)->t1);
 }
 
 void zx_free_flash(int n, void* zx) {
-    SDL_RemoveTimer((SDL_TimerID)((zx_scrn*)zx)->t2);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((zx_scrn*)zx)->t2);
 }
 
 char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
-    int i;
-    SDL_version version;
-    //    SDL_SysWMinfo info;
-    Uint32 video_flags = SDL_OPENGL;
+    int i, ver;
+    SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL;
 
     if ((i = file_lookup_option(argc, argv, "-bpp")))
         file_option_param(argc, argv, i, 0, 32, &bpp);
@@ -200,16 +199,16 @@ char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** 
     zx->bpp = bpp;
 
     /* zainicjowanie ekranu SDL */
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't initialise SDL: %s\n", SDL_GetError());
         return 1;
     }
 
-    SDL_VERSION(&version);
+    ver = SDL_GetVersion();
     msg_printf(MSG_MSG, "SDL initialized\n");
-    msg_printf(MSG_MSG, "SDL compiled version: %d.%d.%d\n", version.major, version.minor, version.patch);
+    msg_printf(MSG_MSG, "SDL compiled version: %d.%d.%d\n", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
     msg_printf(MSG_MSG, "SDL linked version: %d.%d.%d\n",
-               SDL_Linked_Version()->major, SDL_Linked_Version()->minor, SDL_Linked_Version()->patch);
+               SDL_VERSIONNUM_MAJOR(ver), SDL_VERSIONNUM_MINOR(ver), SDL_VERSIONNUM_MICRO(ver));
 
     if (sdl_init_ == 0) {
         atexit(SDL_Quit);
@@ -218,16 +217,17 @@ char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** 
 
     /* automatyczne ustawienie głębi kolorów */
     if (bpp == 0) {
-        if (SDL_GetVideoInfo()->vfmt->BitsPerPixel <= 8)
+        const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
+        if (mode && SDL_BITSPERPIXEL(mode->format) <= 8)
             zx->bpp = 8;
         else
             zx->bpp = 16;
     }
 
     if (file_lookup_option(argc, argv, "-fs"))
-        video_flags |= SDL_FULLSCREEN;
+        window_flags |= SDL_WINDOW_FULLSCREEN;
     if (file_lookup_option(argc, argv, "-nf"))
-        video_flags |= SDL_NOFRAME;
+        window_flags |= SDL_WINDOW_BORDERLESS;
 
     /* rozmiar bitowy składowych koloru */
     switch (zx->bpp) {
@@ -255,14 +255,14 @@ char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     /* inicjowanie trybu graficznego */
-    if (!SDL_SetVideoMode(zx->width, zx->height, zx->bpp, video_flags)) {
+    if (!(zx->window = SDL_CreateWindow("Elwro 800 Junior", zx->width, zx->height, window_flags))
+        || !(zx->glctx = SDL_GL_CreateContext(zx->window))) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't set GL mode: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
     /* informacja o ekranie */
-    msg_printf(MSG_MSG, "Screen BPP : %d\n", SDL_GetVideoSurface()->format->BitsPerPixel);
     msg_printf(MSG_MSG, "Vendor     : %s\n", glGetString(GL_VENDOR));
     msg_printf(MSG_MSG, "Renderer   : %s\n", glGetString(GL_RENDERER));
     msg_printf(MSG_MSG, "Version    : %s\n", glGetString(GL_VERSION));
@@ -278,24 +278,16 @@ char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** 
     msg_printf(MSG_MSG, "SDL GL BLUE SIZE   : %d\n", zx->rgb_size[2]);
     msg_printf(MSG_MSG, "SDL GL DEPTH SIZE  : %d\n", zx->bpp);
     msg_printf(MSG_MSG, "SDL GL DOUBLEBUFFER: %s\n", zx->dbf ? "Yes" : "No");
-    /*
-        SDL_VERSION(&(info.version));
-        if( SDL_GetWMInfo(&info) == -1){
-        printf("(EE)Error getting WM info: %s\n",SDL_GetError());
-        exit(0);
-        }
-        XReparentWindow(info.info.x11.display, info.info.x11.wmwindow, zx->parent,0,0 );
-    */
     zx_glinit(zx);
 
-    if (!(zx->t0 = (void*)SDL_AddTimer(rfsh, zx_refresh, zx))) {
+    if (!(zx->t0 = (void*)(uintptr_t)SDL_AddTimer(rfsh, zx_refresh, zx))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
     on_exit(zx_free_rfsh, (void*)zx);
     msg_printf(MSG_MSG, "Set screen refresh to  : %ims ( %iHz )\n", rfsh, (1000 / rfsh));
 
-    if (!(zx->t2 = (void*)SDL_AddTimer(zx->flash, zx_flash, zx))) {
+    if (!(zx->t2 = (void*)(uintptr_t)SDL_AddTimer(zx->flash, zx_flash, zx))) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
     }
@@ -305,11 +297,6 @@ char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** 
     return 0;
 }
 
-void zx_setgamma(float brt, float r, float g, float b) {
-    if (SDL_SetGamma(brt + r, brt + g, brt + b) < 0)
-        msg_printf(MSG_ERROR, "Gamma set fault.\n");
-}
-
 void zx_kbrd_(int key, int state, void* a) {
     //    if(key == 316) ((elwro*)a)->cpu->dbg_on = state;
     key_set(((elwro*)a)->kb, key, state);
@@ -317,7 +304,8 @@ void zx_kbrd_(int key, int state, void* a) {
 
 void zx_quit() {
     SDL_Event event;
-    event.type = SDL_QUIT;
+    SDL_zero(event);
+    event.type = SDL_EVENT_QUIT;
     SDL_PushEvent(&event);
 }
 
@@ -333,7 +321,7 @@ void zx_main(elwro* ptr) {
 
     if (ik) {
         ik = 0;
-        if (!(ptr->t1 = (void*)SDL_AddTimer(ptr->cpu_rfsh, zx_cpu_rfsh, ptr))) {
+        if (!(ptr->t1 = (void*)(uintptr_t)SDL_AddTimer(ptr->cpu_rfsh, zx_cpu_rfsh, ptr))) {
             msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for cpu: %s\n", SDL_GetError());
             exit(0);
         }
@@ -345,18 +333,17 @@ void zx_main(elwro* ptr) {
     }
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
-        case SDL_VIDEORESIZE:
+        case SDL_EVENT_KEY_DOWN:
+            if (!event.key.repeat)
+                zx_kbrd(event.key.key, 1, ptr);
             break;
-        case SDL_KEYDOWN:
-            zx_kbrd(event.key.keysym.sym, 1, ptr);
+        case SDL_EVENT_KEY_UP:
+            zx_kbrd(event.key.key, 0, ptr);
             break;
-        case SDL_KEYUP:
-            zx_kbrd(event.key.keysym.sym, 0, ptr);
-            break;
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             msg_printf(MSG_MSG, "bye...\n");
             return;
-        case SDL_USEREVENT:
+        case SDL_EVENT_USER:
             if (ptr->zx->rfsh) {
                 ptr->zx->rfsh = 0;
                 zx_scr_rfsh(ptr->zx);

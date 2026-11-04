@@ -50,6 +50,8 @@ typedef struct {
     char rfsh;
     void* t0;
     void* t2;
+    void* window; /* SDL_Window* */
+    void* glctx; /* SDL_GLContext */
     int flash; /* tempo migania atrybutu flash w ms */
     char inverse;
     char fscrn;
@@ -70,8 +72,6 @@ extern void zx_scr_rfsh(zx_scrn* zx);
 
 /* argv -> -fullscreen, -noframe */
 extern char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** argv, int rfsh);
-
-extern void zx_setgamma(float brt, float r, float g, float b);
 
 extern void zx_border(zx_scrn* zx, unsigned int color);
 

@@ -20,11 +20,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_audio.h>
+#include <SDL3/SDL.h>
 #include <math.h>
+#include <string.h>
 #include "e800j_sound.h"
 #include "e800j.h"
+
+#define SND_CHUNK 1024 /* maksymalny rozmiar porcji danych przekazywanej do SDL */
+
+static SDL_AudioStream* snd_stream;
+
+static void snd_close_audio(void) {
+    SDL_DestroyAudioStream(snd_stream);
+}
 
 void snd_free_buffers(sound* w) {
     if (w->nosound)
@@ -75,18 +83,27 @@ void snd_rbuffer_push(sound* w, char data) {
         w->head = 0; /* inaczej zawiń na początek */
 }
 
-void snd_beeper_callback(void* ud, Uint8* stream, int len) {
-    int i;
-    /* kopiowanie len bajtów z bufora kołowego do liniowego */
-    for (i = 0; i < len; i++)
-        ((sound*)ud)->lbuffer[i] = snd_rbuffer_pop(ud);
-    /* skopiowanie bufora liniowego do bufora karty */
-    SDL_MixAudio(stream, ((sound*)ud)->lbuffer, len, ((sound*)ud)->volume);
+void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amount, int total_amount) {
+    sound* w = (sound*)ud;
+    Uint8 mix[SND_CHUNK];
+    int i, n;
+
+    while (additional_amount > 0) {
+        n = additional_amount < SND_CHUNK ? additional_amount : SND_CHUNK;
+        /* kopiowanie n bajtów z bufora kołowego do liniowego */
+        for (i = 0; i < n; i++)
+            w->lbuffer[i] = snd_rbuffer_pop(w);
+        /* zmiksowanie ciszy z buforem liniowym i przekazanie do karty */
+        memset(mix, 0x80, n); /* cisza dla AUDIO_U8 */
+        SDL_MixAudio(mix, w->lbuffer, SDL_AUDIO_U8, n, w->volume / 128.0f /* dawne SDL_MIX_MAXVOLUME */);
+        SDL_PutAudioStreamData(stream, mix, n);
+        additional_amount -= n;
+    }
 }
 
 void snd_init(void* elw) {
-    SDL_AudioSpec spec, spc;
-    char name[32];
+    SDL_AudioSpec spec;
+    char samples[16];
     sound* ww = ((elwro*)elw)->snd;
 
     if (ww->nosound)
@@ -94,21 +111,22 @@ void snd_init(void* elw) {
     printf("(II)Sound init\n");
 
     spec.freq = ww->freq; /* ilość sampli/sec */
-    spec.format = AUDIO_U8; /* format danych    */
+    spec.format = SDL_AUDIO_U8; /* format danych    */
     spec.channels = ww->chn; /* ilość kanałów    */
-    spec.samples = ww->len; /* rozmiar bufora w samplach */
-    spec.callback = snd_beeper_callback;
-    spec.userdata = ww; /* bufor danych */
 
-    if (SDL_OpenAudio(&spec, &spc) < 0) {
+    snprintf(samples, sizeof(samples), "%d", ww->len);
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
+
+    if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, ww))) {
         printf("(WW)Couldn't open audio: %s\n", SDL_GetError());
+        ww->nosound = 1;
         return;
     }
 
-    printf("(II)Using audio driver: %s\n", SDL_AudioDriverName(name, 32));
-    atexit(SDL_CloseAudio);
-    snd_init_rbuffer(ww, spc.samples);
-    SDL_PauseAudio(0);
+    printf("(II)Using audio driver: %s\n", SDL_GetCurrentAudioDriver());
+    atexit(snd_close_audio);
+    snd_init_rbuffer(ww, SND_CHUNK);
+    SDL_ResumeAudioStreamDevice(snd_stream);
 }
 
 void snd_beeper(char r373, z80* z) {

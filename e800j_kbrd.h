@@ -257,7 +257,7 @@ extern unsigned char key_kempston(kbrd*);
 #define KB_CPJ		'6' //- '0' + KB_DIG_START
 
 #ifdef _USE_SDL
-#include <SDL/SDL_keysym.h>
+#include <SDL3/SDL_keycode.h>
 
 #define E8K_ENTER	SDLK_RETURN
 #define E8K_SHIFT_L	SDLK_LSHIFT
