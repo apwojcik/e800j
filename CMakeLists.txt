@@ -9,7 +9,7 @@ option(DEBUG_FDC "Debug FDC" OFF)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libspectrum REQUIRED libspectrum IMPORTED_TARGET)
-find_package(SDL REQUIRED)
+find_package(SDL3 REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 
 add_executable(elwro
@@ -47,7 +47,7 @@ if(DEBUG_FDC)
     target_compile_definitions(elwro PRIVATE DEBUG_FDC)
 endif()
 
-target_link_libraries(elwro PRIVATE SDL::SDL PkgConfig::libspectrum OpenGL::GL OpenGL::GLU)
+target_link_libraries(elwro PRIVATE SDL3::SDL3 PkgConfig::libspectrum OpenGL::GL OpenGL::GLU)
 target_compile_definitions(elwro PRIVATE _USE_SDL)
 
 if(WIN32)

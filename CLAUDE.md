@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 An emulator for the **Elwro 800 Junior**, a Polish 1980s school computer that is ~100% ZX Spectrum
 48K compatible and additionally supports its own CP/J (CP/M clone) mode. Original author: Krzysztof
-Komarnicki (2006); current work modernizes the codebase (build system, C cleanup; the code is still SDL1 — an SDL3 port is planned but not done).
+Komarnicki (2006); current work modernizes the codebase (build system, C cleanup; SDL1 to SDL3 migration is done).
 
 Source comments and docs (`doc/Readme`, `doc/ToDo`) are written in Polish; preserve that language in
 existing comments rather than translating them.
@@ -14,7 +14,7 @@ existing comments rather than translating them.
 ## Build
 
 CMake + Ninja. Dependencies are found on the system, not fetched: `libspectrum` via `pkg-config`,
-SDL1 via `find_package(SDL)`, plus OpenGL/GLU. All sources live in the repo root (no `src/` directory).
+SDL3 via `find_package(SDL3 CONFIG)`, plus OpenGL/GLU. All sources live in the repo root (no `src/` directory).
 
 ```sh
 cmake -B build/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug
@@ -57,7 +57,7 @@ buffers and global timing state.
   loading in `e800j_file.c`). The CPU knows nothing about memory or I/O directly — it's handed function
   pointers (`memory_read_t`, `memory_write_t`, `io_read_t`, `io_write_t`) at `z80_init()` time, which is
   how `e800j_mem.c`/`e800j_io.c` get hooked in. `z80_loop()` runs a fixed number of T-states per call and
-  invokes a callback (interrupt timing) partway through; the outer SDL timer (`zx_cpu_refresh`, added via
+  invokes a callback (interrupt timing) partway through; the outer SDL timer (`zx_cpu_rfsh`, added via
   `SDL_AddTimer` in `zx_main`) decides how often that loop runs, not the CPU itself.
 - **Memory** (`e800j_mem.c`): implements paging/mapping differences between plain ZX Spectrum 48K
   (`mem_zx48_*`), ZX Spectrum 128 (`mem_zx128_*`, not fully wired up yet per `doc/ToDo`), and the Elwro's
@@ -71,7 +71,7 @@ buffers and global timing state.
   level further in `virt_fdd.c`/`virt_fdd.h` (`vfdd_dsk_floppy`), currently only supporting CPCEmu `.dsk`
   files — `VFDD_EMUL_DIR`/`VFDD_EMUL_REAL` emulation modes are declared but not implemented
   (see `doc/ToDo`).
-- **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL1 window/GL context (legacy `glDrawPixels`/`SDL_GL_SwapBuffers`) and renders the ZX Spectrum
+- **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL3 window/GL context (legacy `glDrawPixels`/`SDL_GL_SwapWindow`) and renders the ZX Spectrum
   pixel+attribute framebuffer (`screen.zx_patt`/`zx_attr`, pointers directly into `e.ram` at the
   standard Spectrum screen addresses). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
   FDC, and screen refresh together.
