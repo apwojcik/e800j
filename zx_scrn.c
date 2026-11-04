@@ -34,12 +34,12 @@
 
 char sdl_init_ = 0;
 
-void zx_border(zx_scrn* zx, unsigned int color) {
+void zx_border(struct screen* zx, unsigned int color) {
     if (color < 16)
         zx->border_color = color;
 }
 
-void zx_make_palette(zx_scrn* zx, int nrm, int brt, int wht) {
+void zx_make_palette(struct screen* zx, int nrm, int brt, int wht) {
     unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
     int color, i;
     for (i = 0; i < 16; i++) {
@@ -50,7 +50,7 @@ void zx_make_palette(zx_scrn* zx, int nrm, int brt, int wht) {
     }
 }
 
-void zx_draw_zxscreen(zx_scrn* zx) {
+void zx_draw_zxscreen(struct screen* zx) {
     glDrawPixels(256, 192, GL_RGB, GL_UNSIGNED_BYTE, zx->scr_buffer);
 }
 
@@ -58,7 +58,7 @@ void zx_draw_zxscreen(zx_scrn* zx) {
         *((int*)fb) = *((int*)(pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f)));\
         fb +=3;
 
-void zx_trans_scr(zx_scrn* zx) {
+void zx_trans_scr(struct screen* zx) {
     char* fb = zx->scr_buffer;
     rgbi* pal = zx->palettei;
     char* attr = zx->zx_attr;
@@ -89,7 +89,7 @@ void zx_trans_scr(zx_scrn* zx) {
     }
 }
 
-void zx_draw_border(zx_scrn* zx, int color) {
+void zx_draw_border(struct screen* zx, int color) {
     glColor3f(zx->palettef[color].rf, zx->palettef[color].gf, zx->palettef[color].bf);
     glBegin(GL_POLYGON);
     glVertex2f(0.0, 0.0);
@@ -99,7 +99,7 @@ void zx_draw_border(zx_scrn* zx, int color) {
     glEnd();
 }
 
-void zx_scr_rfsh(zx_scrn* zx) {
+void zx_scr_rfsh(struct screen* zx) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
     zx_draw_border(zx, zx->border_color);
     zx_trans_scr(zx);
@@ -107,7 +107,7 @@ void zx_scr_rfsh(zx_scrn* zx) {
     SDL_GL_SwapWindow(zx->window);
 }
 
-void zx_glinit(zx_scrn* zx) {
+void zx_glinit(struct screen* zx) {
     memset(zx->scr_buffer, 0x80, sizeof(zx->scr_buffer));
     zx_make_palette(zx, 0xb0, 0xf0, 0xe0);
     glViewport(0, 0, zx->width, zx->height);
@@ -145,9 +145,9 @@ void zx_glinit(zx_scrn* zx) {
 Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
     SDL_Event event;
     SDL_zero(event);
-    if (((zx_scrn*)zx)->rfsh == 1)
+    if (((struct screen*)zx)->rfsh == 1)
         return interval;
-    ((zx_scrn*)zx)->rfsh = 1;
+    ((struct screen*)zx)->rfsh = 1;
     event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return interval;
@@ -165,12 +165,12 @@ Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
 }
 
 Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
-    ((zx_scrn*)zx)->inverse = !((zx_scrn*)zx)->inverse;
+    ((struct screen*)zx)->inverse = !((struct screen*)zx)->inverse;
     return interval;
 }
 
 void zx_free_rfsh(int n, void* zx) {
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((zx_scrn*)zx)->t0);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t0);
 }
 
 void zx_free_cpu_rfsh(int n, void* zx) {
@@ -178,10 +178,10 @@ void zx_free_cpu_rfsh(int n, void* zx) {
 }
 
 void zx_free_flash(int n, void* zx) {
-    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((zx_scrn*)zx)->t2);
+    SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t2);
 }
 
-char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
+char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh) {
     int i, ver;
     SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL;
 

@@ -33,7 +33,7 @@ typedef struct {
     float bf;
 } rgbf;
 
-typedef struct {
+struct screen {
     char msg[256];
     char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
     rgbi palettei[16];
@@ -62,17 +62,17 @@ typedef struct {
     float bsize;
     float scrh;
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
-} zx_scrn;
+};
 
 extern char sdl_init; /* jeśli =1 tzn, że już była inicjowana SDL */
-extern void zx_make_palette(zx_scrn* zx, int nrm, int brt, int wht);
+extern void zx_make_palette(struct screen* zx, int nrm, int brt, int wht);
 
-extern void zx_scr_rfsh(zx_scrn* zx);
+extern void zx_scr_rfsh(struct screen* zx);
 
 /* argv -> -fullscreen, -noframe */
-extern char zx_initvideo(zx_scrn* zx, int width, int height, int bpp, int argc, char** argv, int rfsh);
+extern char zx_initvideo(struct screen* zx, int width, int height, int bpp, int argc, char** argv, int rfsh);
 
-extern void zx_border(zx_scrn* zx, unsigned int color);
+extern void zx_border(struct screen* zx, unsigned int color);
 
 extern void (*zx_kbrd)(int key, int state, void* kbptr);
 

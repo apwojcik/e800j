@@ -29,7 +29,7 @@
 typedef struct {
     /* elementy komputera */
     z80* cpu;
-    zx_scrn* zx;
+    struct screen* zx;
     kbrd* kb;
     sound* snd;
     e800j_fdc* fdc;
