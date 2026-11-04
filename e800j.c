@@ -35,7 +35,7 @@
 #include "virt_fdd.h"
 #include "e800j_msg.h"
 
-zx_scrn zx;
+struct screen zx;
 
 void disk_vlookup(int argc, char** argv, char* dparm, char* mode, vfdd_disk* disk, char dn) {
     int tmp, tmp1;
