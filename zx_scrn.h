@@ -46,7 +46,6 @@ typedef struct {
     char* zx_patt; /* wzory bitowe - 6kB */
     char* zx_attr; /* kolory kranu - 1kB */
     char border_color;
-    char old_border_color;
     char rfsh;
     void* t0;
     void* t2;
