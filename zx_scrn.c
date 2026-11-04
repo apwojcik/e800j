@@ -102,7 +102,6 @@ void zx_draw_border(zx_scrn* zx, int color) {
 void zx_scr_rfsh(zx_scrn* zx) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
     zx_draw_border(zx, zx->border_color);
-    zx->old_border_color = zx->border_color;
     zx_trans_scr(zx);
     zx_draw_zxscreen(zx);
     SDL_GL_SwapWindow(zx->window);
