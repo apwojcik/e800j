@@ -13,8 +13,10 @@ existing comments rather than translating them.
 
 ## Build
 
-CMake + Ninja. Dependencies are found on the system, not fetched: `libspectrum` via `pkg-config`,
-SDL3 via `find_package(SDL3 CONFIG)`, plus OpenGL/GLU. All C sources and headers live in `src/` (the architecture section below refers to files by bare name, e.g. `e800j.c` = `src/e800j.c`).
+CMake (>= 4.2) + Ninja. `libspectrum` (fork `apwojcik/libspectrum`, branch `develop`) and SDL3
+(`libsdl-org/SDL`, branch `main`) are fetched via `FetchContent` at configure time and linked
+statically (`SDL3::SDL3-static`, `libspectrum::spectrum`), so the first configure needs network access.
+OpenGL/GLU are the only system dependencies (`find_package(OpenGL)`). All C sources and headers live in `src/` (the architecture section below refers to files by bare name, e.g. `e800j.c` = `src/e800j.c`).
 
 ```sh
 cmake -B build/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug

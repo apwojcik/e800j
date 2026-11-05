@@ -7,10 +7,33 @@ project(elwro LANGUAGES C)
 option(USE_SDL "Use SDL" ON)
 option(DEBUG_FDC "Debug FDC" OFF)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(libspectrum REQUIRED libspectrum IMPORTED_TARGET)
-find_package(SDL3 REQUIRED CONFIG)
+include(FetchContent)
+
+set(CACHE{BUILD_SHARED_LIBS} TYPE INTERNAL VALUE OFF)
+
 find_package(OpenGL REQUIRED)
+
+FetchContent_Declare(
+    libspectrum
+    GIT_REPOSITORY https://github.com/apwojcik/libspectrum.git
+    GIT_TAG develop
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS FALSE
+    SYSTEM
+    EXCLUDE_FROM_ALL)
+
+FetchContent_MakeAvailable(libspectrum)
+
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG main
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS FALSE
+    SYSTEM
+    EXCLUDE_FROM_ALL)
+
+FetchContent_MakeAvailable(SDL3)
 
 add_executable(elwro
         src/e800j.c
@@ -51,9 +74,10 @@ if(DEBUG_FDC)
     target_compile_definitions(elwro PRIVATE DEBUG_FDC)
 endif()
 
-target_link_libraries(elwro PRIVATE SDL3::SDL3 PkgConfig::libspectrum OpenGL::GL OpenGL::GLU)
+target_link_libraries(elwro PRIVATE SDL3::SDL3-static libspectrum::spectrum OpenGL::GL OpenGL::GLU)
+
 if(WIN32)
-    target_compile_definitions(elwro PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX)
+    target_compile_definitions(elwro PRIVATE LIBSPECTRUM_EXPORTS _CRT_SECURE_NO_WARNINGS NOMINMAX)
 endif()
 
 if(MSVC)
