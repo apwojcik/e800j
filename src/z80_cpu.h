@@ -122,7 +122,7 @@ Z80_CLASS_NAME {
             int pref_cb_ed;
             int pref_dd_fd;
             int ibus;
-            char bus[8]; /* bajty wystawione na magistrale w trybie IM 0 */
+            unsigned char bus[8]; /* bajty wystawione na magistrale w trybie IM 0 */
             int    call_cnt;   /* licznik co ile ma być wywołana procedura w petli */
             /* liczniki */
             long int cycles; /* przechowuje ilość cykli  */

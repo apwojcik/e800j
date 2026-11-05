@@ -34,9 +34,9 @@ typedef struct {
     int  freq; /* ilość sampli / sekundę */
     int len; /* długość bufora na karcie, wartość musi być pot 2 i może być skorygowana */
     char chn; /* ilość kanałów */
-    char nosound : 1; /* czy włą obsł dźwięku */
-    char alias:1; /* czy ma być włączony antyaliasing */
-    char ovr : 1; /* wystąpiło przepełnienie bufora   */
+    bool nosound; /* czy włączona obsługa dźwięku */
+    bool alias; /* czy ma być włączony antyaliasing */
+    bool ovr; /* wystąpiło przepełnienie bufora   */
     int scale; /* skalowanie długości okresów      */
     long old_ticks;
     char old_r373;

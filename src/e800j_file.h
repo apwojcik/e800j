@@ -40,9 +40,9 @@ extern int file_snap_load(const char* fname, z80* c, char* ram, char* reg373, ch
 
 //extern int file_snap_save(const char *fname, z80 *c, char *ram, char *reg373);
 // xx - jeśli 1 to brak opcji nie generuje błędu
-extern char* file_find_cfg_option(const char* cfg, const char* name, const char* str, const char* err, int lvl, int xx);
+extern char* file_find_cfg_option(const char* cfg, const char* name, char* str, const char* err, int lvl, int xx);
 
-extern char* file_find_cfg_section(const char* cfg, const char* name, const char* str, const char* err, int lvl);
+extern char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl);
 
 extern char* file_get_profile(const char* cfg, char* str);
 

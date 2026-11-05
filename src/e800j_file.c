@@ -215,12 +215,13 @@ char* file_find_cfg_name(const char* cfg, const char* name, int lvl, int* line) 
     return NULL;
 }
 
-char* file_find_cfg_option(const char* cfg, const char* name, const char* str, const char* err, int lvl, int xx) {
-    char *tmp, eq_ = 0, *ptr = NULL, a, qt = 0, bs = 0, tg = 0;
+char* file_find_cfg_option(const char* cfg, const char* name, char* str, const char* err, int lvl, int xx) {
+    (void)err;
+    char eq_ = 0, *ptr = NULL, a, qt = 0, bs = 0, tg = 0;
     int line = 1, i, len = 0;
     int z = strlen(cfg);
     /**/
-    tmp = file_find_cfg_name(cfg, name, lvl, &line);
+    char *tmp = file_find_cfg_name(cfg, name, lvl, &line);
     if (!tmp) {
         if (!xx)
             msg_printf(MSG_ERROR, "Missing option %s\n", name);
@@ -268,7 +269,8 @@ char* file_find_cfg_option(const char* cfg, const char* name, const char* str, c
     return NULL;
 }
 
-char* file_find_cfg_section(const char* cfg, const char* name, const char* str, const char* err, int lvl) {
+char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl) {
+    (void)err;
     char* tmp;
     int line = 1, i, nest = 0;
     int z;
@@ -349,7 +351,7 @@ void file_unquote(char* str) {
     int k = strlen(str);
 
     if (str[0] == '"')
-        strcpy(str, str + 1);
+        memmove(str, str + 1, strlen(str));
     for (; k; k--) {
         if (file_is_letter(k))
             break;
@@ -473,6 +475,8 @@ int file_bios_load(const char* cfg, char* rom, char* profile, int romsize) {
 }
 
 void file_free_buffers(int n, void* el) {
+    (void)n;
+    (void)el;
     //    free(((elwro*)el)->rom);
     //    free(((elwro*)el)->ram);
 }
@@ -689,7 +693,7 @@ char file_set_sound(char* cfg, elwro* el, char* profile) {
         free(tmp1);
         return 1;
     }
-    el->snd->nosound = strtol(tmp0,NULL, 0);
+    el->snd->nosound = strtol(tmp0, NULL, 0) == 0 ? false : true;
     msg_printf(MSG_MSG, "Sound : %s\n", el->snd->nosound ? "off" : "on");
     if (el->snd->nosound) {
         free(tmp1);

@@ -36,6 +36,10 @@ void i8272_result(i8272* fdc, char plc);
 void i8272_write_data(i8272* fdc, char mode);
 
 int i8272_dummy_drive(void* f, void* param, uchar action, uchar wdata) {
+    (void)f;
+    (void)param;
+    (void)action;
+    (void)wdata;
     return 0x20;
 }
 
@@ -140,7 +144,7 @@ void i8272_call(i8272* fdc, char plc) {
 
 /* odczyt rejestru */
 uchar i8272_in(i8272* fdc, uchar a0) {
-    char tmp = 0xff;
+    unsigned char tmp = 0xff;
 
     fdc->int_line = 0;
     if (!(a0 & 1)) {
@@ -250,6 +254,7 @@ void i8272_result(i8272* fdc, char plc) {
 /**************************************************************************************************/
 
 void i8272_rdata(i8272* fdc, char mode) {
+    (void)mode;
     int tmp = 0;
 
     fdc->st0 = 0;
@@ -441,6 +446,7 @@ void i8272_invalid_cmd(i8272* fdc) {
 }
 
 void i8272_wdata(i8272* fdc, char mode) {
+    (void)mode;
     /* odczyt bajtu z FDD */
     fdc->st0 = 0;
     fdc->st1 = 0;

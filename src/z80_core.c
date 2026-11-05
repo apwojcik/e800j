@@ -168,7 +168,7 @@ void z80_icall(z80* z, ushort addr) {
     z->mem_wr(z, --SPr, PCr >> 8);
     z->mem_wr(z, --SPr, PCr & 0xff);
     PCr = addr;
-};
+}
 
 void z80_setregs(z80* z) {
     z->AF_r = &z->AFs0;
@@ -208,7 +208,7 @@ void z80_nop(z80* z) {
     z->cmd_type = D_NOP;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_halt(z80* z) {
     z->cmd_type = D_HALT;
@@ -216,25 +216,25 @@ void z80_halt(z80* z) {
     if (!z->int_off)
         z->halt = 1;
     INST_END;
-};
+}
 
 void z80_pref_dd(z80* z) {
     TICS_UPDATE;
     z->pref_dd_fd = 256;
     z->ipend = 1;
-};
+}
 
 void z80_pref_fd(z80* z) {
     TICS_UPDATE;
     z->pref_dd_fd = 512;
     z->ipend = 1;
-};
+}
 
 void z80_pref_ed(z80* z) {
     TICS_UPDATE;
     z->pref_cb_ed = 1536;
     z->ipend = 1;
-};
+}
 
 void z80_pref_cb(z80* z) {
     TICS_UPDATE;
@@ -242,28 +242,28 @@ void z80_pref_cb(z80* z) {
     z->ipend = 1;
     if (z->pref_dd_fd)
         z->dd3 = z80_fetch_byte(z);
-};
+}
 
 void z80_im(z80* z) {
     z->cmd_type = D_IM;
     TICS_UPDATE;
     z->dd = z->imode = z->p0;
     INST_END;
-};
+}
 
 void z80_di(z80* z) {
     z->cmd_type = D_DI;
     z->iff1 = z->iff2 = 0;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_ei(z80* z) {
     z->cmd_type = D_EI;
     z->iff1 = z->iff2 = 1;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_jr(z80* z) {
     z->cmd_type = D_JR;
@@ -283,7 +283,7 @@ void z80_jr(z80* z) {
     if (!z->jmp_off)
         PCr = z->nn;
     INST_END;
-};
+}
 
 void z80_jp(z80* z) {
     z->cmd_type = D_JP;
@@ -300,7 +300,7 @@ void z80_jp(z80* z) {
     if (!z->jmp_off)
         PCr = z->nn;
     INST_END;
-};
+}
 
 void z80_jphl(z80* z) {
     z->cmd_type = D_JPHL;
@@ -312,7 +312,7 @@ void z80_jphl(z80* z) {
     if (!z->jmp_off)
         PCr = *(z->regs16[z->regx0 = z->p0]);
     INST_END;
-};
+}
 
 void z80_djnz(z80* z) {
     z->cmd_type = D_DJNZ;
@@ -334,7 +334,7 @@ void z80_djnz(z80* z) {
         PCr = z->nn;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_call(z80* z) {
     z->cmd_type = D_CALL;
@@ -359,7 +359,7 @@ void z80_call(z80* z) {
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_rst(z80* z) {
     z->cmd_type = D_RST;
@@ -371,7 +371,7 @@ void z80_rst(z80* z) {
         PCr = (ushort)z->p0;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_ret(z80* z) {
     z->cmd_type = D_RET;
@@ -394,7 +394,7 @@ void z80_ret(z80* z) {
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_reti(z80* z) {
     z->cmd_type = D_RETI;
@@ -406,7 +406,7 @@ void z80_reti(z80* z) {
         PCr = z->dd2;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_retn(z80* z) {
     z->cmd_type = D_RETN;
@@ -419,7 +419,7 @@ void z80_retn(z80* z) {
     z->iff1 = z->iff2;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_pop(z80* z) {
     z->cmd_type = D_POP;
@@ -430,7 +430,7 @@ void z80_pop(z80* z) {
     *(z->regs16[z->p0 & 0x7]) = z->dd2;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_push(z80* z) {
     z->cmd_type = D_PUSH;
@@ -440,14 +440,14 @@ void z80_push(z80* z) {
     z->regx0 = z->p0;
     TICS_UPDATE;
     INST_END;
-};
+}
 
 void z80_exx(z80* z) {
     z->cmd_type = D_EXX;
     TICS_UPDATE;
     z80_bank_rg(z, !z->alt_rg);
     INST_END;
-};
+}
 
 void z80_ex(z80* z) {
     uchar a, b;
@@ -480,7 +480,7 @@ void z80_ex(z80* z) {
         *(z->regs16[z->p1]) = (b << 8) | a;
     }
     INST_END;
-};
+}
 
 void z80_ldb(z80* z) {
     z->cmd_type = D_LDB;
@@ -489,7 +489,7 @@ void z80_ldb(z80* z) {
     z->reg80 = z->p0;
     z->reg81 = z->p1;
     INST_END;
-};
+}
 
 void z80_ldbrm(z80* z) {
     z->cmd_type = D_LDBRM;
@@ -501,7 +501,7 @@ void z80_ldbrm(z80* z) {
     z->reg80 = z->p0;
     z->regx0 = z->p1;
     INST_END;
-};
+}
 
 void z80_ldbmr(z80* z) {
     z->cmd_type = D_LDBMR;
@@ -511,7 +511,7 @@ void z80_ldbmr(z80* z) {
         z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     z->mem_wr(z, z->dd2, *z->regs8[z->reg80 = z->p1]);
     INST_END;
-};
+}
 
 void z80_ldbmn(z80* z) {
     z->cmd_type = D_LDBMN;
@@ -521,28 +521,28 @@ void z80_ldbmn(z80* z) {
         z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     z->mem_wr(z, z->dd2, z->reg80 = z80_fetch_byte(z));
     INST_END;
-};
+}
 
 void z80_ldbmnr(z80* z) {
     z->cmd_type = D_LDBMNR;
     TICS_UPDATE;
     z->mem_wr(z, z->nn = z80_fetch_word(z), *(z->regs8[z->reg80 = z->p1]));
     INST_END;
-};
+}
 
 void z80_ldbrmn(z80* z) {
     z->cmd_type = D_LDBRMN;
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p0]) = z->mem_rd(z, z->nn = z80_fetch_word(z));
     INST_END;
-};
+}
 
 void z80_ldbn(z80* z) {
     z->cmd_type = D_LDBN;
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p0]) = z->dd = z80_fetch_byte(z);
     INST_END;
-};
+}
 
 void z80_ldb_(z80* z) {
     uchar ftmp = 0;
@@ -551,35 +551,35 @@ void z80_ldb_(z80* z) {
     *(z->regs8[z->reg80 = z->p0]) = *(z->regs8[z->reg81 = z->p1]);
     SET_FLAGSP(Ar, 0)
     INST_END;
-};
+}
 
 void z80_ldw(z80* z) {
     z->cmd_type = D_LDW;
     TICS_UPDATE;
     *(z->regs16[z->regx0 = z->p0]) = (*z->regs16[z->regx1 = z->p1]);
     INST_END;
-};
+}
 
 void z80_ldwn(z80* z) {
     z->cmd_type = D_LDWN;
     TICS_UPDATE;
     *(z->regs16[z->regx0 = z->p0]) = z->nn = z80_fetch_word(z);
     INST_END;
-};
+}
 
 void z80_ldwrmn(z80* z) {
     z->cmd_type = D_LDWRMN;
     TICS_UPDATE;
     *(z->regs16[z->regx0 = z->p0]) = z80_mem_rword(z, z->nn = z80_fetch_word(z));
     INST_END;
-};
+}
 
 void z80_ldwmnr(z80* z) {
     z->cmd_type = D_LDWMNR;
     TICS_UPDATE;
     z80_mem_wword(z, z->nn = z80_fetch_word(z), *(z->regs16[z->regx0 = z->p1]));
     INST_END;
-};
+}
 
 void z80_scf(z80* z) {
     uchar ftmp = 0;
@@ -587,7 +587,7 @@ void z80_scf(z80* z) {
     TICS_UPDATE;
     SET_FLAGSP(Ar & 0x28, 0)
     INST_END;
-};
+}
 
 void z80_ccf(z80* z) {
     z->cmd_type = D_CCF;
@@ -597,7 +597,7 @@ void z80_ccf(z80* z) {
     Fr ^= 0x01;
 
     INST_END;
-};
+}
 
 void z80_cpl(z80* z) {
     uchar ftmp = 0;
@@ -606,7 +606,7 @@ void z80_cpl(z80* z) {
     Ar = ~Ar;
     SET_FLAGSP(0, 0)
     INST_END;
-};
+}
 
 void z80_daa(z80* z) {
     uchar ftmp = 0;
@@ -628,7 +628,7 @@ void z80_daa(z80* z) {
 
     SET_FLAGSP(Ar, z->dd3)
     INST_END;
-};
+}
 
 void z80_bit(z80* z) {
     unsigned char u;
@@ -639,7 +639,7 @@ void z80_bit(z80* z) {
     Fr = (Fr & 0x01) | FH | ((u & z->p0) ? 0 : FZ + FP) | (u & 0x80 & z->p0);
 
     INST_END;
-};
+}
 
 void z80_bitm(z80* z) {
     unsigned char u;
@@ -654,14 +654,14 @@ void z80_bitm(z80* z) {
     z->reg81 = z->p2;
 
     INST_END;
-};
+}
 
 void z80_res(z80* z) {
     z->cmd_type = D_RES;
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p1]) &= z->reg81 = z->p0;
     INST_END;
-};
+}
 
 void z80_resm(z80* z) {
     z->cmd_type = D_RESM;
@@ -672,14 +672,14 @@ void z80_resm(z80* z) {
     z->mem_wr(z, z->dd2, z->mem_rd(z, z->dd2) & z->p0);
     z->reg81 = z->p2;
     INST_END;
-};
+}
 
 void z80_set(z80* z) {
     z->cmd_type = D_SET;
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p1]) |= z->reg81 = z->p0;
     INST_END;
-};
+}
 
 void z80_setm(z80* z) {
     z->cmd_type = D_SETM;
@@ -691,7 +691,7 @@ void z80_setm(z80* z) {
     z->mem_wr(z, z->dd2, z->mem_rd(z, z->dd2) | z->p0);
     z->reg81 = z->p2;
     INST_END;
-};
+}
 
 void z80_and(z80* z) {
     uchar ftmp = 0;
@@ -700,7 +700,7 @@ void z80_and(z80* z) {
     Ar &= *(z->regs8[z->reg80 = z->p1]);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_andn(z80* z) {
     uchar ftmp = 0;
@@ -709,7 +709,7 @@ void z80_andn(z80* z) {
     Ar &= z->dd = z80_fetch_byte(z);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_andm(z80* z) {
     uchar ftmp = 0;
@@ -721,7 +721,7 @@ void z80_andm(z80* z) {
     Ar &= z->mem_rd(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_or(z80* z) {
     uchar ftmp = 0;
@@ -730,7 +730,7 @@ void z80_or(z80* z) {
     Ar |= *(z->regs8[z->reg80 = z->p1]);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_orn(z80* z) {
     uchar ftmp = 0;
@@ -739,7 +739,7 @@ void z80_orn(z80* z) {
     Ar |= z->dd = z80_fetch_byte(z);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_orm(z80* z) {
     uchar ftmp = 0;
@@ -751,7 +751,7 @@ void z80_orm(z80* z) {
     Ar |= z->mem_rd(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_xor(z80* z) {
     uchar ftmp = 0;
@@ -760,7 +760,7 @@ void z80_xor(z80* z) {
     Ar ^= *(z->regs8[z->reg80 = z->p1]);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_xorn(z80* z) {
     uchar ftmp = 0;
@@ -769,7 +769,7 @@ void z80_xorn(z80* z) {
     Ar ^= z->dd = z80_fetch_byte(z);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_xorm(z80* z) {
     uchar ftmp = 0;
@@ -781,7 +781,7 @@ void z80_xorm(z80* z) {
     Ar ^= z->mem_rd(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_rlc(z80* z) {
     uchar ftmp = 0;
@@ -794,7 +794,7 @@ void z80_rlc(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd1 & 0x01);
     INST_END;
-};
+}
 
 void z80_rlcm(z80* z) {
     uchar ftmp = 0;
@@ -807,7 +807,7 @@ void z80_rlcm(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd1 & 0x01);
     INST_END;
-};
+}
 
 void z80_rrc(z80* z) {
     uchar ftmp = 0;
@@ -820,7 +820,7 @@ void z80_rrc(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd1 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_rrcm(z80* z) {
     uchar ftmp = 0;
@@ -833,7 +833,7 @@ void z80_rrcm(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd1 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_rls(z80* z) {
     uchar ftmp = 0;
@@ -846,7 +846,7 @@ void z80_rls(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_rlsm(z80* z) {
     uchar ftmp = 0;
@@ -859,7 +859,7 @@ void z80_rlsm(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_rr(z80* z) {
     uchar ftmp = 0;
@@ -872,7 +872,7 @@ void z80_rr(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_rrm(z80* z) {
     uchar ftmp = 0;
@@ -885,7 +885,7 @@ void z80_rrm(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_sla(z80* z) {
     uchar ftmp = 0;
@@ -898,7 +898,7 @@ void z80_sla(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_slam(z80* z) {
     uchar ftmp = 0;
@@ -911,7 +911,7 @@ void z80_slam(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_sra(z80* z) {
     uchar ftmp = 0;
@@ -924,7 +924,7 @@ void z80_sra(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_sram(z80* z) {
     uchar ftmp = 0;
@@ -937,7 +937,7 @@ void z80_sram(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_sli(z80* z) {
     uchar ftmp = 0;
@@ -950,7 +950,7 @@ void z80_sli(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_slim(z80* z) {
     uchar ftmp = 0;
@@ -963,7 +963,7 @@ void z80_slim(z80* z) {
 
     SET_FLAGSP(z->dd1, (z->dd3 >> 7) & 1);
     INST_END;
-};
+}
 
 void z80_srl(z80* z) {
     uchar ftmp = 0;
@@ -976,7 +976,7 @@ void z80_srl(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_srlm(z80* z) {
     uchar ftmp = 0;
@@ -989,7 +989,7 @@ void z80_srlm(z80* z) {
 
     SET_FLAGSP(z->dd1, z->dd3 & 1);
     INST_END;
-};
+}
 
 void z80_rrd(z80* z) {
     uchar ftmp = 0;
@@ -1004,7 +1004,7 @@ void z80_rrd(z80* z) {
     z->mem_wr(z,HLr, z->dd1);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_rld(z80* z) {
     uchar ftmp = 0;
@@ -1020,14 +1020,14 @@ void z80_rld(z80* z) {
     z->mem_wr(z,HLr, z->dd1);
     SET_FLAGSP(Ar, 0);
     INST_END;
-};
+}
 
 void z80_outa(z80* z) {
     z->cmd_type = D_OUTA;
     TICS_UPDATE;
     z->output(z, z->last_out_addr = ((z->dd = z80_fetch_byte(z)) & 0xff) | (Ar << 8), z->last_out_data = Ar);
     INST_END;
-};
+}
 
 void z80_ina(z80* z) {
     z->cmd_type = D_INA;
@@ -1036,7 +1036,7 @@ void z80_ina(z80* z) {
     if (z->force_in > 0)
         z->last_in_data = Ar = z->force_in;
     INST_END;
-};
+}
 
 void z80_inbc(z80* z) {
     z->cmd_type = D_INBC;
@@ -1045,14 +1045,14 @@ void z80_inbc(z80* z) {
     if (z->force_in > 0)
         z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = z->force_in;
     INST_END;
-};
+}
 
 void z80_outbc(z80* z) {
     z->cmd_type = D_OUTBC;
     TICS_UPDATE;
     z->output(z, z->last_out_addr = BCr, z->last_out_data = *(z->regs8[z->reg80 = z->p1]));
     INST_END;
-};
+}
 
 void z80_add8(z80* z) {
     uchar ftmp = 0;
@@ -1362,7 +1362,7 @@ void z80_neg(z80* z) {
     SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
 
     INST_END;
-};
+}
 
 void z80_incx(z80* z) {
     z->cmd_type = D_INCX;
@@ -1448,7 +1448,7 @@ void z80_ldbl(z80* z) {
     z->dd3 = (z->dd3 & 0x08) | ((z->dd3 << 5) & 0x20);
     Fr |= z->dd3;
     INST_END;
-};
+}
 
 void z80_cpbl(z80* z) {
     uchar ftmp = 0;
@@ -1483,7 +1483,7 @@ void z80_cpbl(z80* z) {
 
     Fr = (Fr & 0xfe) | (e & 0xfe);
     INST_END;
-};
+}
 
 void z80_inbl(z80* z) {
     z->cmd_type = D_INBL;
@@ -1507,7 +1507,7 @@ void z80_inbl(z80* z) {
         }
         while ((z->p0 == PIR || z->p0 == PDR) && Br);
     INST_END;
-};
+}
 
 void z80_outbl(z80* z) {
     z->cmd_type = D_OUTBL;
@@ -1531,7 +1531,7 @@ void z80_outbl(z80* z) {
         }
         while ((z->p0 == PIR || z->p0 == PDR) && Br);
     INST_END;
-};
+}
 
 /*************************************************************************************************/
 

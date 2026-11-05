@@ -143,6 +143,7 @@ void zx_glinit(struct screen* zx) {
 }
 
 Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
+    (void)id;
     SDL_Event event;
     SDL_zero(event);
     if (((struct screen*)zx)->rfsh == 1)
@@ -154,6 +155,7 @@ Uint32 zx_refresh(void* zx, SDL_TimerID id, Uint32 interval) {
 }
 
 Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
+    (void)id;
     SDL_Event event;
     SDL_zero(event);
     if (((elwro*)z)->tcpu == 1)
@@ -165,19 +167,23 @@ Uint32 zx_cpu_rfsh(void* z, SDL_TimerID id, Uint32 interval) {
 }
 
 Uint32 zx_flash(void* zx, SDL_TimerID id, Uint32 interval) {
+    (void)id;
     ((struct screen*)zx)->inverse = !((struct screen*)zx)->inverse;
     return interval;
 }
 
 void zx_free_rfsh(int n, void* zx) {
+    (void)n;
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t0);
 }
 
 void zx_free_cpu_rfsh(int n, void* zx) {
+    (void)n;
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((elwro*)zx)->t1);
 }
 
 void zx_free_flash(int n, void* zx) {
+    (void)n;
     SDL_RemoveTimer((SDL_TimerID)(uintptr_t)((struct screen*)zx)->t2);
 }
 
@@ -310,6 +316,7 @@ void zx_quit() {
 void (*zx_kbrd)(int, int, void*) = zx_kbrd_;
 
 void time_int(z80* z, void* ptr) {
+    (void)ptr;
     z80_int(z,NULL);
 }
 

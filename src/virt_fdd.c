@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "virt_fdd.h"
 #include "i8272_fdc.h"
 
@@ -28,7 +29,8 @@ int vfdd_open_image(vfdd_disk* dsk, char* path, char wmode) {
             return -1;
         wmode = 0;
     }
-    fread(&dsk->hdr, sizeof(vfdd_hdr), 1, dsk->f);
+    if (fread(&dsk->hdr, sizeof(vfdd_hdr), 1, dsk->f) != 1)
+        memset(&dsk->hdr, 0, sizeof(vfdd_hdr));
     dsk->stat = wmode ? 0 : VFDD_WPROT;
     dsk->sbyte = 0;
     dsk->lbytes = 0;
@@ -55,7 +57,8 @@ int vfdd_seek_track(vfdd_disk* dsk, int trk, char hd) {
     dsk->seek = 0x100;
     while (!feof(dsk->f)) {
         /* odczyt nagłówka ścieżki */
-        fread(&dsk->th, sizeof(vfdd_trk_hdr), 1, dsk->f);
+        if (fread(&dsk->th, sizeof(vfdd_trk_hdr), 1, dsk->f) != 1)
+            return 1;
         if (dsk->th.tr_nb == trk && dsk->th.hd_nb == hd)
             break;
         dsk->seek = dsk->seek + (0x80 << dsk->th.bps) * dsk->th.spt + 0x100;
@@ -78,7 +81,8 @@ int vfdd_seek_sector(vfdd_disk* dsk, int trk, int sec, int hd) {
     for (i = 0; i < dsk->th.spt; i++) {
         if (feof(dsk->f))
             return -3;
-        fread(&dsk->sh, sizeof(vfdd_sec_hdr), 1, dsk->f);
+        if (fread(&dsk->sh, sizeof(vfdd_sec_hdr), 1, dsk->f) != 1)
+            return -3;
         if (dsk->sh.tr_nb == trk && dsk->sh.sc_nb == sec && dsk->sh.hd_nb == hd) {
             /* ustawia na początek danych sektora */
             dsk->lbytes = (0x80 << dsk->th.bps);
