@@ -13,35 +13,35 @@ find_package(SDL3 REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 
 add_executable(elwro
-        e800j.c
-        e800j.h
-        e800j_fdc.c
-        e800j_fdc.h
-        e800j_file.c
-        e800j_file.h
-        e800j_io.c
-        e800j_io.h
-        e800j_kbrd.c
-        e800j_kbrd.h
-        e800j_mem.c
-        e800j_mem.h
-        e800j_msg.c
-        e800j_msg.h
-        e800j_prom.h
-        e800j_sound.c
-        e800j_sound.h
-        i8272_fdc.c
-        i8272_fdc.h
-        virt_fdd.c
-        virt_fdd.h
-        z80_core.c
-        z80_core.h
-        z80_cpu.h
-        z80_debug.c
-        z80_debug.h
-        z80_dtbl.h
-        zx_scrn.c
-        zx_scrn.h)
+        src/e800j.c
+        src/e800j.h
+        src/e800j_fdc.c
+        src/e800j_fdc.h
+        src/e800j_file.c
+        src/e800j_file.h
+        src/e800j_io.c
+        src/e800j_io.h
+        src/e800j_kbrd.c
+        src/e800j_kbrd.h
+        src/e800j_mem.c
+        src/e800j_mem.h
+        src/e800j_msg.c
+        src/e800j_msg.h
+        src/e800j_prom.h
+        src/e800j_sound.c
+        src/e800j_sound.h
+        src/i8272_fdc.c
+        src/i8272_fdc.h
+        src/virt_fdd.c
+        src/virt_fdd.h
+        src/z80_core.c
+        src/z80_core.h
+        src/z80_cpu.h
+        src/z80_debug.c
+        src/z80_debug.h
+        src/z80_dtbl.h
+        src/zx_scrn.c
+        src/zx_scrn.h)
 
 if(DEBUG_FDC)
     target_compile_definitions(elwro PRIVATE DEBUG_FDC)
