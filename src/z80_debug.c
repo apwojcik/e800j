@@ -86,6 +86,7 @@ void dbg_deasembly(dbg* d);
 /********************************************************************************************/
 /* zwraca 1 jeśli łańcuch t nie jest liczbą */
 char dbg_dcheck(char* t) {
+    (void)t;
     return 0;
 }
 
@@ -275,7 +276,7 @@ void dbg_deasm(dbg* d) {
     dbg_equalize(tmp, 16);
     dbg_resolver(d->z, ddt[d->z->cmd_type], c);
     dbg_equalize(c, 16);
-    sprintf(d->line, "%s%s%s\n", tmp, c, dbg_getregs(d, tmp1));
+    snprintf(d->line, sizeof(d->line), "%.100s%.31s%.100s\n", tmp, c, dbg_getregs(d, tmp1));
     d->z->dd = d->z->nn = d->z->reg80 = 0;
     d->z->reg81 = d->z->regx0 = d->z->regx1 = d->z->cmd_type = 0;
 }
@@ -730,7 +731,7 @@ void dbg_poke(dbg* d) {
     addr = strtol(t,NULL, 0);
     i = k = 0;
     do {
-        for (; i < strlen(tmp) && tmp[i] != ','; i++);
+        for (; i < (int)strlen(tmp) && tmp[i] != ','; i++);
         if (tmp[i] == ',')
             i++;
         if (i - k > 7) {
@@ -761,7 +762,7 @@ void dbg_poke(dbg* d) {
         addr++;
         k = i;
     }
-    while (i < strlen(tmp));
+    while (i < (int)strlen(tmp));
 }
 
 #define M(bit) (f >> bit) & 0x01
@@ -822,7 +823,7 @@ char dbg_setreg(dbg* d, char* t) {
     char tmp0[8] = "", tmp1[8] = "";
     int i, val;
 
-    for (i = 0; i < strlen(t) && t[i] != '='; i++);
+    for (i = 0; i < (int)strlen(t) && t[i] != '='; i++);
     if (t[i] != '=') {
         d->out("Missing '=' operator for argument.\n");
         return 1;
@@ -852,7 +853,7 @@ char dbg_setreg(dbg* d, char* t) {
 
     val = strtol(tmp1,NULL, 0);
 
-    for (i = 0; i < strlen(tmp0); i++)
+    for (i = 0; i < (int)strlen(tmp0); i++)
         tmp0[i] = tolower(tmp0[i]);
 
     if (!strcmp(tmp0, "a"))
@@ -976,7 +977,7 @@ void dbg_regs(dbg* d) {
     i = k = 0;
     do {
         tmp1[0] = '\0';
-        for (; i < strlen(tmp) && tmp[i] != ','; i++);
+        for (; i < (int)strlen(tmp) && tmp[i] != ','; i++);
         if (tmp[i] == ',')
             i++;
 
@@ -997,7 +998,7 @@ void dbg_regs(dbg* d) {
 
         k = i;
     }
-    while (i < strlen(tmp));
+    while (i < (int)strlen(tmp));
 }
 
 void dbg_goto(dbg* d) {
@@ -1085,12 +1086,20 @@ void dbg_proc(dbg* d) {
 
 /* zapis przy deasemblacji ma iść w pustkę */
 void dbg_dummy_wr(void* z, ushort addr, uchar data) {
+    (void)z;
+    (void)addr;
+    (void)data;
 }
 
 void dbg_dummy_output(void* z, ushort addr, uchar data) {
+    (void)z;
+    (void)addr;
+    (void)data;
 }
 
 uchar dbg_dummy_input(void* z, ushort addr) {
+    (void)z;
+    (void)addr;
     return 0;
 }
 

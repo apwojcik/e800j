@@ -52,7 +52,7 @@ void snd_init_rbuffer(sound* w, int lbsize) {
         free(w->lbuffer);
         exit(0);
     }
-    w->ovr = 0;
+    w->ovr = false;
     w->old_ticks = 0;
     w->old_r373 = 0;
 }
@@ -73,7 +73,7 @@ void snd_rbuffer_push(sound* w, char data) {
     if (((w->head == w->size) && (w->tail == 0)) || (w->head + 1 == w->tail)) {
         if (!w->ovr)
             printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
-        w->ovr = 1;
+        w->ovr = true;
         return;
     }
     w->rbuffer[w->head] = data; /* wkładam daną do bufora    */
@@ -84,6 +84,7 @@ void snd_rbuffer_push(sound* w, char data) {
 }
 
 void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amount, int total_amount) {
+    (void) total_amount;
     sound* w = (sound*)ud;
     Uint8 mix[SND_CHUNK];
     int i, n;
@@ -119,7 +120,7 @@ void snd_init(void* elw) {
 
     if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, ww))) {
         printf("(WW)Couldn't open audio: %s\n", SDL_GetError());
-        ww->nosound = 1;
+        ww->nosound = true;
         return;
     }
 

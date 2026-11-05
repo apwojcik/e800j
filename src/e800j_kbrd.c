@@ -18,14 +18,12 @@
  *
  */
 
-#define _USE_SDL
-
 #include "e800j_kbrd.h"
 
 unsigned char keymap_table[] = KEY_MAP_TABLE; /* zamiana kodu klawisza na współrzędne w matrycy */
 
 void key_init(kbrd* kb) {
-    int i;
+    size_t i;
     /* zerowanie całej struktury */
     for (i = 0; i < sizeof(kbrd); i++)
         *((char*)kb + i) = 0;
@@ -266,7 +264,7 @@ void key_set(kbrd* kb, unsigned int key, unsigned char kb_state) {
     }
 
     //    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
-    if (key < 0)
+    if ((int)key < 0)
         return;
 
     key_update(kb, key, kb_state);
