@@ -53,7 +53,7 @@ struct dbg {
     char noregs; /* jeśli ustawiony, nie wyświetla stanu rejestrów */
     char trace; /* flaga trybu śledzenia */
     void (*out)(char*); /* funkcja zwrotna do wyrzucania tekstu */
-    char (*in)();
+    char (*in)(void);
 
     struct cpu* z;
 /* warunek załaczenia */

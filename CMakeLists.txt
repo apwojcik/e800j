@@ -4,7 +4,6 @@ cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 
 project(elwro LANGUAGES C)
 
-option(USE_SDL "Use SDL" ON)
 option(DEBUG_FDC "Debug FDC" OFF)
 
 include(FetchContent)

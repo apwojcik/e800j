@@ -22,7 +22,7 @@
 
 /* MSVC/Windows have no on_exit(3) (it's a glibc/BSD extension), so provide a
  * minimal drop-in replacement backed by atexit(). */
-#if defined(_MSC_VER) || (defined(_WIN32) && !defined(__GNUC__))
+#if defined(_MSC_VER) || defined(__APPLE__) || (defined(_WIN32) && !defined(__GNUC__))
 
 int on_exit(void (*function)(int, void*), void* arg);
 

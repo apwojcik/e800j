@@ -18,6 +18,10 @@
  *
  */
 
+#ifdef DEBUG_FDC
+#include <stdio.h>
+#endif
+
 #include "i8272_fdc.h"
 #include "e800j_fdc.h"
 #include "e800j_msg.h"

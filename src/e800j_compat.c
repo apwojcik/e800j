@@ -20,7 +20,7 @@
 
 #include "e800j_compat.h"
 
-#if defined(_MSC_VER) || (defined(_WIN32) && !defined(__GNUC__))
+#if defined(_MSC_VER) || defined(__APPLE__) || (defined(_WIN32) && !defined(__GNUC__))
 
 #include <stdlib.h>
 

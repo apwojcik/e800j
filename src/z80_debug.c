@@ -458,7 +458,7 @@ void dbg_help(struct dbg* d) {
 
 void dbg_trap(struct dbg* d) {
     char addrs[7] = "";
-    char slife[8] = "";
+    char slife[9] = "";
     char cnd[3] = "";
     char cond = 0;
     int addr = 0;
@@ -1209,7 +1209,7 @@ static void dbg_sout(char* a) {
     printf("%s", a);
 }
 
-static char dbg_sin() {
+static char dbg_sin(void) {
     return (char)getchar();
 }
 
