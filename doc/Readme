@@ -2,50 +2,45 @@ Elwro 800 Junior v 0.2
 
 Program ten jest emulatorem popularnego w latach 80 (i na początku 90) polskiego komputera szkolnego
 jakim był Elwro 800 Junior. Komputer ten ma możliwość pracy w dwóch trybach: ZX SPECTRUM, z którym
-jest zgodny prawie w 100% (Główna różnica polega na zagospodarowaniu obszaru BIOS, gdzie w oryginale 
+jest zgodny prawie w 100% (Główna różnica polega na zagospodarowaniu obszaru BIOS, gdzie w oryginale
 mieścił się nieużywany obszar wypełniony wartościami #FF. Obszar ten w niektórych programach (zwykle
-grach) był niekiedy wykorzystany jako tablica wektorów przerwań trybu IM2, co powodowało niemożliwość 
-ich uruchomienia ), oraz CP/J. System CP/J jest klonem systemu CP/M i aby w niego wejść należało 
+grach) był niekiedy wykorzystany jako tablica wektorów przerwań trybu IM2, co powodowało niemożliwość
+ich uruchomienia ), oraz CP/J. System CP/J jest klonem systemu CP/M i aby w niego wejść należało
 dysponować bądź dyskietką, bądź być podłączonym do sieci JUNET.
 
 Program:
 
-Program na dzień dzisiejszym jest jedynie szkieletem funkjcjonalności. Pozwala na uruchamianie 
-programów ZX SPECTRUM, oraz systemu CP/J (zapewne nie wszystkich). Aby używać stacji dysków należy 
-się zaopatrzeć w plik CPCEmu DSK. Jeśli nie podamy mu pliku dyskietki, zostanie podłączona do emulatora
+Program na dzień dzisiejszy jest jedynie szkieletem funkcjonalności. Pozwala na uruchamianie
+programów ZX SPECTRUM, oraz systemu CP/J (zapewne nie wszystkich). Aby używać stacji dysków należy
+się zaopatrzyć w plik CPCEmu DSK. Jeśli nie podamy pliku dyskietki, do emulatora zostanie podłączona
 atrapa napędu. Aby uruchomić emulator z dyskietką należy wpisać:
 
-elwro -adisk plik.dsk
+    elwro -adisk plik.dsk
 
 jeśli chcemy mieć możliwość zapisu:
 
-elwro -adisk plik.dsk -awr
+    elwro -adisk plik.dsk -awr
 
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
-elwro -adisk plik1.dsk -bdisk plik2.dsk -bwr
+    elwro -adisk plik1.dsk -bdisk plik2.dsk -bwr
 
 itp..
 
 Aby dowiedzieć się więcej o opcjach programu należy uruchomić go z parametrem:
 
-elwro -help
+    elwro -help
 
 Program zawiera również debugger/deasembler, aby emulator uruchomić w jego trybie należy wpisać:
 
-elwro -debug
+    elwro -debug
 
-W tym momencie sterowanie programu przejmuje konsola tekstowa, aby dowiedzieć się o możliwych opcjach 
+W tym momencie sterowanie programu przejmuje konsola tekstowa, aby dowiedzieć się o możliwych opcjach
 debuggera, należy wpisać h i nacisnąć enter.
 
 Konfiguracja:
 
 Konfiguracja trzymana jest w pliku e800j.cfg w katalogu bieżącym (o ile nie zostało inne miejsce wymuszone).
 Plik konfiguracji jest podzielony na sekcje, z możliwością tworzenia różnych profili konfiguracji.
-Podstawową sekcją jest 'main', która zawiera nazwę domyślnie użytego profilu (można wymusić inny opcją 
-uruchomienia ). 
-				  
-
-
-
-
+Podstawową sekcją jest 'main', która zawiera nazwę domyślnie użytego profilu (można wymusić inny opcją
+uruchomienia ).
