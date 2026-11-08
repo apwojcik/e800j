@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ int file_snap_load(const char* filename, const struct elwro* e, unsigned char* r
     }
     unsigned char* buffer;
     FILE* f;
-    if ((f = fopen(filename, "rb")) == NULL) {
+    if ((f = fopen(filename, "rb")) == nullptr) {
         msg_printf(MSG_ERROR, "Error opening snapshot file: %s\n", filename);
         return 1;
     }
@@ -371,7 +371,7 @@ static int file_read_rom(char* filename, const int addr, const unsigned char* ro
     struct stat st;
     if (stat(filename, &st) == 0) {
         FILE* f;
-        if ((f = fopen(filename, "rb")) == NULL) {
+        if ((f = fopen(filename, "rb")) == nullptr) {
             msg_printf(MSG_ERROR, "\nError opening file %s\n", filename);
             return 1;
         }
@@ -763,12 +763,12 @@ bool file_init(struct elwro* e, const char* config_path, const int argc, const c
         msg_printf(MSG_ERROR, "Config file does not exists: %s\n", config_path);
         return false;
     }
-    if ((cfg = malloc(st.st_size + 1)) == NULL) {
+    if ((cfg = malloc(st.st_size + 1)) == nullptr) {
         msg_printf(MSG_ERROR, "Error memory allocation for config file\n");
         return false;
     }
     FILE* f = fopen(config_path, "rb");
-    if (f != NULL) {
+    if (f != nullptr) {
         msg_printf(MSG_MSG, "Config file: %s\n", config_path);
         const size_t size = st.st_size;
         if (fread(cfg, 1, size, f) < size) {
@@ -785,12 +785,12 @@ bool file_init(struct elwro* e, const char* config_path, const int argc, const c
         msg_printf(MSG_ERROR, "Error opening the config file: %s\n", config_path);
         return false;
     }
-    if ((profile = malloc(st.st_size + 1)) == NULL) {
+    if ((profile = malloc(st.st_size + 1)) == nullptr) {
         msg_printf(MSG_ERROR, "Error allocate memory for configuration.\n");
         free(cfg);
         return false;
     }
-    if (file_get_profile(cfg, profile) == NULL) {
+    if (file_get_profile(cfg, profile) == nullptr) {
         return false;
     }
     if (file_lookup_option(argc, argv, "-profile")) {

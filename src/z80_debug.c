@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
 #include "z80_core.h"
-#include "z80_dtbl.h"
 #include "z80_debug.h"
-
-char fbytes[32];
 
 static const char* blk[] = { "IR", "DR", "I", "D" };
 
@@ -69,7 +65,7 @@ static void dbg_trace(struct dbg* d);
 static void dbg_proc(struct dbg* d);
 static void dbg_var(struct dbg* d);
 static void dbg_memo(struct dbg* d);
-static void dbg_stck(struct dbg* d);
+static void dbg_stck(const struct dbg* d);
 static void dbg_dasm(struct dbg* d);
 static void dbg_trap(struct dbg* d);
 static void dbg_goto(struct dbg* d);
@@ -84,7 +80,7 @@ static void dbg_sregs(struct dbg* d);
 static void dbg_deasembly(struct dbg* d);
 
 /********************************************************************************************/
-/* zwraca 1 jeśli łańcuch t nie jest liczbą */
+/* zwraca 1, jeśli łańcuch t nie jest liczbą */
 static char dbg_dcheck(char* t) {
     (void)t;
     return 0;
@@ -187,7 +183,7 @@ static void dbg_resolver(const struct cpu* z, const char* code, char* str) {
     }
 }
 
-void dbg_addmach(struct dbg* deb, unsigned char n) {
+static void dbg_addmach(struct dbg* deb, unsigned char n) {
     /* jeśli więcej niż MAX_BYTES zawijaj */
     if (deb->len >= MAX_BYTES - 1)
         deb->len = 0;
@@ -195,7 +191,7 @@ void dbg_addmach(struct dbg* deb, unsigned char n) {
     deb->len += 2;
 }
 
-void dbg_call(struct dbg* deb, unsigned char mode, unsigned char data) {
+static void dbg_call(struct dbg* deb, unsigned char mode, unsigned char data) {
     deb->z->exit = deb->console;
     dbg_test(deb, mode);
     if (mode == D_FETCH) {
@@ -225,7 +221,7 @@ void dbg_call(struct dbg* deb, unsigned char mode, unsigned char data) {
     deb->line[0] = 0;
 }
 
-char* dbg_getregs(struct dbg* d, char* str) {
+static char* dbg_getregs(struct dbg* d, char* str) {
     char af[5], bc[5], de[5], hl[5], af_[5], bc_[5], de_[5], hl_[5];
     char ix[5], iy[5], sp[5], pc[5], i[3], r[3];
 
@@ -323,7 +319,7 @@ void dbg_input(struct dbg* d) {
         dbg_cmd(d);
 }
 
-void dbg_getcmd(struct dbg* d, char* cmd) {
+static void dbg_getcmd(struct dbg* d, char* cmd) {
     char* n = d->cmdline;
     int i, j, k = (int)strlen(n);
 
@@ -508,7 +504,7 @@ void dbg_trap(struct dbg* d) {
                 d->out("Address parameter is not a digit.\n");
                 return;
             }
-            addr = strtol(addrs,NULL, 0);
+            addr = strtol(addrs, nullptr, 0);
         }
     }
     else
@@ -523,7 +519,7 @@ void dbg_trap(struct dbg* d) {
             d->out("Life parameter is not a digit.\n");
             return;
         }
-        life = strtol(slife,NULL, 0);
+        life = strtol(slife, nullptr, 0);
     }
 
     /* argumenty pobrane czas dodać pułapkę do listy */
@@ -607,7 +603,7 @@ void dbg_dbps(struct dbg* d) {
             d->out("Parameter is not a digit.\n");
             return;
         }
-        k = strtol(tmp,NULL, 0);
+        k = strtol(tmp, nullptr, 0);
     }
     dbg_bp_delete(d, k);
 }
@@ -627,14 +623,14 @@ void dbg_memo(struct dbg* d) {
             d->out("Parameter is not a digit.\n");
             return;
         }
-        d->daddr = strtol(tmp0,NULL, 0);
+        d->daddr = strtol(tmp0, nullptr, 0);
     }
     if (*tmp1) {
         if (dbg_dcheck(tmp1)) {
             d->out("Parameter is not a digit.\n");
             return;
         }
-        d->dline = strtol(tmp1,NULL, 0);
+        d->dline = strtol(tmp1, nullptr, 0);
     }
     for (j = 0; j < d->dline; j++) {
         *tmp2 = '\0';
@@ -659,9 +655,6 @@ void dbg_memo(struct dbg* d) {
 
 void dbg_var(struct dbg* d) {
     char tmp0[64] = "";
-    int addr = 0;
-    unsigned char obit = 0;
-    unsigned short int xbit = 0;
 
     sscanf(d->cmdline, "v %7s", tmp0);
     if (!tmp0[0]) {
@@ -672,21 +665,20 @@ void dbg_var(struct dbg* d) {
         d->out("Parameter is not a digit.\n");
         return;
     }
-    addr = strtol(tmp0,NULL, 0);
+    const int addr = strtol(tmp0, nullptr, 0);
     if (addr < 0 || addr > 0xffff) {
         d->out("Address parameter is out of range.");
         return;
     }
-    obit = dbg_peek(d, addr);
-    xbit = (int)obit * 256 + dbg_peek(d, addr + 1);
+    unsigned char obit = dbg_peek(d, addr);
+    unsigned short int xbit = (int)obit * 256 + dbg_peek(d, addr + 1);
     sprintf(tmp0, "8bit: mem[%x]=%x,  16bit: mem[%x]=%x\n", addr, obit, addr, xbit);
     d->out(tmp0);
 }
 
-void dbg_stck(struct dbg* d) {
+void dbg_stck(const struct dbg* d) {
     char tmp[8] = "";
     int lines = 4;
-    int i = 0, t = 0;
 
     sscanf(d->cmdline, "s %6s", tmp);
     if (tmp[0]) {
@@ -694,19 +686,19 @@ void dbg_stck(struct dbg* d) {
             d->out("Parameter is not a digit.\n");
             return;
         }
-        lines = strtol(tmp,NULL, 0);
+        lines = strtol(tmp, nullptr, 0);
     }
 
     d->out("Stack:\n");
-    for (i = 0; i < lines; i++) {
-        t = dbg_peek(d, (*d->z->SP_r) + i * 2 + 1) * 256 + dbg_peek(d, (*d->z->SP_r) + i * 2);
+    for (int i = 0; i < lines; i++) {
+        const int t = dbg_peek(d, (*d->z->SP_r) + i * 2 + 1) * 256 + dbg_peek(d, (*d->z->SP_r) + i * 2);
         dbg_xc2hexstr((unsigned short)t, tmp);
         strcat(tmp, "\n");
         d->out(tmp);
     }
 }
 
-void dbg_pokebyte(struct dbg* d, int addr, unsigned char data) {
+static void dbg_pokebyte(struct dbg* d, int addr, unsigned char data) {
     d->z->memory_write(d->z, (unsigned short)addr, data);
 }
 
@@ -727,7 +719,7 @@ void dbg_poke(struct dbg* d) {
         d->out("Adress parameter is not a digit.\n");
         return;
     }
-    addr = strtol(t,NULL, 0);
+    addr = strtol(t, nullptr, 0);
     i = k = 0;
     do {
         for (; i < (int)strlen(tmp) && tmp[i] != ','; i++);
@@ -750,7 +742,7 @@ void dbg_poke(struct dbg* d) {
             d->out("' is not a digit.\n");
             return;
         }
-        data = strtol(t,NULL, 0);
+        data = strtol(t, nullptr, 0);
         if (data < 0 || data > 0xff) {
             d->out("Data parameter '");
             d->out(t);
@@ -818,9 +810,9 @@ void dbg_sregs(struct dbg* d) {
     d->out(tmp);
 }
 
-char dbg_setreg(struct dbg* d, char* t) {
+static char dbg_setreg(struct dbg* d, char* t) {
     char tmp0[8] = "", tmp1[8] = "";
-    int i, val;
+    int i;
 
     for (i = 0; i < (int)strlen(t) && t[i] != '='; i++);
     if (t[i] != '=') {
@@ -850,7 +842,7 @@ char dbg_setreg(struct dbg* d, char* t) {
         return 1;
     }
 
-    val = strtol(tmp1,NULL, 0);
+    int val = strtol(tmp1, nullptr, 0);
 
     for (i = 0; i < (int)strlen(tmp0); i++)
         tmp0[i] = (char)tolower((unsigned char)tmp0[i]);
@@ -963,7 +955,7 @@ char dbg_setreg(struct dbg* d, char* t) {
 }
 
 void dbg_regs(struct dbg* d) {
-    int i, j, k;
+    int j, k;
     char tmp[1024] = "", tmp1[16];
 
     sscanf(d->cmdline, "r %s", tmp);
@@ -973,7 +965,7 @@ void dbg_regs(struct dbg* d) {
         return;
     }
 
-    i = k = 0;
+    int i = k = 0;
     do {
         tmp1[0] = '\0';
         for (; i < (int)strlen(tmp) && tmp[i] != ','; i++);
@@ -1021,7 +1013,7 @@ void dbg_goto(struct dbg* d) {
             d->out("g command parameter incorrect.");
             return;
         }
-        d->addr = strtol(tmp,NULL, 0);
+        d->addr = strtol(tmp, nullptr, 0);
     }
     d->console = 0;
 }
@@ -1040,7 +1032,7 @@ void dbg_trace(struct dbg* d) {
             d->out("Incorrect parameter.\n");
             return;
         }
-        cnt = strtol(tmp0,NULL, 0);
+        cnt = strtol(tmp0, nullptr, 0);
         if (cnt <= 0) {
             d->out("Incorrect parameter.\n");
             return;
@@ -1068,7 +1060,7 @@ void dbg_proc(struct dbg* d) {
             d->out("Incorrect parameter.\n");
             return;
         }
-        cnt = strtol(tmp0,NULL, 0);
+        cnt = strtol(tmp0, nullptr, 0);
         if (cnt <= 0) {
             d->out("Incorrect parameter.\n");
             return;
@@ -1142,7 +1134,7 @@ void dbg_dasm(struct dbg* d) {
             d->out("Incorrect parameter.\n");
             return;
         }
-        d->zline = strtol(tmp1, NULL, 0);
+        d->zline = strtol(tmp1, nullptr, 0);
     }
 
     if (tmp0[0]) {
@@ -1150,7 +1142,7 @@ void dbg_dasm(struct dbg* d) {
             d->out("Incorrect parameter.\n");
             return;
         }
-        d->zaddr = strtol(tmp0, NULL, 0);
+        d->zaddr = strtol(tmp0, nullptr, 0);
     }
 
     dbg_deasembly(d);
@@ -1171,8 +1163,8 @@ void dbg_iout(struct dbg* d) {
         d->out("Incorrect parameter.\n");
         return;
     }
-    addr = strtol(tmp0,NULL, 0);
-    value = strtol(tmp1,NULL, 0);
+    addr = strtol(tmp0, nullptr, 0);
+    value = strtol(tmp1, nullptr, 0);
     if (addr < 0 || addr > 0xffff || value < 0 || value > 0xff) {
         d->out("Parameter out of range.\n");
         return;
@@ -1196,8 +1188,8 @@ void dbg_iin(struct dbg* d) {
         d->out("Incorrect parameter.\n");
         return;
     }
-    addr = strtol(tmp0,NULL, 0);
-    value = strtol(tmp1,NULL, 0);
+    addr = strtol(tmp0, nullptr, 0);
+    value = strtol(tmp1, nullptr, 0);
     if (addr < 0 || addr > 0xffff || value < 0 || value > 0xff) {
         d->out("Parameter out of range.\n");
         return;

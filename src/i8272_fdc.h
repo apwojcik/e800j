@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ struct i8272 {
 
     /* sprzęgnięcie z emulacją napędu */
     void* parameter[4]; // parametr wywołania funkcji napędu
-    unsigned char (*drive)(  // funkcja obsługi napędu
+    int (*drive)(  // funkcja obsługi napędu
         const void* i8272,   //      struktura FDC
         void* fdd,           //      parametr napędu (struktura opisu dyskietki)
         unsigned char action,//      kod operacji
@@ -121,7 +121,7 @@ unsigned char i8272_in(struct i8272* fdc, unsigned char address_bit);
 */
 void i8272_fdd_connect(
     struct i8272* fdc, /* struktura FDC */
-    unsigned char (*drive)(const void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
+    int (*drive)(const void*, void*, unsigned char, unsigned char), /* funkcja napędu wirtualnego */
     void*, void*, void*, void* /* struktury napędów 0,1,2,3 */
 );
 

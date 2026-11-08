@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v 0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

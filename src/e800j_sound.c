@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ void snd_init(struct sound* snd, const struct cpu* cpu) {
     snd->cpu = cpu;
 
     spec.freq = snd->freq; // ilość sampli/sec
-    spec.format = SDL_AUDIO_U8; /* format danych    */
+    spec.format = SDL_AUDIO_U8; /* format danych */
     spec.channels = snd->chn; // ilość kanałów
 
     snprintf(samples, sizeof(samples), "%d", snd->length);
