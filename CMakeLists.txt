@@ -54,8 +54,6 @@ add_executable(elwro
         src/e800j_prom.h
         src/e800j_sound.c
         src/e800j_sound.h
-        #src/e800j_string.h
-        #src/e800j_string.c
         src/i8272_fdc.c
         src/i8272_fdc.h
         src/virt_fdd.c
