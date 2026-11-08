@@ -37,7 +37,7 @@
 #include "zx_scrn.h"
 #include "e800j_fdc.h"
 
-static char sdl_init_ = {};
+static bool sdl_init_ = false;
 
 void screen_border(struct screen* s, const unsigned char color) {
     if (color < 16)
@@ -226,9 +226,9 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
         SDL_VERSIONNUM_MINOR(linked),
         SDL_VERSIONNUM_MICRO(linked));
 
-    if (sdl_init_ == 0) {
+    if (sdl_init_ == false) {
         atexit(SDL_Quit);
-        sdl_init_ = 1;
+        sdl_init_ = true;
     }
 
     /* automatyczne ustawienie głębi kolorów */
@@ -332,7 +332,7 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     return true;
 }
 
-void zx_quit() {
+void zx_quit(void) {
     SDL_Event event;
     SDL_zero(event);
     event.type = SDL_EVENT_QUIT;

@@ -841,7 +841,7 @@ void file_option_param(const int argc, const char** argv, const int pos, const i
     *val = tmp;
 }
 
-void file_help() {
+void file_help(void) {
     printf(
         "e800j v0.2 - Elwro 800 Junior emulator - (C)2006 Krzysztof Komarnicki\n"
         "Usage:   e800j [snapshot filename] [options]\n\n"

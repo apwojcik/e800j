@@ -77,4 +77,4 @@ bool screen_init(struct screen* s, int width, int height, int bpp, int argc, con
 
 void screen_border(struct screen* s, unsigned char color);
 
-void zx_quit();
+void zx_quit(void);

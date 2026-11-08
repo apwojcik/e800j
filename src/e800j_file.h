@@ -58,4 +58,4 @@ int file_lookup_option(int argc, const char** argv, const char* name);
 
 void file_option_param(int argc, const char** argv, int pos, int min, int max, int* val);
 
-void file_help();
+void file_help(void);

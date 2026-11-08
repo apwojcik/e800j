@@ -18,10 +18,10 @@
  *
  */
 
+#include <string.h>
+
 #include "e800j_msg.h"
 #include "i8272_fdc.h"
-
-#include <string.h>
 
 /* tablica dekodująca instrukcje */
 static const struct i8272opc opcodes_tabl[32] = i8272_CMD_TABLE;

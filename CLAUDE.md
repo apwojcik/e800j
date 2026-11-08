@@ -31,7 +31,6 @@ The project is also opened directly in CLion/Visual Studio, which manage the `bu
 build folders.
 
 Key CMake options (`CMakeLists.txt`):
-- `USE_SDL` (default ON)
 - `DEBUG_FDC` (default OFF) — enables verbose floppy controller debug output via `DEBUG_FDC` define
 
 Warnings are enabled (`-Wall -Wextra -pedantic` on GCC/Clang, `/W4` on MSVC) and the code is kept
