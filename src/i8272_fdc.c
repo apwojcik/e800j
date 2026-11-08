@@ -1,6 +1,7 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
+
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +31,7 @@ static void i8272_command(struct i8272* fdc, char plc);
 static void i8272_result(struct i8272* fdc, char plc);
 static void i8272_write_data(struct i8272* fdc, char mode);
 
-static unsigned char i8272_dummy_drive(const void* f, void* param, const unsigned char action, const unsigned char wdata) {
+static int i8272_dummy_drive(const void* f, void* param, const unsigned char action, const unsigned char wdata) {
     (void)f;
     (void)param;
     (void)action;
@@ -40,7 +41,7 @@ static unsigned char i8272_dummy_drive(const void* f, void* param, const unsigne
 
 /**************************************************************************************************/
 
-void i8272_fdd_connect(struct i8272* fdc, unsigned char (*drive)(const void*, void*, unsigned char, unsigned char), void* f0,
+void i8272_fdd_connect(struct i8272* fdc, int (*drive)(const void*, void*, unsigned char, unsigned char), void* f0,
     void* f1, void* f2, void* f3)
 {
     fdc->drive = drive;

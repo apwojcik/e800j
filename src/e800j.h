@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@
 
 #pragma once
 
+#ifdef _MSC_VER
 #include <stdbool.h>
+#endif
 
 struct screen;
 struct cpu;
@@ -46,7 +48,7 @@ struct elwro {
     unsigned int t1;
     unsigned int cpu_refresh;
     int ifreq; /* co ile taktów CPU ma zostać wywołane przerwanie */
-    int tr; /* ilość taktów/wywołanie   */
+    int tr; /* ilość taktów/wywołanie */
 
     // porty I/O
     unsigned char port_f7; /* port sterowania pamięcią */

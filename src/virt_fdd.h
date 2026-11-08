@@ -1,6 +1,6 @@
-/* Elwro 800 Junior emulator v 0.2
+/* Elwro 800 Junior emulator v0.3
  * Copyright (C) 2006 Krzysztof Komarnicki
- * Email: krzkomar@wp.pl
+ * Copyright (C) 2026 Artur Wojcik
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,15 +92,12 @@ enum {
     VFDD_EMUL_REAL /* emulacja rzeczywistego napędu przez stację FDD  */
 };
 
-/* póki nie ma innych emulacji napędu niż pliki *.dsk */
-#define vfdd_floppy vfdd_dsk_floppy
-
 /*
     Emulacja Dyskietki
     1 - dla akcji VFDD_WR_SEC
     2 - dla akcji VFDD_LOAD
 */
-unsigned char vfdd_dsk_floppy(
+int vfdd_dsk_floppy(
     struct vfdd_disk*,
     char action,
     unsigned char parm0, /* ścieżka | 1-dana do zapisu | 2-tryb otwarcia (RO/RW) */
@@ -112,9 +109,9 @@ unsigned char vfdd_dsk_floppy(
 /*
     Emulacja napędu
 */
-unsigned char vfdd_drive(
+int vfdd_drive(
     const void* ptr, /* wskaźnik nadrzędnej struktury danych */
     void* dsk, /* vfdd_disk */
-    unsigned char action, /* rodzaj akcji - zdefiniowane w  i8272_fdc.h */
+    unsigned char action, /* rodzaj akcji, zdefiniowane w i8272_fdc.h */
     unsigned char wdata /* dana dla operacji zapisu */
 );
