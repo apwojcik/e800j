@@ -247,7 +247,7 @@ void i8272_result(struct i8272* fdc, char plc) {
 
 void i8272_rdata(struct i8272* fdc, char mode) {
     (void)mode;
-    unsigned char tmp = 0;
+    int tmp = 0;
     fdc->st0 = 0;
     fdc->st1 = 0;
     fdc->st2 = 0;
@@ -256,7 +256,9 @@ void i8272_rdata(struct i8272* fdc, char mode) {
     if (!fdc->err) {
         tmp = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_READ_TRACK, 0);
     }
-    fdc->data = tmp;
+    fdc->data = (unsigned char)tmp;
+    if (tmp < 0)
+        fdc->err = tmp;
     /* reakcja na brak dysku */
     if (fdc->err == FDD_ERR_NODISK) {
         fdc->st0 = FDC_NR | (fdc->ds & 0x03) | 0x40;
