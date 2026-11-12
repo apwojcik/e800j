@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "e800j_config.h"
 #include "z80_core.h"
 #include "z80_debug.h"
 
@@ -176,6 +177,8 @@ static void dbg_resolver(const struct cpu* z, const char* code, char* str) {
                 strcat(str + j, blk[(int)z->dd]);
                 j += strlen(str + j);
                 break;
+            default:
+                break;
             }
             continue;
         }
@@ -313,7 +316,7 @@ void dbg_input(struct dbg* d) {
     if (!d->in)
         return;
     d->out("dbg# ");
-    for (i = 0; ((d->cmdline[i] = d->in()) != '\n') && i < 255; i++);
+    for (i = 0; ((d->cmdline[i] = d->in()) != '\n') && i < 255; i++) {}
     d->cmdline[i] = 0;
     if (i)
         dbg_cmd(d);
@@ -324,10 +327,10 @@ static void dbg_getcmd(struct dbg* d, char* cmd) {
     int i, j, k = (int)strlen(n);
 
     /* znajdź początek wyrazu */
-    for (i = 0; i < k && n[i] < '!'; i++);
+    for (i = 0; i < k && n[i] < '!'; i++) {}
 
     /* znajdź koniec wyrazu */
-    for (j = i; j < k && n[j] > ' '; j++);
+    for (j = i; j < k && n[j] > ' '; j++) {}
 
     strncpy(cmd, n + i, j - i);
 }

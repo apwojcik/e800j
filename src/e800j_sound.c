@@ -20,11 +20,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL3/SDL.h>
 #include <math.h>
-#include <string.h>
+#include <SDL3/SDL.h>
 #include "e800j_sound.h"
-#include "e800j.h"
 #include "z80_cpu.h"
 
 #define SND_CHUNK 1024 /* maksymalny rozmiar porcji danych przekazywanej do SDL */
@@ -44,11 +42,11 @@ void snd_free_buffers(struct sound* w) {
 
 static void snd_init_rbuffer(struct sound* w, int lbsize) {
     w->head = w->tail = 0;
-    if (!(w->lbuffer = (unsigned char*)malloc(lbsize))) {
+    if ((w->lbuffer = malloc(lbsize)) == nullptr) {
         printf("(EE) Error memory allocation i sound buffer init\n");
         exit(0);
     }
-    if (!(w->rbuffer = (unsigned char*)malloc(w->size))) {
+    if ((w->rbuffer = malloc(w->size)) == nullptr) {
         printf("(EE) Error memory allocation i sound buffer init\n");
         free(w->lbuffer);
         exit(0);
@@ -59,10 +57,10 @@ static void snd_init_rbuffer(struct sound* w, int lbsize) {
 }
 
 /* kopiuje len bajtów z bufora rbuffer i zwraca ilość skopiowanych bajtów */
-static char snd_rbuffer_pop(struct sound* w) {
+static unsigned char snd_rbuffer_pop(struct sound* w) {
     if (w->tail == w->head)
         return w->rbuffer[w->tail];
-    const char a = w->rbuffer[w->tail++];
+    const unsigned char a = w->rbuffer[w->tail++];
     if (w->tail == w->size)
         w->tail = 0;
     return a;
@@ -117,7 +115,7 @@ void snd_init(struct sound* snd, const struct cpu* cpu) {
     snprintf(samples, sizeof(samples), "%d", snd->length);
     SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
 
-    if (!(snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, snd))) {
+    if ((snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, snd)) == nullptr) {
         printf("(WW)Couldn't open audio: %s\n", SDL_GetError());
         snd->nosound = true;
         return;
@@ -137,19 +135,19 @@ void snd_beeper(struct sound* snd, char r373) {
     snd->old_r373 = r373;
     const double ticks = (double)(snd->cpu->ticks - snd->old_ticks);
     double period = ticks / snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
-    const int smpls = (int)(period * 256);
+    const int samples = (int)(period * 256);
     snd->old_ticks = snd->cpu->ticks;
 
     r373 &= 0x10;
     if (snd->alias) {
         const double data = r373 ? 127 : -128;
-        period = 3.14 / smpls;
-        for (int i = 0; i < smpls; i++)
+        period = 3.14 / samples;
+        for (int i = 0; i < samples; i++)
             snd_rbuffer_push(snd, (char)(128 + data * sin(i * period)));
     }
     else {
         const double data = r373 ? 0 : 0xff;
-        for (int i = 0; i < smpls; i++)
+        for (int i = 0; i < samples; i++)
             snd_rbuffer_push(snd, (char)data);
     }
 }
