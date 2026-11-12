@@ -20,9 +20,7 @@
 
 #pragma once
 
-#ifdef _MSC_VER
-#include <stdbool.h>
-#endif
+#include "e800j_config.h"
 
 struct screen;
 struct cpu;

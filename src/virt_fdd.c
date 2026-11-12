@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "e800j_config.h"
 #include "virt_fdd.h"
 #include "i8272_fdc.h"
 
