@@ -90,7 +90,7 @@ void msg_printf(int level, const char* fmt, ...) {
                 msg_putstr(va_arg(ap, const char *));
                 break;
             case 'c':
-                msg_putchar(va_arg(ap, int));
+                msg_putchar(va_arg(ap, char));
                 break;
             case 'i':
                 msg_putint(va_arg(ap, int));
@@ -105,7 +105,7 @@ void msg_printf(int level, const char* fmt, ...) {
                 msg_putaddr(va_arg(ap, unsigned int));
                 break;
             case 'f':
-                msg_putfloat(va_arg(ap, double));
+                msg_putfloat(va_arg(ap, float));
                 break;
             default:
                 break;
