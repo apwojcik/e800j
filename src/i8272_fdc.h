@@ -256,10 +256,10 @@ enum {
     FDD_WRITE_TRACK,
     FDD_SEEK_SECTOR,
     // Wartości zwracane przez FDD
-    FDD_OK = 0,
-    FDD_ERR_WPROT = 0x81,
-    FDD_ERR_NODISK = 0x82,
-    FDD_ERR_OVER = 0x83
+    FDD_ERR_WPROT = -1,
+    FDD_ERR_NODISK = -2,
+    FDD_ERR_OVER = -3,
+    FDD_OK = 0
 };
 
 /* kody przerwania dla rejestru ST0 */
