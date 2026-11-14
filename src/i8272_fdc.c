@@ -266,6 +266,12 @@ void i8272_rdata(struct i8272* fdc, char mode) {
         fdc->st2 = 0;
         fdc->st3 = 0;
     }
+    /* reakcja na nieznaleziony sektor (błąd seek-to-sector) */
+    if (fdc->err == FDD_ERR_OVER) {
+        fdc->st0 = (fdc->ds & 0x03) | 0x40;
+        fdc->st1 = FDC_ND;
+        fdc->st2 = 0;
+    }
     /* ustawienie flag gotowości danej do odbioru przez CPU */
     fdc->msr |= FDC_RQM;
     fdc->msr |= FDC_DIO;
@@ -327,7 +333,7 @@ static void i8272_read_data(struct i8272* fdc, char mode) {
                    ale inaczej by do niej nie weszła
                  */
                 fdc->msr |= FDC_RQM | FDC_DIO;
-                fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
+                fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
 
                 msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
                            fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
@@ -457,6 +463,12 @@ static void i8272_wdata(struct i8272* fdc, const char mode) {
         fdc->st2 = 0;
         fdc->st3 = 0;
     }
+    /* reakcja na nieznaleziony sektor (błąd seek-to-sector) */
+    if (fdc->err == FDD_ERR_OVER) {
+        fdc->st0 = (fdc->ds & 0x03) | 0x40;
+        fdc->st1 = FDC_ND;
+        fdc->st2 = 0;
+    }
 
     /* ustawienie flag gotowości danej do zapisu przez CPU */
     fdc->msr |= FDC_RQM;
@@ -515,7 +527,7 @@ void i8272_write_data(struct i8272* fdc, const char mode) {
                 /* ustawienie flag możliwości zapisu danej  */
                 fdc->msr |= FDC_RQM;
                 fdc->msr &= ~FDC_DIO;
-                fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
+                fdc->err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_SEEK_SECTOR, 0x00);
 
                 msg_printf(MSG_NVERB_MSG, "D:%i C:%i H%i R:%i N:%i EOT:%i GPL:%i DTL:%i\n",
                            fdc->ds, fdc->cn, fdc->ha, fdc->rec, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
