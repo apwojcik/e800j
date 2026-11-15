@@ -60,7 +60,7 @@
         Fr |= z->x & ftmp;
 
 #define SET_FLAGSVX(reg,flags)\
-        ftmp = ((~(reg) & ((reg) - 1)) >> 1) & 0x40;\
+        ftmp = ((~(reg) & ((reg) - 1)) >> 9) & 0x40;\
         ftmp |= ((reg) & 0xa800) >> 8;\
         ftmp |= flags & 0x15;\
             ftmp |= z->o;\
@@ -70,29 +70,56 @@
 
 #define GET_MEM(v) \
         z->dd2 = *z->regs16[z->regx0 = z->p0];\
-        if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z->dd3);\
+        if(z->pref_dd_fd) z->memptr = z->dd2 += (char)(z->dd=z->dd3);\
         v = z->memory_read(z,z->dd2);
-
-#define ALU_INDEX_8(r,a,b,c)  \
-        c = (((b) >> 3) & 0x11) | (((a) >> 2) & 0x22) | (((r) >> 1) & 0x44); \
-        c = ((c) & 0x07) | (((c) >> 1) & 0x38);
-
-#define ALU_INDEX_X(r,a,b,c)  \
-        c = (((b) >> 11) & 0x11) | (((a) >> 10) & 0x22) | (((r) >> 9) & 0x44); \
-        c = ((c) & 0x07) | (((c) >> 1) & 0x38);
 
 #define VGET_MEM8(b) \
         z->dd2 = *z->regs16[z->regx0=z->p1]; \
-        if(z->pref_dd_fd) z->dd2 += (char)(z->dd=z80_fetch_byte(z));\
+        if(z->pref_dd_fd) z->memptr = z->dd2 += (char)(z->dd=z80_fetch_byte(z));\
         b = z->memory_read(z,z->dd2);
+
+/* 8-bitowa ALU: a +/- b +/- cy, ustawia znaczniki wg masek instrukcji, zwraca wynik */
+static unsigned char z80_alu8(struct cpu* z, int sub, unsigned char a, unsigned char b, unsigned char cy) {
+    unsigned char ftmp, res, fl;
+    unsigned int r;
+
+    if (sub) {
+        r = (unsigned int)a - b - cy;
+        fl = (unsigned char)(((a ^ b) & (a ^ r) & 0x80) >> 5);
+    } else {
+        r = (unsigned int)a + b + cy;
+        fl = (unsigned char)((~(a ^ b) & (a ^ r) & 0x80) >> 5);
+    }
+    fl |= (unsigned char)(((a ^ b ^ r) & 0x10) | ((r >> 8) & 0x01));
+    res = (unsigned char)r;
+    SET_FLAGSV(res, fl)
+    return res;
+}
+
+/* 16-bitowa ALU (ADD/ADC/SBC HL,rr): kind 0 = ADD, 1 = ADC, 2 = SBC; zwraca wynik */
+static unsigned short z80_alu16(struct cpu* z, int kind, unsigned int a, unsigned int b) {
+    unsigned char ftmp, fl;
+    unsigned int r, cy = kind ? (Fr & FC) : 0;
+    unsigned short res;
+
+    if (kind == 2) {
+        r = a - b - cy;
+        fl = (unsigned char)(((a ^ b) & (a ^ r) & 0x8000) >> 13);
+    } else {
+        r = a + b + cy;
+        fl = (unsigned char)((~(a ^ b) & (a ^ r) & 0x8000) >> 13);
+    }
+    fl |= (unsigned char)((((a ^ b ^ r) >> 8) & 0x10) | ((r >> 16) & 0x01));
+    res = (unsigned short)r;
+    SET_FLAGSVX(res, fl)
+    return res;
+}
 
 /* tablice stałych */
 static const struct z80dt __z80_decoder__[] = Z80_DECODE_TABLE;
 static const unsigned char __z80_parity__[] = Z80_PARITY_TABLE;
 static const unsigned char __z80_cond_mask[] = Z80_COND_MASK;
 static const unsigned char __z80_cond_plrt[] = Z80_COND_PLRT;
-static const unsigned char __z80_add_cy_tbl[] = Z80_ADD_CARRY_TBL;
-static const unsigned char __z80_sub_cy_tbl[] = Z80_SUB_CARRY_TBL;
 
 /**************************************************************************************************/
 
@@ -281,6 +308,7 @@ void z80_jr(struct cpu* z) {
     z->ticks += 5;
     z->_tic += 5;
     z->cycles++;
+    z->memptr = z->nn;
     if (z->jmp_off == false) {
         PCr = z->nn;
     }
@@ -295,6 +323,7 @@ void z80_jp(struct cpu* z) {
     z->dd2 = z80_fetch_word(z);
     z->reg80 = z->p1;
     z->nn = z->dd2;
+    z->memptr = z->nn;
     if (!Z80_COND(z->p1, Fr)) {
         INST_END;
         return;
@@ -331,6 +360,7 @@ void z80_djnz(struct cpu* z) {
         return;
     }
     z->djnz = 1;
+    z->memptr = z->nn;
     z->ticks += 5;
     z->_tic += 5;
     z->cycles++;
@@ -348,6 +378,7 @@ void z80_call(struct cpu* z) {
     z->dd2 = z80_fetch_word(z);
     z->reg80 = z->p1;
     z->nn = z->dd2;
+    z->memptr = z->nn;
     if (!Z80_COND(z->p1, Fr)) {
         INST_END;
         return;
@@ -371,6 +402,7 @@ void z80_rst(struct cpu* z) {
     z->memory_write(z, --SPr, PCr & 0xff);
     z->dd = z->p0;
     z->nested++;
+    z->memptr = z->p0;
     if (z->jmp_off == false)
         PCr = (unsigned short)z->p0;
     TICS_UPDATE;
@@ -394,6 +426,7 @@ void z80_ret(struct cpu* z) {
     z->dd2 = z->memory_read(z, SPr);
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
+    z->memptr = z->dd2;
     if (z->jmp_off == false)
         PCr = z->dd2;
     TICS_UPDATE;
@@ -406,6 +439,7 @@ void z80_reti(struct cpu* z) {
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
     z->nested--;
+    z->memptr = z->dd2;
     if (z->jmp_off == false)
         PCr = z->dd2;
     TICS_UPDATE;
@@ -417,6 +451,7 @@ void z80_retn(struct cpu* z) {
     z->dd2 = z->memory_read(z, SPr);
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
+    z->memptr = z->dd2;
     if (z->jmp_off == false)
         PCr = z->dd2;
     z->nested--;
@@ -481,7 +516,7 @@ void z80_ex(struct cpu* z) {
         z->dd2 = *(z->regs16[z->regx0 = z->p1]);
         z->memory_write(z,SPr + 1, z->dd2 >> 8);
         z->memory_write(z,SPr, z->dd2 & 0xff);
-        *(z->regs16[z->p1]) = (b << 8) | a;
+        *(z->regs16[z->p1]) = z->memptr = (unsigned short)((b << 8) | a);
     }
     INST_END;
 }
@@ -500,8 +535,10 @@ void z80_ldbrm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     *(z->regs8[z->p0]) = z->memory_read(z, z->dd2);
+    if (z->p1 == RBC || z->p1 == RDE)
+        z->memptr = (unsigned short)(z->dd2 + 1);
     z->reg80 = z->p0;
     z->regx0 = z->p1;
     INST_END;
@@ -512,8 +549,10 @@ void z80_ldbmr(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p0]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     z->memory_write(z, z->dd2, *z->regs8[z->reg80 = z->p1]);
+    if (z->p0 == RBC || z->p0 == RDE)
+        z->memptr = (unsigned short)(((z->dd2 + 1) & 0xff) | (Ar << 8));
     INST_END;
 }
 
@@ -522,7 +561,7 @@ void z80_ldbmn(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p0]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     z->memory_write(z, z->dd2, z->reg80 = z80_fetch_byte(z));
     INST_END;
 }
@@ -531,6 +570,7 @@ void z80_ldbmnr(struct cpu* z) {
     z->cmd_type = D_LDBMNR;
     TICS_UPDATE;
     z->memory_write(z, z->nn = z80_fetch_word(z), *(z->regs8[z->reg80 = z->p1]));
+    z->memptr = (unsigned short)(((z->nn + 1) & 0xff) | (Ar << 8));
     INST_END;
 }
 
@@ -538,6 +578,7 @@ void z80_ldbrmn(struct cpu* z) {
     z->cmd_type = D_LDBRMN;
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p0]) = z->memory_read(z, z->nn = z80_fetch_word(z));
+    z->memptr = (unsigned short)(z->nn + 1);
     INST_END;
 }
 
@@ -554,6 +595,7 @@ void z80_ldb_(struct cpu* z) {
     TICS_UPDATE;
     *(z->regs8[z->reg80 = z->p0]) = *(z->regs8[z->reg81 = z->p1]);
     SET_FLAGSP(Ar, 0)
+    Fr = (Fr & ~FP) | (z->iff2 ? FP : 0);
     INST_END;
 }
 
@@ -575,6 +617,7 @@ void z80_ldwrmn(struct cpu* z) {
     z->cmd_type = D_LDWRMN;
     TICS_UPDATE;
     *(z->regs16[z->regx0 = z->p0]) = z80_mem_rword(z, z->nn = z80_fetch_word(z));
+    z->memptr = (unsigned short)(z->nn + 1);
     INST_END;
 }
 
@@ -582,24 +625,22 @@ void z80_ldwmnr(struct cpu* z) {
     z->cmd_type = D_LDWMNR;
     TICS_UPDATE;
     z80_mem_wword(z, z->nn = z80_fetch_word(z), *(z->regs16[z->regx0 = z->p1]));
+    z->memptr = (unsigned short)(z->nn + 1);
     INST_END;
 }
 
 void z80_scf(struct cpu* z) {
-    unsigned char ftmp = 0;
     z->cmd_type = D_SCF;
     TICS_UPDATE;
-    SET_FLAGSP(Ar & 0x28, 0)
+    /* flagi 5 i 3: (Q ^ F) | A, gdzie Q to flagi zapisane przez poprzednią instrukcję */
+    Fr = (Fr & (FS | FZ | FP)) | FC | (((z->q ^ Fr) | Ar) & (F5 | F3));
     INST_END;
 }
 
 void z80_ccf(struct cpu* z) {
     z->cmd_type = D_CCF;
     TICS_UPDATE;
-
-    Fr = (Fr & 0xc5) | (Ar & 0x28) | ((Fr << 4) & 0x10);
-    Fr ^= 0x01;
-
+    Fr = (Fr & (FS | FZ | FP)) | ((Fr & FC) ? FH : FC) | (((z->q ^ Fr) | Ar) & (F5 | F3));
     INST_END;
 }
 
@@ -608,29 +649,33 @@ void z80_cpl(struct cpu* z) {
     z->cmd_type = D_CPL;
     TICS_UPDATE;
     Ar = ~Ar;
-    SET_FLAGSP(0, 0)
+    SET_FLAGSP(Ar, 0)
     INST_END;
 }
 
 void z80_daa(struct cpu* z) {
-    unsigned char ftmp = 0;
+    unsigned char ftmp = 0, a = Ar, corr = 0, fl = 0;
     z->cmd_type = D_DAA;
     TICS_UPDATE;
 
-    z->dd1 = Ar > 0x99;
-    z->dd3 = 0;
-    if ((Fr & FC) || z->dd1) {
-        Ar += (Fr & FN) ? -0x60 : 0x60;
-        z->dd3 = FC;
+    if ((Fr & FH) || (a & 0x0f) > 0x09)
+        corr |= 0x06;
+    if ((Fr & FC) || a > 0x99) {
+        corr |= 0x60;
+        fl = FC;
+    }
+    if (Fr & FN) {
+        Ar = (unsigned char)(a - corr);
+        if ((Fr & FH) && (a & 0x0f) < 0x06)
+            fl |= FH;
+    }
+    else {
+        Ar = (unsigned char)(a + corr);
+        if ((a & 0x0f) > 0x09)
+            fl |= FH;
     }
 
-    z->dd1 = (Ar & 0x0f) > 0x09;
-    if ((Fr & FH) || z->dd1) {
-        Ar += (Fr & FN) ? -0x06 : 0x06;
-        z->dd3 |= FH;
-    }
-
-    SET_FLAGSP(Ar, z->dd3)
+    SET_FLAGSP(Ar, fl)
     INST_END;
 }
 
@@ -640,7 +685,7 @@ void z80_bit(struct cpu* z) {
     TICS_UPDATE;
 
     u = *(z->regs8[z->reg80 = z->p1]);
-    Fr = (Fr & 0x01) | FH | ((u & z->p0) ? 0 : FZ + FP) | (u & 0x80 & z->p0);
+    Fr = (Fr & 0x01) | FH | ((u & z->p0) ? 0 : FZ + FP) | (u & 0x80 & z->p0) | (u & (F5 | F3));
 
     INST_END;
 }
@@ -651,10 +696,11 @@ void z80_bitm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z->dd3);
+        z->memptr = z->dd2 += (char)(z->dd = z->dd3);
 
     u = z->memory_read(z, z->dd2);
-    Fr = (Fr & 0x01) | FH | ((u & z->p0) ? 0 : FZ + FP) | (u & 0x80 & z->p0);
+    /* flagi 5 i 3 pochodzą z górnego bajtu MEMPTR */
+    Fr = (Fr & 0x01) | FH | ((u & z->p0) ? 0 : FZ + FP) | (u & 0x80 & z->p0) | ((z->memptr >> 8) & (F5 | F3));
     z->reg81 = z->p2;
 
     INST_END;
@@ -672,7 +718,7 @@ void z80_resm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z->dd3);
+        z->memptr = z->dd2 += (char)(z->dd = z->dd3);
     z->memory_write(z, z->dd2, z->memory_read(z, z->dd2) & z->p0);
     z->reg81 = z->p2;
     INST_END;
@@ -691,7 +737,7 @@ void z80_setm(struct cpu* z) {
 
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z->dd3);
+        z->memptr = z->dd2 += (char)(z->dd = z->dd3);
     z->memory_write(z, z->dd2, z->memory_read(z, z->dd2) | z->p0);
     z->reg81 = z->p2;
     INST_END;
@@ -721,7 +767,7 @@ void z80_andm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     Ar &= z->memory_read(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
@@ -751,7 +797,7 @@ void z80_orm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     Ar |= z->memory_read(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
@@ -781,7 +827,7 @@ void z80_xorm(struct cpu* z) {
     TICS_UPDATE;
     z->dd2 = *(z->regs16[z->regx0 = z->p1]);
     if (z->pref_dd_fd)
-        z->dd2 += (char)(z->dd = z80_fetch_byte(z));
+        z->memptr = z->dd2 += (char)(z->dd = z80_fetch_byte(z));
     Ar ^= z->memory_read(z, z->dd2);
     SET_FLAGSP(Ar, 0);
     INST_END;
@@ -999,6 +1045,7 @@ void z80_rrd(struct cpu* z) {
     unsigned char ftmp = 0;
     z->cmd_type = D_RRD;
     TICS_UPDATE;
+    z->memptr = (unsigned short)(HLr + 1);
     z->dd1 = z->memory_read(z,HLr);
     z->dd3 = z->dd1;
     z->dd1 >>= 4;
@@ -1015,6 +1062,7 @@ void z80_rld(struct cpu* z) {
     z->cmd_type = D_RLD;
     TICS_UPDATE;
 
+    z->memptr = (unsigned short)(HLr + 1);
     z->dd1 = z->memory_read(z,HLr);
     z->dd3 = z->dd1;
     z->dd1 <<= 4;
@@ -1030,24 +1078,32 @@ void z80_outa(struct cpu* z) {
     z->cmd_type = D_OUTA;
     TICS_UPDATE;
     z->io_write(z, z->last_out_addr = ((z->dd = z80_fetch_byte(z)) & 0xff) | (Ar << 8), z->last_out_data = Ar);
+    z->memptr = (unsigned short)(((z->dd + 1) & 0xff) | (Ar << 8));
     INST_END;
 }
 
 void z80_ina(struct cpu* z) {
     z->cmd_type = D_INA;
     TICS_UPDATE;
-    z->last_in_data = Ar = z->io_read(z, z->last_in_addr = ((z->dd = z80_fetch_byte(z)) & 0xff) | (Ar << 8));
+    z->memptr = (unsigned short)(((z->dd = z80_fetch_byte(z)) & 0xff) | (Ar << 8)) + 1;
+    z->last_in_data = Ar = z->io_read(z, z->last_in_addr = (unsigned short)(z->memptr - 1));
     if (z->force_in > 0)
         z->last_in_data = Ar = (unsigned char)z->force_in;
     INST_END;
 }
 
 void z80_inbc(struct cpu* z) {
+    unsigned char ftmp = 0, v;
     z->cmd_type = D_INBC;
     TICS_UPDATE;
-    z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = z->io_read(z, z->last_in_addr = BCr);
+    z->memptr = (unsigned short)(BCr + 1);
+    z->last_in_data = v = z->io_read(z, z->last_in_addr = BCr);
     if (z->force_in > 0)
-        z->last_in_data = *(z->regs8[z->reg80 = z->p0]) = (unsigned char)z->force_in;
+        z->last_in_data = v = (unsigned char)z->force_in;
+    z->reg80 = z->p0;
+    if (z->p0 != RF) /* IN F,(C) tylko ustawia znaczniki */
+        *(z->regs8[z->p0]) = v;
+    SET_FLAGSP(v, 0)
     INST_END;
 }
 
@@ -1055,315 +1111,227 @@ void z80_outbc(struct cpu* z) {
     z->cmd_type = D_OUTBC;
     TICS_UPDATE;
     z->io_write(z, z->last_out_addr = BCr, z->last_out_data = *(z->regs8[z->reg80 = z->p1]));
+    z->memptr = (unsigned short)(BCr + 1);
     INST_END;
 }
 
 void z80_add8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_ADD8;
     TICS_UPDATE;
 
     VGET_REG8(b);
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_addn8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_ADDN8;
     TICS_UPDATE;
 
     VGET_CNS8(b);
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_addm8(struct cpu* z) {
-    unsigned short a, b, c;
-    unsigned char ftmp = 0;
+    unsigned char b;
     z->cmd_type = D_ADDM8;
     TICS_UPDATE;
 
     VGET_MEM8(b);
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_adc8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_ADC8;
     TICS_UPDATE;
 
     VGET_REG8(b);
-    b += Fr & 1;
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_adcn8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_ADCN8;
     TICS_UPDATE;
 
     VGET_CNS8(b);
-    b += Fr & 1;
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_adcm8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_ADCM8;
     TICS_UPDATE;
 
     VGET_MEM8(b);
-    b += Fr & 1;
-    a = Ar;
-    Ar = (unsigned char)(a + b);
-    ALU_INDEX_8(Ar, a, b, c);
-    SET_FLAGSV(Ar, __z80_add_cy_tbl[c]);
+    Ar = z80_alu8(z, 0, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_sub8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_SUB8;
     TICS_UPDATE;
 
     VGET_REG8(b);
-    a = Ar;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_subn8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_SUBN8;
     TICS_UPDATE;
 
     VGET_CNS8(b);
-    a = Ar;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_subm8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
-    z->cmd_type = D_SUB8;
+    unsigned char b;
+    z->cmd_type = D_SUBM8;
     TICS_UPDATE;
 
     VGET_MEM8(b);
-    a = Ar;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, 0);
 
     INST_END;
 }
 
 void z80_sbc8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_SBC8;
     TICS_UPDATE;
 
     VGET_REG8(b);
-    a = Ar;
-    b += Fr & FC;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_sbcn8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_SBCN8;
     TICS_UPDATE;
 
     VGET_CNS8(b);
-    a = Ar;
-    b += Fr & FC;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_sbcm8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char b;
     z->cmd_type = D_SBCM8;
     TICS_UPDATE;
 
     VGET_MEM8(b);
-    a = Ar;
-    b += Fr & FC;
-    Ar = (unsigned char)(a - b);
-    ALU_INDEX_8(Ar, b, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, Ar, b, Fr & FC);
 
     INST_END;
 }
 
 void z80_cp(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c, d, s;
+    unsigned char b;
     z->cmd_type = D_CP;
     TICS_UPDATE;
 
     VGET_REG8(b);
-    s = b;
-    a = Ar;
-    d = a - b;
-    ALU_INDEX_8(d, b, a, c);
-    SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
-    Fr = (Fr & 0xd7) | (s & 0x28);
+    z80_alu8(z, 1, Ar, b, 0);
+    Fr = (Fr & 0xd7) | (b & 0x28);
 
     INST_END;
 }
 
 void z80_cpn(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c, d, s;
+    unsigned char b;
     z->cmd_type = D_CPN;
     TICS_UPDATE;
 
     VGET_CNS8(b);
-    s = b;
-    a = Ar;
-    d = a - b;
-    ALU_INDEX_8(d, b, a, c);
-    SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
-    Fr = (Fr & 0xd7) | (s & 0x28);
+    z80_alu8(z, 1, Ar, b, 0);
+    Fr = (Fr & 0xd7) | (b & 0x28);
 
     INST_END;
 }
 
 void z80_cpm(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c, d, s;
+    unsigned char b;
     z->cmd_type = D_CPM;
     TICS_UPDATE;
 
     VGET_MEM8(b);
-    s = b;
-    a = Ar;
-    d = a - b;
-    ALU_INDEX_8(d, b, a, c);
-    SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
-    Fr = (Fr & 0xd7) | (s & 0x28);
+    z80_alu8(z, 1, Ar, b, 0);
+    Fr = (Fr & 0xd7) | (b & 0x28);
 
     INST_END;
 }
 
 void z80_inc8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char a;
     z->cmd_type = D_INC8;
     TICS_UPDATE;
 
     VGET_REG8(a);
-    b = a + 1;
-    ALU_INDEX_8(b, 1, a, c);
-    SET_FLAGSV(b, __z80_add_cy_tbl[c]);
-    VSET_REG8(b);
+    VSET_REG8(z80_alu8(z, 0, a, 1, 0));
 
     INST_END;
 }
 
 void z80_incm8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char a;
     z->cmd_type = D_INCM8;
     TICS_UPDATE;
 
     VGET_MEM8(a);
-    b = a + 1;
-    ALU_INDEX_8(b, 1, a, c);
-    SET_FLAGSV(b, __z80_add_cy_tbl[c]);
-    VSET_MEM8(b);
+    VSET_MEM8(z80_alu8(z, 0, a, 1, 0));
 
     INST_END;
 }
 
 void z80_dec8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char a;
     z->cmd_type = D_DEC8;
     TICS_UPDATE;
 
     VGET_REG8(a);
-    b = a - 1;
-    ALU_INDEX_8(b, 1, a, c);
-    SET_FLAGSV(b, __z80_sub_cy_tbl[c]);
-    VSET_REG8(b);
+    VSET_REG8(z80_alu8(z, 1, a, 1, 0));
 
     INST_END;
 }
 
 void z80_decm8(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c;
+    unsigned char a;
     z->cmd_type = D_DECM8;
     TICS_UPDATE;
 
     VGET_MEM8(a);
-    b = a - 1;
-    ALU_INDEX_8(b, 1, a, c);
-    SET_FLAGSV(b, __z80_sub_cy_tbl[c]);
-    VSET_MEM8(b);
+    VSET_MEM8(z80_alu8(z, 1, a, 1, 0));
 
     INST_END;
 }
 
 void z80_neg(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, c;
     z->cmd_type = D_NEG;
     TICS_UPDATE;
 
-    Ar = (unsigned char)(-(a = Ar));
-    ALU_INDEX_8(Ar, 0, a, c);
-    SET_FLAGSV(Ar, __z80_sub_cy_tbl[c]);
+    Ar = z80_alu8(z, 1, 0, Ar, 0);
 
     INST_END;
 }
@@ -1383,157 +1351,191 @@ void z80_decx(struct cpu* z) {
 }
 
 void z80_addx(struct cpu* z) {
-    unsigned char ftmp = 0;
-    int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
-    int c, d;
+    unsigned int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
     z->cmd_type = D_ADDX;
     TICS_UPDATE;
 
-    d = a + b;
-    ALU_INDEX_X(d, a, b, c);
-    SET_FLAGSV(d >> 8, __z80_add_cy_tbl[c]);
-    *(z->regs16[z->p0]) = (unsigned short)d;
+    z->memptr = (unsigned short)(a + 1);
+    *(z->regs16[z->p0]) = z80_alu16(z, 0, a, b);
 
     INST_END;
 }
 
 void z80_adcx(struct cpu* z) {
-    unsigned char ftmp = 0;
-    int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
-    int c, d;
+    unsigned int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
     z->cmd_type = D_ADCX;
     TICS_UPDATE;
-    b += Fr & 1;
-    d = a + b;
-    ALU_INDEX_X(d, a, b, c);
-    SET_FLAGSV(d >> 8, __z80_add_cy_tbl[c]);
-    *(z->regs16[z->p0]) = (unsigned short)d;
+
+    z->memptr = (unsigned short)(a + 1);
+    *(z->regs16[z->p0]) = z80_alu16(z, 1, a, b);
 
     INST_END;
 }
 
 void z80_sbcx(struct cpu* z) {
-    unsigned char ftmp = 0;
-    int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
-    int c, d;
+    unsigned int a = *(z->regs16[z->regx0 = z->p0]), b = *(z->regs16[z->regx1 = z->p1]);
     z->cmd_type = D_SBCX;
     TICS_UPDATE;
-    b += (Fr & FC);
-    d = a - b;
-    ALU_INDEX_X(d, b, a, c);
-    SET_FLAGSVX(d, __z80_sub_cy_tbl[c]);
-    *(z->regs16[z->p0]) = (unsigned short)d;
+
+    z->memptr = (unsigned short)(a + 1);
+    *(z->regs16[z->p0]) = z80_alu16(z, 2, a, b);
 
     INST_END;
 }
 
 void z80_ldbl(struct cpu* z) {
+    const bool inc = (z->p0 == PI || z->p0 == PIR);
+    const bool rep = (z->p0 == PIR || z->p0 == PDR);
+    bool again;
+    unsigned char v;
     z->cmd_type = D_LDBL;
     TICS_UPDATE;
     z->dd = z->p0;
-    Fr &= ~(FH | FP | FN | F5 | F3);
+    if (rep) { /* tablica zawiera czas obiegu powtarzanego, ostatni obieg trwa o 5 taktów krócej */
+        z->ticks -= 5;
+        z->cycles -= 1;
+        z->_tic -= 5;
+    }
     if (z->jmp_off == false)
         do {
-            z->memory_write(z,DEr, z->dd3 = z->memory_read(z,HLr));
-            if (z->p0 == PI || z->p0 == PIR)
+            unsigned char n;
+            z->memory_write(z, DEr, z->dd3 = v = z->memory_read(z, HLr));
+            if (inc)
                 HLr++, DEr++;
             else
                 HLr--, DEr--;
-
-            if (--BCr) {
-                Fr |= FP;
-                z->ticks += 5;
-                z->cycles += 1;
-                z->_tic += 5;
+            --BCr;
+            n = (unsigned char)(v + Ar);
+            Fr = (Fr & (FS | FZ | FC)) | (n & F3) | ((n << 4) & F5) | (BCr ? FP : 0);
+            again = rep && BCr;
+            if (again)
+                z->memptr = (unsigned short)(z->adrs + 1);
+            if (again) {
+                z->ticks += 21;
+                z->cycles += 5;
+                z->_tic += 21;
             }
         }
-        while ((z->p0 == PIR || z->p0 == PDR) && BCr);
-    z->dd3 += Ar;
-    z->dd3 = (z->dd3 & 0x08) | ((z->dd3 << 5) & 0x20);
-    Fr |= z->dd3;
+        while (again);
     INST_END;
 }
 
 void z80_cpbl(struct cpu* z) {
-    unsigned char ftmp = 0;
-    unsigned short a, b, c, d, e;
+    const bool inc = (z->p0 == PI || z->p0 == PIR);
+    const bool rep = (z->p0 == PIR || z->p0 == PDR);
+    bool again;
+    unsigned char v;
     z->cmd_type = D_CPBL;
     TICS_UPDATE;
     z->dd = z->p0;
-    e = Fr;
+    if (rep) { /* tablica zawiera czas obiegu powtarzanego, ostatni obieg trwa o 5 taktów krócej */
+        z->ticks -= 5;
+        z->cycles -= 1;
+        z->_tic -= 5;
+    }
     if (z->jmp_off == false)
         do {
-            a = Ar;
-            b = z->memory_read(z,HLr);
-            d = a - b;
-            ALU_INDEX_8(d, b, a, c);
-            SET_FLAGSV(d, __z80_sub_cy_tbl[c]);
-            if (z->p0 == PI || z->p0 == PIR)
+            unsigned char a = Ar, r, n, f;
+            v = z->memory_read(z, HLr);
+            r = (unsigned char)(a - v);
+            f = (r & FS) | (r ? 0 : FZ) | ((a ^ v ^ r) & FH) | FN;
+            n = (unsigned char)(r - ((f & FH) ? 1 : 0));
+            f |= (n & F3) | ((n << 4) & F5);
+            if (inc)
                 HLr++;
             else
                 HLr--;
-            Fr &= ~FP;
-            if (--BCr) {
-                Fr |= FP;
-                z->ticks += 5;
-                z->cycles += 1;
-                z->_tic += 5;
+            --BCr;
+            if (BCr)
+                f |= FP;
+            Fr = f | (Fr & FC);
+            again = rep && BCr && !(f & FZ);
+            if (again)
+                z->memptr = (unsigned short)(z->adrs + 1);
+            else
+                z->memptr += inc ? 1 : -1;
+            if (again) {
+                z->ticks += 21;
+                z->cycles += 5;
+                z->_tic += 21;
             }
-
-            if (Fr & FZ)
-                break;
         }
-        while ((z->p0 == PIR || z->p0 == PDR) && BCr);
-
-    Fr = (Fr & 0xfe) | (e & 0xfe);
+        while (again);
     INST_END;
 }
 
 void z80_inbl(struct cpu* z) {
+    const bool inc = (z->p0 == PI || z->p0 == PIR);
+    const bool rep = (z->p0 == PIR || z->p0 == PDR);
+    bool again;
+    unsigned char v;
     z->cmd_type = D_INBL;
     TICS_UPDATE;
     z->dd = z->p0;
-    Fr |= FN | FZ;
+    if (rep) { /* tablica zawiera czas obiegu powtarzanego, ostatni obieg trwa o 5 taktów krócej */
+        z->ticks -= 5;
+        z->cycles -= 1;
+        z->_tic -= 5;
+    }
     if (z->jmp_off == false)
         do {
-            z->memory_write(z,HLr, z->last_in_data = z->dd3 = z->io_read(z, z->last_in_addr = Cr));
-            if (z->p0 == PI || z->p0 == PIR)
+            unsigned short k;
+            z->memptr = (unsigned short)(BCr + (inc ? 1 : -1));
+            z->memory_write(z, HLr, z->last_in_data = z->dd3 = v = z->io_read(z, z->last_in_addr = BCr));
+            if (inc)
                 HLr++;
             else
                 HLr--;
-
-            if (--Br) {
-                Fr &= ~FZ;
-                z->ticks += 5;
-                z->cycles += 1;
-                z->_tic += 5;
+            --Br;
+            k = (unsigned short)(v + ((Cr + (inc ? 1 : -1)) & 0xff));
+            Fr = (Br & (FS | F5 | F3)) | (Br ? 0 : FZ) | ((v & 0x80) ? FN : 0) | (k > 255 ? FH | FC : 0) |
+                 ((__z80_parity__[(k & 7) ^ Br] << 2) & FP);
+            again = rep && Br;
+            if (again) {
+                z->ticks += 21;
+                z->cycles += 5;
+                z->_tic += 21;
             }
         }
-        while ((z->p0 == PIR || z->p0 == PDR) && Br);
+        while (again);
     INST_END;
 }
 
 void z80_outbl(struct cpu* z) {
+    const bool inc = (z->p0 == PI || z->p0 == PIR);
+    const bool rep = (z->p0 == PIR || z->p0 == PDR);
+    bool again;
+    unsigned char v;
     z->cmd_type = D_OUTBL;
     TICS_UPDATE;
     z->dd = z->p0;
-    Fr |= FN | FZ;
+    if (rep) { /* tablica zawiera czas obiegu powtarzanego, ostatni obieg trwa o 5 taktów krócej */
+        z->ticks -= 5;
+        z->cycles -= 1;
+        z->_tic -= 5;
+    }
     if (z->jmp_off == false)
         do {
-            z->io_write(z, z->last_out_addr = Cr, z->last_out_data = z->memory_read(z,HLr));
-            if (z->p0 == PI || z->p0 == PIR)
+            unsigned short k;
+            v = z->memory_read(z, HLr);
+            --Br;
+            z->io_write(z, z->last_out_addr = BCr, z->last_out_data = v);
+            z->memptr = (unsigned short)(BCr + (inc ? 1 : -1));
+            if (inc)
                 HLr++;
             else
                 HLr--;
-
-            if (--Br) {
-                Fr &= ~FZ;
-                z->ticks += 5;
-                z->cycles += 1;
-                z->_tic += 5;
+            k = (unsigned short)(v + (HLr & 0xff));
+            Fr = (Br & (FS | F5 | F3)) | (Br ? 0 : FZ) | ((v & 0x80) ? FN : 0) | (k > 255 ? FH | FC : 0) |
+                 ((__z80_parity__[(k & 7) ^ Br] << 2) & FP);
+            again = rep && Br;
+            if (again) {
+                z->ticks += 21;
+                z->cycles += 5;
+                z->_tic += 21;
             }
         }
-        while ((z->p0 == PIR || z->p0 == PDR) && Br);
+        while (again);
     INST_END;
 }
 
@@ -1626,6 +1628,8 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
         xf.code(z);
 
         if (!z->ipend) {
+            /* Q: flagi zapisane przez tę instrukcję, lub 0 jeśli ich nie zmieniała (dla SCF/CCF) */
+            z->q = (xf.f_mask_chg && z->cmd_type != D_POP) ? Fr : 0;
             /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
             if (z->inmi) {
                 z->halt = 0;
@@ -1688,6 +1692,7 @@ void z80_step(struct cpu* z)
     xf.code(z);
 
     if (!z->ipend) {
+        z->q = (xf.f_mask_chg && z->cmd_type != D_POP) ? Fr : 0;
         /* zabronienie przerwania, gdy instrukcja jest w trakcie wykonywania */
         if (z->inmi) {
             z->halt = 0;

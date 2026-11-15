@@ -145,6 +145,8 @@ struct cpu {
             unsigned short last_mem_wr; /* ostatnio zapisana dana do pamięci */
             unsigned int nested; /* wskazuje zagłębienie podprogramów */
         int    force_in;		/* jesli > 0 wartośc będzie odczytana przez IN */
+            unsigned short memptr; /* rejestr WZ (MEMPTR), źródło flag 5 i 3 w BIT n,(HL)   */
+            unsigned char q; /* flagi zapisane przez poprzednią instrukcję lub 0 (SCF/CCF) */
         }; // koniec struktury
         char z80_data[Z80_DATA_SIZE]; // maksymalny dopuszczalny rozmiar pola danych
     }; // koniec unii
