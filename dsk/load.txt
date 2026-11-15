@@ -1,0 +1,19 @@
+To list files on a mounted floppy disk, use the command `DIR` (press Ctrl - to enter Extended mode, Alt+9). Press Enter. To load use `LOAD * "FILE"` (J, Alt+:, Alt+2, <filename>, Alt+2). Press Enter
+
+Files with "_g" in the name are games that work in Spectrum mode. Files with "_p" in the name are programs intended to run under CP/J (Elwro 800 Junior flavor of CP/M). To boot CP/J, type "CP/J" in Spectrum mode (press Ctrl - to enter Extended mode, Alt+6). Press Enter.
+
+CP/J is easy to use, same as CP/M
+
+CP/J Mode :
+
+* mount elwro_p1.dsk
+* press Ctrl -> E
+* press Alt + 6 -> CP/J L
+* press Enter
+
+Spectrum Mode :
+
+* mount elwro_g1.dsk
+* press J
+* enter `LOAD * "MISPACMA"`
+* press Enter
