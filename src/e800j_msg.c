@@ -38,7 +38,7 @@ static void msg_putstr(const char* str) {
     }
 }
 
-static void msg_putfloat(const float value) {
+static void msg_putfloat(const double value) {
     char t[16] = "";
     sprintf(t, "%f", value);
     msg_putstr(t);
@@ -105,7 +105,7 @@ void msg_printf(int level, const char* fmt, ...) {
                 msg_putaddr(va_arg(ap, unsigned int));
                 break;
             case 'f':
-                msg_putfloat(va_arg(ap, float));
+                msg_putfloat(va_arg(ap, double));
                 break;
             default:
                 break;

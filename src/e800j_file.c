@@ -724,7 +724,7 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
         return 1;
     }
     e->snd->volume = strtof(tmp0, NULL);
-    msg_printf(MSG_MSG, "Mix volume: %g\n", e->snd->volume);
+    msg_printf(MSG_MSG, "Mix volume: %f\n", e->snd->volume);
     if (file_find_cfg_option(tmp1, "scale", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;

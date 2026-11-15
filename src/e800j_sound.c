@@ -68,17 +68,15 @@ static unsigned char snd_rbuffer_pop(struct sound* w) {
 
 static void snd_rbuffer_push(struct sound* w, char data) {
     /* detekcja przepełnienia bufora */
-    if (((w->head == w->size) && (w->tail == 0)) || (w->head + 1 == w->tail)) {
+    const int next_head = (w->head + 1 == w->size) ? 0 : w->head + 1;
+    if (next_head == w->tail) {
         if (!w->ovr)
             printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
         w->ovr = true;
         return;
     }
     w->rbuffer[w->head] = data; /* wkładam daną do bufora    */
-    if (w->head < w->size)
-        w->head++; /* jeśli nie doszło do końca bufora, to przesuń wskaźnik head */
-    else
-        w->head = 0; /* inaczej zawiń na początek */
+    w->head = next_head;
 }
 
 void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amount, int total_amount) {
