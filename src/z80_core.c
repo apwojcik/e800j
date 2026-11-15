@@ -1559,6 +1559,7 @@ void z80_nmi(struct cpu* z) {
 void z80_int(struct cpu* z, const unsigned char* bus) {
     if (z->int_off == false) {
         z->intr = 1;
+        z->int_t = 32;
         if (bus) {
             for (int i = 0; i < 8; ++i) {
                 z->bus[i] = bus[i];
@@ -1632,8 +1633,8 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
             }
             /* po EI przerwanie dopiero po następnej instrukcji */
             if (z->intr && z->cmd_type != D_EI) {
-                z->halt = 0;
                 if (z->iff1) {
+                    z->halt = 0; /* przy DI HALT trwa do NMI/reset */
                     z->intr = 0;
                     switch (z->imode) {
                     case 0: z->irupt = 1;
@@ -1649,6 +1650,9 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                 }
             }
         }
+        /* linia INT trwa ok. 32 taktów, potem przerwanie niezaakceptowane znika */
+        if (z->intr && (z->int_t -= z->_tic) <= 0)
+            z->intr = 0;
         if (!z->halt && z->debug_on && z->debug) {
             z->debug(z, D_FLUSH, 0);
         }
@@ -1657,7 +1661,7 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
 
 void z80_step(struct cpu* z)
 {
-    if (z->cpu_off == 0) {
+    if (z->cpu_off) {
         return;
     }
     if (z->debug_on && z->debug) {
@@ -1696,8 +1700,8 @@ void z80_step(struct cpu* z)
         }
         /* po EI przerwanie dopiero po następnej instrukcji */
         if (z->intr && z->cmd_type != D_EI) {
-            z->halt = 0;
             if (z->iff1) {
+                z->halt = 0; /* przy DI HALT trwa do NMI/reset */
                 z->intr = 0;
                 switch (z->imode) {
                 case 0: z->irupt = 1;
@@ -1713,6 +1717,9 @@ void z80_step(struct cpu* z)
             }
         }
     }
+
+    if (z->intr && (z->int_t -= z->_tic) <= 0)
+        z->intr = 0;
 
     if (!z->halt && z->debug_on && z->debug)
         z->debug(z, D_FLUSH, 0);

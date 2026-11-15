@@ -147,6 +147,7 @@ struct cpu {
         int    force_in;		/* jesli > 0 wartośc będzie odczytana przez IN */
             unsigned short memptr; /* rejestr WZ (MEMPTR), źródło flag 5 i 3 w BIT n,(HL)   */
             unsigned char q; /* flagi zapisane przez poprzednią instrukcję lub 0 (SCF/CCF) */
+            int int_t; /* ile taktów jeszcze trwa linia INT */
         }; // koniec struktury
         char z80_data[Z80_DATA_SIZE]; // maksymalny dopuszczalny rozmiar pola danych
     }; // koniec unii
