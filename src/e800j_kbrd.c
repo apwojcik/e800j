@@ -30,6 +30,8 @@ void key_init(struct keyboard* kb) {
     /* wypełnienie matrycy klawiatury wartościami 0xff - nie naciśnięty żaden klawisz */
     for (i = 0; i < sizeof(kb->matrix); i++)
         *(kb->matrix + i) = 0xff;
+    for (i = 0; i < KB_HELD_MAX; i++)
+        kb->held[i].idx = KB_NONE;
 }
 
 unsigned char key_matrix(const struct keyboard* kb, unsigned short int addr) {
@@ -48,222 +50,198 @@ unsigned char key_matrix(const struct keyboard* kb, unsigned short int addr) {
 }
 
 /*
-  Ustawia stan klawisza w matrycy na współrzędnych row,col
+  Ustawia stan punktu matrycy dla klawisza o indeksie idx w keymap_table.
+  Punkt może być wciskany przez kilka klawiszy fizycznych naraz (np. F3 i J,
+  lewy i prawy Shift), więc zwolnienie następuje dopiero po puszczeniu ostatniego.
 
 coord:
     06 05 04 03 02 01 00
     16 15 14 13 12 11 10
     .. .. .. .. .. .. ..
     96 95 94 93 92 91 90
-state:
-    1 - wciśnięto
-    0 - zwolniono
 */
-static void key_matrix_update(struct keyboard* kb, unsigned char coord, const int state) {
+static void key_matrix_update(struct keyboard* kb, const unsigned int idx, const int state) {
+    const unsigned char coord = keymap_table[idx];
     const unsigned char row = (coord >> 4) & 0xf;
-    const unsigned char col = 1 << (coord & 0x7);
+    const unsigned char bit = coord & 0x7;
 
-    if (row < KB_ROWS) {
-        if (state) {
-            kb->matrix[row] &= ~col;
-        } else {
-            kb->matrix[row] |= col;
+    if (row >= KB_ROWS)
+        return;
+    unsigned char* cnt = &kb->down[row][bit];
+    if (state) {
+        if (*cnt < 0xff)
+            (*cnt)++;
+    } else if (*cnt) {
+        (*cnt)--;
+    }
+    if (*cnt)
+        kb->matrix[row] &= (unsigned char)~(1u << bit);
+    else
+        kb->matrix[row] |= (unsigned char)(1u << bit);
+}
+
+/* naciśnięcie klawisza fizycznego 'key', który wciska klawisz matrycy 'idx' */
+static void key_press(struct keyboard* kb, const unsigned int key, const unsigned int idx) {
+    int free_slot = -1;
+    for (int i = 0; i < KB_HELD_MAX; i++) {
+        if (kb->held[i].idx == KB_NONE) {
+            if (free_slot < 0)
+                free_slot = i;
+        } else if (kb->held[i].key == key) {
+            return; /* już wciśnięty */
+        }
+    }
+    if (free_slot < 0)
+        return;
+    kb->held[free_slot].key = key;
+    kb->held[free_slot].idx = (unsigned char)idx;
+    key_matrix_update(kb, idx, 1);
+}
+
+/* zwolnienie klawisza fizycznego: zwalnia dokładnie to, co wcisnął */
+static void key_release(struct keyboard* kb, const unsigned int key) {
+    for (int i = 0; i < KB_HELD_MAX; i++) {
+        if (kb->held[i].idx != KB_NONE && kb->held[i].key == key) {
+            key_matrix_update(kb, kb->held[i].idx, 0);
+            kb->held[i].idx = KB_NONE;
+            return;
         }
     }
 }
 
-void key_update(struct keyboard* kb, unsigned int key, const int state) {
-    unsigned int key_idx = 0xff;
+/* zamiana kodu SDL (litera, cyfra, znak) na indeks w keymap_table lub KB_NONE */
+static unsigned int key_resolve(const struct keyboard* kb, const unsigned int key) {
     if (kb->mode == KB_MODE_PC) {
-        if (key < KEY_CONTROL_CNT)
-            key_idx = key;
-        switch (key) {
-        case '~':
-            key_idx = KB_ROOF;
-            break;
-        case '[':
-            key_idx = KB_BRL;
-            break;
-        case ']':
-            key_idx = KB_BRR;
-            break;
-        case '/':
-            key_idx = KB_SLASH;
-            break;
-        case '\\':
-            key_idx = KB_BSLASH;
-            break;
-        case '.':
-            key_idx = KB_DOT;
-            break;
-        case ';':
-            key_idx = KB_SEMIC;
-            break;
-        case ',':
-            key_idx = KB_COM;
-            break;
-        case '-':
-            key_idx = KB_MINUS;
-            break;
-        case '=':
-            key_idx = KB_PLUS;
-            break;
-        default:
-            break;
-        }
-        if (key == KB_ALT_R) {
-            kb->alt_r = state;
-            return;
-        }
         if (kb->alt_r) {
             switch (key) {
             case 'a':
-                key = 0xff;
-                key_idx = KB_A_;
-                break;
+                return KB_A_;
             case 'c':
-                key = 0xff;
-                key_idx = KB_C_;
-                break;
+                return KB_C_;
             case 'e':
-                key = 0xff;
-                key_idx = KB_E_;
-                break;
+                return KB_E_;
             case 'l':
-                key = 0xff;
-                key_idx = KB_L_;
-                break;
+                return KB_L_;
             case 'n':
-                key = 0xff;
-                key_idx = KB_N_;
-                break;
+                return KB_N_;
             case 'o':
-                key = 0xff;
-                key_idx = KB_O_;
-                break;
+                return KB_O_;
             case 's':
-                key = 0xff;
-                key_idx = KB_S_;
-                break;
+                return KB_S_;
             case 'z':
-                key = 0xff;
-                key_idx = KB_Z_;
-                break;
+                return KB_Z_;
             case 'x':
-                key = 0xff;
-                key_idx = KB_Z__;
-                break;
+                return KB_Z__;
             default:
                 break;
             }
         }
+        switch (key) {
+        case '~':
+        case SDLK_GRAVE:
+            return KB_ROOF;
+        case '[':
+            return KB_BRL;
+        case ']':
+            return KB_BRR;
+        case '/':
+            return KB_SLASH;
+        case '\\':
+            return KB_BSLASH;
+        case '.':
+            return KB_DOT;
+        case ';':
+            return KB_SEMIC;
+        case ',':
+            return KB_COM;
+        case '-':
+            return KB_MINUS;
+        case '=':
+            return KB_PLUS;
+        default:
+            break;
+        }
     }
     if ((key >= 'a') && (key <= 'z'))
-        key_idx = key - 'a' + KB_LET_START;
+        return key - 'a' + KB_LET_START;
     if ((key >= '0') && (key <= '9'))
-        key_idx = key - '0' + KB_DIG_START;
-    if (key_idx >= KB_ALL_CNT)
+        return key - '0' + KB_DIG_START;
+    return KB_NONE;
+}
+
+void key_update(struct keyboard* kb, const unsigned int key, const int state) {
+    if (!state) {
+        key_release(kb, key);
         return;
-    key_matrix_update(kb, keymap_table[key_idx], (unsigned char)state);
-}
-
-/*
-unsigned int key_joymap(struct keyboard *kb,  unsigned int key, unsigned int nkey, char state)
-{
-    unsigned char nk=0;
-    if(kb->joy_mode & JOY_KEM){
-
-        if(nkey == 32 ) nk = 0x10;
-        if(nkey == 273) nk = 0x08;
-        if(nkey == 274) nk = 0x04;
-        if(nkey == 276) nk = 0x02;
-        if(nkey == 275) nk = 0x01;
-
-        kb->in1f &= ~nk;
-        if(state) kb->in1f |= nk;
-        if(nk) return -1;
-        return key;
     }
-
-    return key;
+    const unsigned int key_idx = key_resolve(kb, key);
+    if (key_idx < KB_ALL_CNT)
+        key_press(kb, key, key_idx);
 }
-*/
 
-void key_set(struct keyboard* kb, unsigned int key, const int state) {
-    //    int nkey=key;
-    //kb->joy_mode = JOY_KEM;
-    /* mapowanie klawiszy specjalnych */
+/* klawisze specjalne SDL -> indeks w keymap_table lub KB_NONE */
+static unsigned int key_special(const unsigned int key) {
     switch (key) {
     case E8K_ENTER:
-        key = KB_ENTER;
-        break;
+        return KB_ENTER;
     case E8K_SHIFT_L:
     case E8K_SHIFT_R:
-        key = KB_SHIFT;
-        break;
+        return KB_SHIFT;
     case E8K_CAPS:
-        key = KB_CAPS;
-        break;
+        return KB_CAPS;
     case E8K_SPC:
-        key = KB_SPACE;
-        break;
+        return KB_SPACE;
     case E8K_ALT_L:
-        key = KB_ALT_L;
-        break;
-    case E8K_ALT_R:
-        key = KB_ALT_R;
-        break;
+        return KB_ALT_L;
     case E8K_CTRL_L:
     case E8K_CTRL_R:
-        key = KB_CTRL;
-        break;
+        return KB_CTRL;
     case E8K_DEL:
-        key = KB_DEL;
-        break;
+        return KB_DEL;
     case E8K_BS:
-        key = KB_BS;
-        break;
+        return KB_BS;
     case E8K_F1:
-        key = KB_CPJ;
-        break;
+        return KB_CPJ;
     case E8K_F2:
-        key = KB_DIR;
-        break;
+        return KB_DIR;
     case E8K_F3:
-        key = KB_LOAD;
-        break;
+        return KB_LOAD;
     case E8K_F4:
-        key = KB_SAVE;
-        break;
+        return KB_SAVE;
     case E8K_F5:
-        key = KB_ERASE;
-        break;
+        return KB_ERASE;
     case E8K_ARROW_L:
-        key = KB_CUR_L;
-        break;
+        return KB_CUR_L;
     case E8K_ARROW_R:
-        key = KB_CUR_R;
-        break;
+        return KB_CUR_R;
     case E8K_ARROW_U:
-        key = KB_CUR_U;
-        break;
+        return KB_CUR_U;
     case E8K_ARROW_D:
-        key = KB_CUR_D;
-        break;
+        return KB_CUR_D;
     case E8K_ESC:
-        key = KB_ESC;
-        break;
+        return KB_ESC;
     case E8K_TAB:
-        key = KB_TAB;
-        break;
+        return KB_TAB;
     default:
-        break;
+        return KB_NONE;
     }
+}
 
-    //    if(kb->joy_mode) key = key_joymap(kb, key,nkey,kb_state);
-    if ((int)key < 0)
+void key_set(struct keyboard* kb, const unsigned int key, const int state) {
+    /* prawy ALT tylko przełącza warstwę polskich liter, nie wciska klawisza matrycy */
+    if (key == E8K_ALT_R) {
+        kb->alt_r = state;
         return;
-
+    }
+    /* klawisze specjalne omijają key_resolve (np. F4 z prawym ALT to nadal SAVE, nie ś) */
+    const unsigned int idx = key_special(key);
+    if (idx != KB_NONE) {
+        if (state)
+            key_press(kb, key, idx);
+        else
+            key_release(kb, key);
+        return;
+    }
     key_update(kb, key, state);
 }
 

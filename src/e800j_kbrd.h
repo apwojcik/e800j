@@ -28,6 +28,7 @@
 #define KB_ROWS		10	/* ilość rzędów matrycy klawiatury */
 #define KB_ZX_ROW_MASK	0x0
 #define KB_ZX_COL_MASK	0x0
+#define KB_HELD_MAX	32	/* maks. liczba jednocześnie śledzonych klawiszy fizycznych */
 
 struct keyboard {
     /* klawiatura */
@@ -36,6 +37,11 @@ struct keyboard {
     char mode; /* tryb klawiatury       */
     int alt_r; /* wciśnięty prawy ALT	 */
     unsigned char matrix[KB_ROWS]; /* matryca klawiszy      */
+    unsigned char down[KB_ROWS][8]; /* ile klawiszy fizycznych wciska dany punkt matrycy */
+    struct {
+        unsigned int key; /* kod SDL klawisza fizycznego */
+        unsigned char idx; /* wciśnięty klawisz matrycy (KB_NONE - wolny wpis) */
+    } held[KB_HELD_MAX];
     char* matrix_map1; /* pierwszy stopień mapowania klawiszy */
     unsigned short int row_mask; /* maska adresu (odcina część linii adresowych) */
     unsigned char col_mask; /* maska danych (odcina czść linii kolumn) */
@@ -79,7 +85,7 @@ void key_init(struct keyboard*);
 /*********************************************/
 void key_set(struct keyboard*, unsigned int key, int state);
 /*
-    ..:: podobnie do key_update, ale dodatkowo mapuje klawisze ::..
+    ..:: podobnie do key_update, ale dodatkowo mapuje klawisze specjalne ::..
     key - kod SDL klawisza
     state - 1 wciśnięty, 0- wyciśnięty
 
@@ -96,7 +102,8 @@ unsigned char key_matrix(const struct keyboard*, unsigned short int addr);
 void key_update(struct keyboard*, unsigned int key, int state);
 
 /*	..:: 'wciska' lub 'wyciska' odpowiedni klawisz na emulacji matrycy klawiatury ::..
-        key   - kod klawisza
+        key   - kod SDL klawisza (litery, cyfry, znaki); zwolnienie zawsze zwalnia to,
+                co wcisnięto przy naciśnięciu tego klawisza
     state - =1 wciśnięto, =0 puszczono
 */
 
@@ -227,34 +234,35 @@ unsigned char key_kempston(const struct keyboard*);
 #define KB_CUR_R	13
 #define KB_CUR_U	14
 #define KB_CUR_D	15
-#define KB_ROOF		0 + KEY_CONTROL_CNT
-#define KB_BRL		1 + KEY_CONTROL_CNT
-#define KB_BRR		2 + KEY_CONTROL_CNT
-#define KB_SLASH	3 + KEY_CONTROL_CNT
-#define KB_BSLASH	4 + KEY_CONTROL_CNT
-#define KB_DOT		5 + KEY_CONTROL_CNT
-#define KB_SEMIC	6 + KEY_CONTROL_CNT
-#define KB_COM		7 + KEY_CONTROL_CNT
-#define KB_MINUS	8 + KEY_CONTROL_CNT
-#define KB_PLUS		9 + KEY_CONTROL_CNT
-#define KB_A_		0 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_C_		1 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_E_		2 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_L_		3 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_N_		4 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_O_		5 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_S_		6 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_Z__		7 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
-#define KB_Z_		8 + KEY_CONTROL_CNT + KEY_SIGNS_CNT
+#define KB_ROOF		(0 + KEY_CONTROL_CNT)
+#define KB_BRL		(1 + KEY_CONTROL_CNT)
+#define KB_BRR		(2 + KEY_CONTROL_CNT)
+#define KB_SLASH	(3 + KEY_CONTROL_CNT)
+#define KB_BSLASH	(4 + KEY_CONTROL_CNT)
+#define KB_DOT		(5 + KEY_CONTROL_CNT)
+#define KB_SEMIC	(6 + KEY_CONTROL_CNT)
+#define KB_COM		(7 + KEY_CONTROL_CNT)
+#define KB_MINUS	(8 + KEY_CONTROL_CNT)
+#define KB_PLUS		(9 + KEY_CONTROL_CNT)
+#define KB_A_		(0 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_C_		(1 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_E_		(2 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_L_		(3 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_N_		(4 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_O_		(5 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_S_		(6 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_Z__		(7 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
+#define KB_Z_		(8 + KEY_CONTROL_CNT + KEY_SIGNS_CNT)
 
-#define KB_DIG_START	KEY_CONTROL_CNT + KEY_SIGNS_CNT + KEY_PLETTERS_CNT
-#define KB_LET_START	KB_DIG_START + KEY_DIGITS_CNT
-#define KB_ALL_CNT	KB_LET_START + KEY_LETTERS_CNT
+#define KB_DIG_START	(KEY_CONTROL_CNT + KEY_SIGNS_CNT + KEY_PLETTERS_CNT)
+#define KB_LET_START	(KB_DIG_START + KEY_DIGITS_CNT)
+#define KB_ALL_CNT	(KB_LET_START + KEY_LETTERS_CNT)
+#define KB_NONE		0xff	/* brak klawisza w tabeli mapowania */
 
-#define KB_LOAD		'j' //- 'a' + KB_LET_START
-#define KB_SAVE		's' //- 'a' + KB_LET_START
-#define KB_ERASE	'7' //- '0' + KB_DIG_START
-#define KB_CPJ		'6' //- '0' + KB_DIG_START
+#define KB_LOAD		('j' - 'a' + KB_LET_START)
+#define KB_SAVE		('s' - 'a' + KB_LET_START)
+#define KB_ERASE	('7' - '0' + KB_DIG_START)
+#define KB_CPJ		('6' - '0' + KB_DIG_START)
 
 #include <SDL3/SDL_keycode.h>
 
