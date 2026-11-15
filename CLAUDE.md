@@ -48,6 +48,9 @@ flags (see `file_help()` in `e800j_file.c`):
 - `-msg_lvl <n>` — verbosity of `msg_printf` diagnostics (see `e800j_msg.h` for levels)
 - `-help` — full option list
 
+`dsk/` holds sample CPCEmu disk images (`*_g*.dsk` = Spectrum-mode games, `*_p*.dsk` = CP/J programs);
+`dsk/load.txt` explains how to list/load files and boot CP/J.
+
 ## Architecture
 
 The emulator is built from independent hardware-component modules that are wired together in
@@ -79,9 +82,13 @@ buffers and global timing state.
   pixel+attribute framebuffer (`screen.zx_patt`/`zx_attr`, pointers directly into `e.ram` at the
   standard Spectrum screen addresses). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
   FDC, and screen refresh together.
-- **Sound** (`e800j_sound.c`): a simple beeper emulator (port 0xFE bit) using a circular sample buffer,
-  with optional sine-based anti-aliasing (`alias` config flag). AY-3-8910 sound is listed in `doc/ToDo`
-  as unimplemented.
+- **Sound** (`e800j_sound.c`): a beeper emulator (port 0xFE bit) rendered on the CPU clock: `snd_beeper()`
+  records each level change at the current T-state (`cpu` ticks), and the sound is rendered up to that tick
+  at the previous level, so timing is independent of the SDL timer. Output is S16 (44.1 kHz by default) pushed
+  into an `SDL_AudioStream`, with a DC-blocking high-pass filter, optional box-filter anti-aliasing (`alias`
+  config flag) and a latency cap (excess samples are dropped when emulation runs faster than real time).
+  `snd_flush()` is called from `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80`
+  config section). AY-3-8910 sound is listed in `doc/ToDo` as unimplemented.
 - **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O.
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/
