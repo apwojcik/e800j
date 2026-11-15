@@ -115,7 +115,7 @@ void io_write(void* p, const unsigned short addr, unsigned char data) {
         e->port_f7 = data;
     }
     if (adec & PORT_CFE) {
-        e->scn->border_color = data & 0x07;
+        screen_border_set(e->scn, ((struct cpu*)p)->ticks, data & 0x07);
         snd_beeper(e->snd, data);
         //	tape_save(data, z);
     }

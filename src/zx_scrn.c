@@ -93,13 +93,83 @@ static void screen_transform(struct screen* s) {
     }
 }
 
+/* układ linii ekranu (jak w ZX Spectrum 48K): 312 linii na klatkę, widoczne 288 */
+#define SCR_LINES_TOTAL 312
+#define SCR_LINE_FIRST 16 /* pierwsza widoczna linia klatki */
+#define SCR_LINES_TOP 48
+#define SCR_LINES_PAPER 192
+#define SCR_LINES_VIS 288
+
+void screen_border_set(struct screen* s, const long ticks, const unsigned char color) {
+    struct border_frame* f = &s->bframe[s->bcur];
+    const unsigned char last = f->n ? f->ev[f->n - 1].color : f->start;
+
+    s->border_color = color;
+    if (color == last || f->n >= BORDER_EV_MAX)
+        return;
+    long t = ticks - s->frame_t0;
+    if (t < 0)
+        t = 0;
+    f->ev[f->n].t = (int)t;
+    f->ev[f->n].color = color;
+    f->n++;
+}
+
+void screen_frame_start(struct screen* s, const long ticks, const int len) {
+    s->bframe[s->bcur].len = len;
+    if (s->bstarted)
+        s->bhave = true;
+    s->bstarted = true;
+    s->bcur ^= 1;
+    s->bframe[s->bcur].n = 0;
+    s->bframe[s->bcur].start = s->border_color;
+    s->frame_t0 = ticks;
+}
+
+/* górna krawędź widocznej linii v (0..288) we współrzędnych okna; linie ramki są
+ * rozciągnięte na górny i dolny margines, linie obrazu na pole obrazu */
+static float screen_line_y(const struct screen* s, const int v) {
+    if (v <= SCR_LINES_TOP)
+        return 1.0f - (1.0f - s->py1) * (float)v / SCR_LINES_TOP;
+    if (v <= SCR_LINES_TOP + SCR_LINES_PAPER)
+        return s->py1 - (s->py1 - s->py0) * (float)(v - SCR_LINES_TOP) / SCR_LINES_PAPER;
+    return s->py0 - s->py0 * (float)(v - SCR_LINES_TOP - SCR_LINES_PAPER) / (SCR_LINES_VIS - SCR_LINES_TOP - SCR_LINES_PAPER);
+}
+
+/* ramka rysowana liniami: kolor każdej linii z zapisów portu w ostatniej pełnej klatce */
 static void screen_draw_border(struct screen* s) {
-    glColor3f(s->palettef[s->border_color].rf, s->palettef[s->border_color].gf, s->palettef[s->border_color].bf);
-    glBegin(GL_POLYGON);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-    glVertex2f(0.0f, 1.0f);
+    unsigned char col[SCR_LINES_VIS];
+
+    if (s->bhave) {
+        const struct border_frame* f = &s->bframe[s->bcur ^ 1];
+        unsigned char c = f->start;
+        int idx = 0;
+        for (int v = 0; v < SCR_LINES_VIS; v++) {
+            const int t = (int)(((double)(SCR_LINE_FIRST + v) + 0.5) * f->len / SCR_LINES_TOTAL);
+            while (idx < f->n && f->ev[idx].t <= t)
+                c = f->ev[idx++].color;
+            col[v] = c;
+        }
+    }
+    else {
+        memset(col, s->border_color, sizeof(col));
+    }
+
+    glBegin(GL_QUADS);
+    for (int v = 0; v < SCR_LINES_VIS;) {
+        int e = v + 1;
+        while (e < SCR_LINES_VIS && col[e] == col[v])
+            e++;
+        const struct rgbf* c = &s->palettef[col[v] & 0x0f];
+        const float ytop = screen_line_y(s, v);
+        const float ybot = screen_line_y(s, e);
+        glColor3f(c->rf, c->gf, c->bf);
+        glVertex2f(0.0f, ybot);
+        glVertex2f(1.0f, ybot);
+        glVertex2f(1.0f, ytop);
+        glVertex2f(0.0f, ytop);
+        v = e;
+    }
     glEnd();
 }
 
@@ -127,6 +197,9 @@ static void screen_layout(struct screen* s) {
         s->bsize = 0.4f;
     glPixelZoom((width - 2 * width * s->bsize) / 256, (height - 2 * height * s->bsize - yresv) / 192);
     glRasterPos2d(s->bsize, s->bsize);
+
+    s->py0 = s->bsize;
+    s->py1 = s->bsize + (height - 2 * height * s->bsize - yresv) / height;
 }
 
 static void screen_glinit(struct screen* s) {
@@ -361,7 +434,9 @@ static void zx_kbrd_(const unsigned int key, const int state, void* a) {
 static void (*zx_kbrd)(unsigned int, int, void*) = zx_kbrd_;
 
 static void time_int(struct cpu* z, void* ptr) {
-    (void)ptr;
+    const struct elwro* e = ptr;
+    /* call_cnt przekracza okres o takty, które minęły od faktycznego początku klatki */
+    screen_frame_start(e->scn, z->ticks - (z->call_cnt - e->ifreq), e->ifreq);
     z80_int(z, NULL);
 }
 
@@ -403,7 +478,7 @@ int zx_main(struct elwro* e) {
                 SDL_SetAtomicInt(&e->scn->refresh, 0);
             }
             if (e->tcpu) {
-                z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);
+                z80_loop(e->cpu, e->tr, e->ifreq, time_int, e);
                 snd_flush(e->snd);
                 e->tcpu = false;
             }
