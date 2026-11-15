@@ -28,7 +28,7 @@
 #define SND_TARGET_LATENCY_MS 50 /* docelowa ilość zakolejkowanego dźwięku, utrzymywana korektą tempa */
 #define SND_RATE_ADJ 0.01 /* maksymalna korekta tempa renderowania (1% ~ 17 centów) */
 #define SND_QUEUE_SMOOTH 0.2 /* współczynnik wygładzania pomiaru kolejki */
-#define SND_DC_R 0.995f /* współczynnik filtru górnoprzepustowego */
+#define SND_DC_R 0.999f /* współczynnik filtru górnoprzepustowego (odcięcie ok. 7 Hz przy 44.1 kHz) */
 
 void snd_free_buffers(struct sound* w) {
     if (w->stream == nullptr)

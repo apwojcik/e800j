@@ -83,12 +83,15 @@ buffers and global timing state.
   standard Spectrum screen addresses). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
   FDC, and screen refresh together.
 - **Sound** (`e800j_sound.c`): a beeper emulator (port 0xFE bit) rendered on the CPU clock: `snd_beeper()`
-  records each level change at the current T-state (`cpu` ticks), and the sound is rendered up to that tick
-  at the previous level, so timing is independent of the SDL timer. Output is S16 (44.1 kHz by default) pushed
-  into an `SDL_AudioStream`, with a DC-blocking high-pass filter, optional box-filter anti-aliasing (`alias`
-  config flag) and a latency cap (excess samples are dropped when emulation runs faster than real time).
-  `snd_flush()` is called from `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80`
-  config section). AY-3-8910 sound is listed in `doc/ToDo` as unimplemented.
+  records each level change at the current T-state (`cpu` ticks), so timing is independent of the SDL timer.
+  With the `alias` config flag each edge is added as a band-limited step (windowed-sinc BLEP, 16 taps, 64
+  fractional phases) and the running sum of impulses is the output, which costs ~8 samples of latency;
+  without it edges land on the nearest sample. Output is S16 (44.1 kHz by default, mono duplicated to 2
+  channels if requested) pushed into an `SDL_AudioStream`, through a DC-blocking high-pass filter. The queue
+  is kept near a 50 ms target: silence is prefilled at start and `snd_rate()` nudges the render step by up to
+  +-1% (smoothed queue length), with a 200 ms hard cap that drops excess samples. `snd_flush()` is called from
+  `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80` config section). AY-3-8910
+  sound is listed in `doc/ToDo` as unimplemented.
 - **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O.
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/

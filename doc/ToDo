@@ -1,7 +1,6 @@
 Elwro 800 Junior emulator v 0.2
 
 Sporo jeszcze do zrobienia:
- - poprawa dźwięku. Obecna obsługa jest jedynie szkieletem funkcjonalności.
  - dodanie rozkazu format do FDC
  - sieć Junet, obsługa 8251 (szeregówka i ethernet)
  - obsługa RST #48 pod CP/J
