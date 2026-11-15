@@ -59,8 +59,8 @@ static void screen_draw(struct screen* s) {
 }
 
 #define PCPY_SCRN(b) \
-        *((int*)fb) = *((int*)(pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f)));\
-        fb +=3;
+        memcpy(fb, pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f), 3);\
+        fb += 3;
 
 static void screen_transform(struct screen* s) {
     unsigned char* fb = s->scr_buffer;
@@ -68,7 +68,7 @@ static void screen_transform(struct screen* s) {
     const unsigned char* attr = s->zx_attr;
     const unsigned char* patt = s->zx_patt;
     int pt = 0;
-    const char inv = s->inverse ? -1 : 0;
+    const int inv = SDL_GetAtomicInt(&s->inverse) ? -1 : 0;
 
     for (short i = 0; i < 6144; i++) {
         const short yy = (short)(i >> 5);
@@ -98,8 +98,8 @@ static void screen_draw_border(struct screen* s) {
     glBegin(GL_POLYGON);
     glVertex2f(0.0f, 0.0f);
     glVertex2f(1.0f, 0.0f);
-    glVertex2f(1.0f, s->scrh);
-    glVertex2f(0.0f, s->scrh);
+    glVertex2f(1.0f, 1.0f);
+    glVertex2f(0.0f, 1.0f);
     glEnd();
 }
 
@@ -111,39 +111,31 @@ void screen_refresh(struct screen* s) {
     SDL_GL_SwapWindow(s->window);
 }
 
-static void screen_glinit(struct screen* s) {
-    memset(s->scr_buffer, 0x80, sizeof(s->scr_buffer));
-    /* poziomy jasności z konfiguracji; gdy brak (0) - wartości domyślne */
-    screen_make_palette(s, s->nbrt ? s->nbrt : 0xb0, s->bbrt ? s->bbrt : 0xf0, s->wbrt ? s->wbrt : 0xe0);
+/* geometria obrazu i ramki; wywoływana też po zmianie rozmiaru okna */
+static void screen_layout(struct screen* s) {
     glViewport(0, 0, s->width, s->height);
-    glClearColor(0.0f, 0.3f, 0.8f, 0.0f);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    //    glMatrixMode(GL_MODELVIEW);
-    //    glLoadIdentity();
 
     const float width = (float)s->width;
     const float height = (float)s->height;
     const float yresv = (float)s->yresv;
 
-    s->scrh = 1.0f - yresv / height;
     if (s->bsize > 0.5f)
         s->bsize = 0.4f;
     glPixelZoom((width - 2 * width * s->bsize) / 256, (height - 2 * height * s->bsize - yresv) / 192);
     glRasterPos2d(s->bsize, s->bsize);
+}
 
-    //    glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
-
-    //    glEnable(GL_POINT_SMOOTH);
-    //    glEnable(GL_BLEND);
-    //    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-
-    //    glDisable(GL_POINT_SMOOTH);
-    //    glDisable(GL_BLEND);
+static void screen_glinit(struct screen* s) {
+    memset(s->scr_buffer, 0x80, sizeof(s->scr_buffer));
+    /* poziomy jasności z konfiguracji; gdy brak (0) - wartości domyślne */
+    screen_make_palette(s, s->nbrt ? s->nbrt : 0xb0, s->bbrt ? s->bbrt : 0xf0, s->wbrt ? s->wbrt : 0xe0);
+    glClearColor(0.0f, 0.3f, 0.8f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    screen_layout(s);
 
     screen_border(s, 1);
     screen_draw(s);
@@ -154,11 +146,11 @@ static void screen_glinit(struct screen* s) {
 static Uint32 zx_screen_refresh(void *userdata, SDL_TimerID timerID, Uint32 interval) {
     (void)timerID;
     struct screen* s = userdata;
-    if (!s->refresh) {
+    if (!SDL_GetAtomicInt(&s->refresh)) {
         SDL_Event event;
         SDL_zero(event);
         event.type = SDL_EVENT_USER;
-        s->refresh = true;
+        SDL_SetAtomicInt(&s->refresh, 1);
         SDL_PushEvent(&event);
     }
     return interval;
@@ -179,7 +171,8 @@ static Uint32 zx_cpu_refresh(void *userdata, SDL_TimerID timerID, Uint32 interva
 
 static Uint32 zx_flash(void* zx, SDL_TimerID timerID, Uint32 interval) {
     (void)timerID;
-    ((struct screen*)zx)->inverse = !((struct screen*)zx)->inverse;
+    struct screen* s = zx;
+    SDL_SetAtomicInt(&s->inverse, !SDL_GetAtomicInt(&s->inverse));
     return interval;
 }
 
@@ -191,6 +184,15 @@ static void zx_free_refresh(const int n, void* zx) {
 static void zx_free_cpu_refresh(const int n, void* zx) {
     (void)n;
     SDL_RemoveTimer(((struct elwro*)zx)->t1);
+}
+
+static void zx_free_gl(const int n, void* zx) {
+    (void)n;
+    struct screen* s = zx;
+    if (s->glctx)
+        SDL_GL_DestroyContext(s->glctx);
+    if (s->window)
+        SDL_DestroyWindow(s->window);
 }
 
 static void zx_free_flash(const int n, void* zx) {
@@ -206,6 +208,11 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
         file_option_param(argc, argv, i, 256, 2048, &width);
     if ((i = file_lookup_option(argc, argv, "-yres")))
         file_option_param(argc, argv, i, 256, 2048, &height);
+
+    if (refresh <= 0 || s->flash <= 0) {
+        msg_printf(MSG_CRITICAL_ERROR, "Invalid screen refresh (%i ms) or blink (%i ms) time\n", refresh, s->flash);
+        return false;
+    }
 
     s->width = width;
     s->height = height;
@@ -271,7 +278,6 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, s->rgb_size[0]);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, s->rgb_size[1]);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, s->rgb_size[2]);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     /* inicjowanie trybu graficznego */
@@ -289,6 +295,11 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
         return false;
     }
 
+    on_exit(zx_free_gl, (void*)s);
+
+    /* rozmiar w pikselach może różnić się od żądanego (pełny ekran, HiDPI) */
+    SDL_GetWindowSizeInPixels(window, &s->width, &s->height);
+
     /* informacja o ekranie */
     msg_printf(MSG_MSG, "Vendor     : %s\n", glGetString(GL_VENDOR));
     msg_printf(MSG_MSG, "Renderer   : %s\n", glGetString(GL_RENDERER));
@@ -298,13 +309,11 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &s->rgb_size[0]);
     SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &s->rgb_size[1]);
     SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &s->rgb_size[2]);
-    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &s->bpp);
     SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &s->dbf);
 
     msg_printf(MSG_MSG, "SDL GL RED SIZE: %i\n", s->rgb_size[0]);
     msg_printf(MSG_MSG, "SDL GL GREEN SIZE: %i\n", s->rgb_size[1]);
     msg_printf(MSG_MSG, "SDL GL BLUE SIZE: %i\n", s->rgb_size[2]);
-    msg_printf(MSG_MSG, "SDL GL DEPTH SIZE: %i\n", s->bpp);
     msg_printf(MSG_MSG, "SDL GL DOUBLE BUFFER: %s\n", s->dbf ? "Yes" : "No");
     /*
         SDL_VERSION(&(info.version));
@@ -317,7 +326,7 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     screen_glinit(s);
 
     /* w konfiguracji rfsh było wczytane do flagi - zerujemy, inaczej timer nigdy nie wyśle zdarzenia */
-    s->refresh = false;
+    SDL_SetAtomicInt(&s->refresh, 0);
     if ((s->t0 = SDL_AddTimer(refresh, zx_screen_refresh, s)) == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Could not create timer for refresh: %s\n", SDL_GetError());
         exit(0);
@@ -381,12 +390,17 @@ int zx_main(struct elwro* e) {
         case SDL_EVENT_KEY_UP:
             zx_kbrd(event.key.key, 0, e);
             break;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            e->scn->width = event.window.data1;
+            e->scn->height = event.window.data2;
+            screen_layout(e->scn);
+            break;
         case SDL_EVENT_QUIT:
             return 0;
         case SDL_EVENT_USER:
-            if (e->scn->refresh) {
+            if (SDL_GetAtomicInt(&e->scn->refresh)) {
                 screen_refresh(e->scn);
-                e->scn->refresh = false;
+                SDL_SetAtomicInt(&e->scn->refresh, 0);
             }
             if (e->tcpu) {
                 z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);

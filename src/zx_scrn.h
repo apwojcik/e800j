@@ -26,7 +26,7 @@ struct rgbi {
     unsigned char ri;
     unsigned char gi;
     unsigned char bi;
-    unsigned char ai; /* bajt nadmiarowy do kopiowania 32 bitowego */
+    unsigned char ai; /* bajt wyrównujący */
 };
 
 struct rgbf {
@@ -37,7 +37,7 @@ struct rgbf {
 
 struct screen {
     char msg[256];
-    unsigned char scr_buffer[192 * 256 * 3 + 1]; /* +1 aby można było zrobić szybkie kopiowanie 32 bitowe */
+    unsigned char scr_buffer[192 * 256 * 3];
     struct rgbi palettei[16];
     struct rgbf palettef[16];
     int width;
@@ -49,12 +49,12 @@ struct screen {
     unsigned char* zx_attr; /* kolory kranu - 1kB */
     unsigned char border_color;
     int rfsh;
-    bool refresh; // screen refresh pending
+    SDL_AtomicInt refresh; // screen refresh pending (ustawiane z wątku timera)
     unsigned int t0;
     unsigned int t2;
-    void* glctx; /* SDL_GLContext */
+    SDL_GLContext glctx;
     int flash; /* tempo migania atrybutu flash w ms */
-    bool inverse;
+    SDL_AtomicInt inverse; /* faza migania (zmieniana w wątku timera) */
     int fscrn;
     int bright;
     int nbrt;
@@ -62,10 +62,8 @@ struct screen {
     int wbrt;
     long parent; /* ID okna GTK */
     float bsize;
-    float scrh;
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
     SDL_Window* window;
-    SDL_GLContext gl_context;
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
