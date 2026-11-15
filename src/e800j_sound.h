@@ -38,7 +38,10 @@ struct sound {
 
     /* stan renderowania; czas liczony w taktach CPU */
     double cpu_hz; // częstotliwość taktowania CPU
-    double step; // ilość taktów CPU na jedną próbkę
+    double step; // ilość taktów CPU na jedną próbkę (z korektą tempa)
+    double step_nom; // nominalna ilość taktów CPU na próbkę
+    int target_frames; // docelowa ilość zakolejkowanych ramek
+    double avg_q; // wygładzona ilość zakolejkowanych ramek
     double pos; // takty zużyte w bieżącej próbce
     double acc; // całka poziomu sygnału w bieżącej próbce
     long last_ticks; // takt, do którego wyrenderowano dźwięk

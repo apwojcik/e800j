@@ -25,6 +25,9 @@
 #include "z80_cpu.h"
 
 #define SND_MAX_LATENCY_MS 200 /* powyżej tego opóźnienia nadmiarowe próbki są odrzucane */
+#define SND_TARGET_LATENCY_MS 50 /* docelowa ilość zakolejkowanego dźwięku, utrzymywana korektą tempa */
+#define SND_RATE_ADJ 0.01 /* maksymalna korekta tempa renderowania (1% ~ 17 centów) */
+#define SND_QUEUE_SMOOTH 0.2 /* współczynnik wygładzania pomiaru kolejki */
 #define SND_DC_R 0.995f /* współczynnik filtru górnoprzepustowego */
 
 void snd_free_buffers(struct sound* w) {
@@ -41,6 +44,15 @@ static void snd_put(struct sound* w) {
     if (SDL_GetAudioStreamQueued(w->stream) < w->max_queue)
         SDL_PutAudioStreamData(w->stream, w->out, w->nout * w->chn * (int)sizeof(short));
     w->nout = 0;
+}
+
+/* wprowadza ciszę do kolejki, by urządzenie nie zaczynało od pustego bufora */
+static void snd_prefill(struct sound* w) {
+    short silence[SND_CHUNK * 2] = { 0 };
+    for (int left = w->target_frames; left > 0; left -= SND_CHUNK) {
+        const int n = left < SND_CHUNK ? left : SND_CHUNK;
+        SDL_PutAudioStreamData(w->stream, silence, n * w->chn * (int)sizeof(short));
+    }
 }
 
 static void snd_emit(struct sound* w, float x) {
@@ -79,6 +91,20 @@ static void snd_advance(struct sound* w, const long now) {
     }
 }
 
+/* utrzymuje zakolejkowany dźwięk blisko wartości docelowej: gdy kolejka maleje, próbki są
+   renderowane nieco gęściej (i odwrotnie), co kompensuje różnicę między zegarem emulacji i urządzenia */
+static void snd_rate(struct sound* w) {
+    const double queued = (double)SDL_GetAudioStreamQueued(w->stream) / (w->chn * (int)sizeof(short));
+    w->avg_q += SND_QUEUE_SMOOTH * (queued - w->avg_q);
+    double err = (w->target_frames - w->avg_q) / w->target_frames;
+    err = err > 1.0 ? 1.0 : err < -1.0 ? -1.0 : err;
+    const double step = w->step_nom * (1.0 - SND_RATE_ADJ * err);
+    const double ratio = step / w->step;
+    w->pos *= ratio;
+    w->acc *= ratio;
+    w->step = step;
+}
+
 void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     if (w->nosound)
         return;
@@ -106,7 +132,7 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
 
     w->cpu = cpu;
     w->cpu_hz = cpu_hz;
-    w->step = cpu_hz / w->freq;
+    w->step = w->step_nom = cpu_hz / w->freq;
     w->pos = w->acc = 0;
     w->last_ticks = cpu->ticks;
     w->level = -1.f;
@@ -114,6 +140,9 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     w->dc_x = w->dc_y = 0;
     w->nout = 0;
     w->max_queue = w->freq * SND_MAX_LATENCY_MS / 1000 * w->chn * (int)sizeof(short);
+    w->target_frames = w->freq * SND_TARGET_LATENCY_MS / 1000;
+    w->avg_q = w->target_frames;
+    snd_prefill(w);
     SDL_ResumeAudioStreamDevice(w->stream);
 }
 
@@ -123,6 +152,7 @@ void snd_flush(struct sound* w) {
         return;
     snd_advance(w, w->cpu->ticks);
     snd_put(w);
+    snd_rate(w);
 }
 
 void snd_beeper(struct sound* w, const unsigned char port_fe) {
