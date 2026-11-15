@@ -22,28 +22,36 @@
 
 #include "e800j.h"
 
-struct sound {
-    unsigned char* rbuffer; // bufor kołowy dźwięku
-    unsigned char* lbuffer; // bufor liniowy
-    char* sin; // tablica sinus do antyaliasingu
+#define SND_CHUNK 512 /* ilość ramek renderowanych jednorazowo przed przekazaniem do SDL */
 
-    int head; /* początek bufora kołowego  */
-    int tail; // koniec bufora kołowego
+struct SDL_AudioStream;
+
+struct sound {
+    struct SDL_AudioStream* stream; // strumień audio SDL (bezpieczny wątkowo)
+
     float volume; // głośność (0..128)
-    int size; // rozmiar bufora
     int freq; /* ilość sampli / sekundę */
-    int length; // długość bufora na karcie, wartość musi być pot 2 i może być skorygowana
+    int length; // rozmiar bufora urządzenia w ramkach (podpowiedź dla SDL)
     int chn; // ilość kanałów
     unsigned char nosound : 1; // czy włączyć obsługę dźwięku
-    unsigned char alias : 1; // czy ma być włączony antyaliasing
-    unsigned char ovr : 1; // wystąpiło przepełnienie bufora
-    int scale; // skalowanie długości okresów
-    long old_ticks;
-    unsigned char old_r373;
+    unsigned char alias : 1; // czy uśredniać sygnał prostokątny w obrębie próbki (anty-aliasing)
+
+    /* stan renderowania; czas liczony w taktach CPU */
+    double cpu_hz; // częstotliwość taktowania CPU
+    double step; // ilość taktów CPU na jedną próbkę
+    double pos; // takty zużyte w bieżącej próbce
+    double acc; // całka poziomu sygnału w bieżącej próbce
+    long last_ticks; // takt, do którego wyrenderowano dźwięk
+    float level; // aktualny poziom wyjścia (-1..1)
+    float amp; // wzmocnienie wynikające z volume
+    float dc_x, dc_y; // stan filtru górnoprzepustowego (usuwa składową stałą)
+    int max_queue; // maksymalna ilość bajtów w kolejce SDL (opóźnienie)
+    int nout; // ilość ramek w out
+    short out[SND_CHUNK * 2];
     const struct cpu* cpu;
 };
 
-void snd_beeper(struct sound* snd, char r373);
-void snd_beeper_play(struct sound* snd);
-void snd_init(struct sound* snd, const struct cpu* cpu);
+void snd_beeper(struct sound* snd, unsigned char port_fe);
+void snd_flush(struct sound* snd);
+void snd_init(struct sound* snd, const struct cpu* cpu, double cpu_hz);
 void snd_free_buffers(struct sound* snd);

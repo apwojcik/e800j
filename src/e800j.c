@@ -111,7 +111,7 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    snd_init(&snd, &cpu);
+    snd_init(&snd, &cpu, (double)e.tr * 1000.0 / (double)e.cpu_refresh);
     file_get_cline(argc, argv, &e, e.ram, &e.scn->border_color, 0);
 
     zx_main(&e);

@@ -387,6 +387,7 @@ int zx_main(struct elwro* e) {
             }
             if (e->tcpu) {
                 z80_loop(e->cpu, e->tr, e->ifreq, time_int, NULL);
+                snd_flush(e->snd);
                 e->tcpu = false;
             }
             fdc_clk(e->fdc);

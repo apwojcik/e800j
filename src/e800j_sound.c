@@ -19,133 +19,118 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include <SDL3/SDL.h>
 #include "e800j_sound.h"
+#include "e800j_msg.h"
 #include "z80_cpu.h"
 
-#define SND_CHUNK 1024 /* maksymalny rozmiar porcji danych przekazywanej do SDL */
-
-static SDL_AudioStream* snd_stream;
-
-static void snd_close_audio(void) {
-    SDL_DestroyAudioStream(snd_stream);
-}
+#define SND_MAX_LATENCY_MS 200 /* powyżej tego opóźnienia nadmiarowe próbki są odrzucane */
+#define SND_DC_R 0.995f /* współczynnik filtru górnoprzepustowego */
 
 void snd_free_buffers(struct sound* w) {
+    if (w->stream == nullptr)
+        return;
+    SDL_DestroyAudioStream(w->stream);
+    w->stream = nullptr;
+}
+
+/* przekazuje wyrenderowane ramki do SDL; przy zbyt dużej kolejce (emulacja szybsza od czasu rzeczywistego) odrzuca je */
+static void snd_put(struct sound* w) {
+    if (w->nout == 0)
+        return;
+    if (SDL_GetAudioStreamQueued(w->stream) < w->max_queue)
+        SDL_PutAudioStreamData(w->stream, w->out, w->nout * w->chn * (int)sizeof(short));
+    w->nout = 0;
+}
+
+static void snd_emit(struct sound* w, float x) {
+    /* filtr górnoprzepustowy usuwa składową stałą (trzaski przy zmianie stanu bezczynności) */
+    const float y = x - w->dc_x + SND_DC_R * w->dc_y;
+    w->dc_x = x;
+    w->dc_y = y;
+    const float v = y * w->amp;
+    const short s = (short)(v > 1.f ? 32767 : v < -1.f ? -32767 : v * 32767.f);
+    for (int c = 0; c < w->chn; c++)
+        w->out[w->nout * w->chn + c] = s;
+    if (++w->nout == SND_CHUNK)
+        snd_put(w);
+}
+
+/* renderuje dźwięk do taktu 'now' przy stałym dotychczasowym poziomie wyjścia */
+static void snd_advance(struct sound* w, const long now) {
+    double dt = (double)(now - w->last_ticks);
+    w->last_ticks = now;
+    if (dt <= 0)
+        return;
+    if (dt > w->cpu_hz) /* np. wstrzymanie emulacji w debuggerze */
+        dt = w->cpu_hz;
+    while (dt > 0) {
+        const double room = w->step - w->pos;
+        if (dt < room) {
+            w->acc += w->level * dt;
+            w->pos += dt;
+            return;
+        }
+        w->acc += w->level * room;
+        dt -= room;
+        snd_emit(w, w->alias ? (float)(w->acc / w->step) : w->level);
+        w->acc = 0;
+        w->pos = 0;
+    }
+}
+
+void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     if (w->nosound)
         return;
-    free(w->lbuffer);
-    free(w->rbuffer);
-}
-
-static void snd_init_rbuffer(struct sound* w, int lbsize) {
-    w->head = w->tail = 0;
-    if ((w->lbuffer = malloc(lbsize)) == nullptr) {
-        printf("(EE) Error memory allocation i sound buffer init\n");
-        exit(0);
-    }
-    if ((w->rbuffer = malloc(w->size)) == nullptr) {
-        printf("(EE) Error memory allocation i sound buffer init\n");
-        free(w->lbuffer);
-        exit(0);
-    }
-    w->ovr = false;
-    w->old_ticks = 0;
-    w->old_r373 = 0;
-}
-
-/* kopiuje len bajtów z bufora rbuffer i zwraca ilość skopiowanych bajtów */
-static unsigned char snd_rbuffer_pop(struct sound* w) {
-    if (w->tail == w->head)
-        return w->rbuffer[w->tail];
-    const unsigned char a = w->rbuffer[w->tail++];
-    if (w->tail == w->size)
-        w->tail = 0;
-    return a;
-}
-
-static void snd_rbuffer_push(struct sound* w, char data) {
-    /* detekcja przepełnienia bufora */
-    const int next_head = (w->head + 1 == w->size) ? 0 : w->head + 1;
-    if (next_head == w->tail) {
-        if (!w->ovr)
-            printf("(WW)Sound buffer(0x%x) overflow.\n", w->size);
-        w->ovr = true;
+    msg_printf(MSG_MSG, "Sound init\n");
+    w->stream = nullptr;
+    if (w->chn < 1 || w->chn > 2)
+        w->chn = 1;
+    if (w->freq < 8000 || cpu_hz <= 0) {
+        msg_printf(MSG_ERROR, "Invalid sound sample rate or CPU frequency\n");
+        w->nosound = true;
         return;
     }
-    w->rbuffer[w->head] = data; /* wkładam daną do bufora    */
-    w->head = next_head;
-}
 
-void snd_beeper_callback(void* ud, SDL_AudioStream* stream, int additional_amount, int total_amount) {
-    (void) total_amount;
-    struct sound* w = (struct sound*)ud;
-    Uint8 mix[SND_CHUNK];
-
-    while (additional_amount > 0) {
-        const int n = additional_amount < SND_CHUNK ? additional_amount : SND_CHUNK;
-        /* kopiowanie n bajtów z bufora kołowego do liniowego */
-        for (int i = 0; i < n; i++)
-            w->lbuffer[i] = snd_rbuffer_pop(w);
-        /* zmiksowanie ciszy z buforem liniowym i przekazanie do karty */
-        memset(mix, 0x80, n); /* cisza dla AUDIO_U8 */
-        SDL_MixAudio(mix, w->lbuffer, SDL_AUDIO_U8, n, w->volume / 128.0f /* dawne SDL_MIX_MAXVOLUME */);
-        SDL_PutAudioStreamData(stream, mix, n);
-        additional_amount -= n;
-    }
-}
-
-void snd_init(struct sound* snd, const struct cpu* cpu) {
-    SDL_AudioSpec spec;
+    const SDL_AudioSpec spec = { SDL_AUDIO_S16, w->chn, w->freq };
     char samples[16];
+    snprintf(samples, sizeof(samples), "%d", w->length);
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples);
 
-    if (snd->nosound)
-        return;
-    printf("(II)Sound init\n");
-    snd->cpu = cpu;
-
-    spec.freq = snd->freq; // ilość sampli/sec
-    spec.format = SDL_AUDIO_U8; /* format danych */
-    spec.channels = snd->chn; // ilość kanałów
-
-    snprintf(samples, sizeof(samples), "%d", snd->length);
-    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples); /* rozmiar bufora w samplach */
-
-    if ((snd_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, snd_beeper_callback, snd)) == nullptr) {
-        printf("(WW)Couldn't open audio: %s\n", SDL_GetError());
-        snd->nosound = true;
+    if ((w->stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr)) == nullptr) {
+        msg_printf(MSG_WARN, "Couldn't open audio: %s\n", SDL_GetError());
+        w->nosound = true;
         return;
     }
+    msg_printf(MSG_MSG, "Using audio driver: %s\n", SDL_GetCurrentAudioDriver());
 
-    printf("(II)Using audio driver: %s\n", SDL_GetCurrentAudioDriver());
-    atexit(snd_close_audio);
-    snd_init_rbuffer(snd, SND_CHUNK);
-    SDL_ResumeAudioStreamDevice(snd_stream);
+    w->cpu = cpu;
+    w->cpu_hz = cpu_hz;
+    w->step = cpu_hz / w->freq;
+    w->pos = w->acc = 0;
+    w->last_ticks = cpu->ticks;
+    w->level = -1.f;
+    w->amp = 0.3f * w->volume / 128.f;
+    w->dc_x = w->dc_y = 0;
+    w->nout = 0;
+    w->max_queue = w->freq * SND_MAX_LATENCY_MS / 1000 * w->chn * (int)sizeof(short);
+    SDL_ResumeAudioStreamDevice(w->stream);
 }
 
-void snd_beeper(struct sound* snd, char r373) {
-    if (snd->nosound)
+/* wywoływana po każdym przebiegu pętli CPU - dogania renderowanie do bieżącego taktu */
+void snd_flush(struct sound* w) {
+    if (w->nosound || w->stream == nullptr)
         return;
-    if (!((r373 ^ snd->old_r373) & 0x10))
-        return; /* jesli nie nastąpiła zmiana bitu 4 portu wyjdą */
-    snd->old_r373 = r373;
-    const double ticks = (double)(snd->cpu->ticks - snd->old_ticks);
-    double period = ticks / snd->scale; /* ile upłynęło przedziałów 20ms od zmiany */
-    const int samples = (int)(period * 256);
-    snd->old_ticks = snd->cpu->ticks;
+    snd_advance(w, w->cpu->ticks);
+    snd_put(w);
+}
 
-    r373 &= 0x10;
-    if (snd->alias) {
-        const double data = r373 ? 127 : -128;
-        period = 3.14 / samples;
-        for (int i = 0; i < samples; i++)
-            snd_rbuffer_push(snd, (char)(128 + data * sin(i * period)));
-    }
-    else {
-        const double data = r373 ? 0 : 0xff;
-        for (int i = 0; i < samples; i++)
-            snd_rbuffer_push(snd, (char)data);
-    }
+void snd_beeper(struct sound* w, const unsigned char port_fe) {
+    if (w->nosound || w->stream == nullptr)
+        return;
+    const float level = (port_fe & 0x10) ? 1.f : -1.f;
+    if (level == w->level)
+        return;
+    snd_advance(w, w->cpu->ticks);
+    w->level = level;
 }

@@ -701,12 +701,6 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
     }
     e->snd->chn = file_cfg_int(tmp0, 0);
     msg_printf(MSG_MSG, "Channels: %i\n", e->snd->chn);
-    if (file_find_cfg_option(tmp1, "rbuffer", tmp0, NULL, 0, 0) == NULL) {
-        free(tmp1);
-        return 1;
-    }
-    e->snd->size = file_cfg_int(tmp0, 0);
-    msg_printf(MSG_MSG, "Sound round buffer size: %i\n", e->snd->size);
     if (file_find_cfg_option(tmp1, "samplert", tmp0, NULL, 0, 0) == NULL) {
         free(tmp1);
         return 1;
@@ -725,13 +719,6 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
     }
     e->snd->volume = strtof(tmp0, NULL);
     msg_printf(MSG_MSG, "Mix volume: %f\n", e->snd->volume);
-    if (file_find_cfg_option(tmp1, "scale", tmp0, NULL, 0, 0) == NULL) {
-        free(tmp1);
-        return 1;
-    }
-    e->snd->scale = file_cfg_int(tmp0, 0);
-    msg_printf(MSG_MSG, "Max samples / CPU atom: %i\n", e->snd->scale);
-
     if (!file_find_cfg_option(tmp1, "alias", tmp0, NULL, 0, 0)) {
         free(tmp1);
         return 1;
