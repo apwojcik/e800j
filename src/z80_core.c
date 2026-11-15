@@ -191,7 +191,11 @@ void z80_bank_af(struct cpu* z, char i) {
     z->alt_af = i;
 }
 
-void z80_icall(struct cpu* z, unsigned short addr) {
+/* t - czas przyjęcia przerwania w taktach (NMI 11, IM1 13, IM2 19) */
+void z80_icall(struct cpu* z, unsigned short addr, const int t) {
+    z->ticks += t;
+    z->_tic += t;
+    z->cycles += t == 11 ? 5 : 7;
     z->memory_write(z, --SPr, PCr >> 8);
     z->memory_write(z, --SPr, PCr & 0xff);
     PCr = addr;
@@ -349,21 +353,19 @@ void z80_jphl(struct cpu* z) {
 
 void z80_djnz(struct cpu* z) {
     z->cmd_type = D_DJNZ;
-    z->cycles += 2;
-    z->ticks += 8;
-    z->_tic = 8;
     z->dd1 = z80_fetch_byte(z);
     z->nn = PCr + (char)z->dd1;
     if (!--Br) {
         z->djnz = 0;
+        z->cycles += 2;
+        z->ticks += 8;
+        z->_tic = 8;
         INST_END;
         return;
     }
     z->djnz = 1;
     z->memptr = z->nn;
-    z->ticks += 5;
-    z->_tic += 5;
-    z->cycles++;
+    /* czas i cykle pętli z tablicy (TICS_UPDATE) */
     if (z->jmp_off == false)
         PCr = z->nn;
     TICS_UPDATE;
@@ -372,21 +374,18 @@ void z80_djnz(struct cpu* z) {
 
 void z80_call(struct cpu* z) {
     z->cmd_type = D_CALL;
-    z->cycles += 3;
-    z->ticks += 10;
-    z->_tic = 10;
     z->dd2 = z80_fetch_word(z);
     z->reg80 = z->p1;
     z->nn = z->dd2;
     z->memptr = z->nn;
     if (!Z80_COND(z->p1, Fr)) {
+        z->cycles += 3;
+        z->ticks += 10;
+        z->_tic = 10;
         INST_END;
         return;
     }
     z->nested++;
-    z->ticks += 7;
-    z->_tic += 7;
-    z->cycles += 2;
     SPr -= 2;
     z->memory_write(z, SPr, PCr & 0xff);
     z->memory_write(z, SPr + 1, PCr >> 8);
@@ -411,18 +410,15 @@ void z80_rst(struct cpu* z) {
 
 void z80_ret(struct cpu* z) {
     z->cmd_type = D_RET;
-    z->cycles += 1;
-    z->ticks += 5;
-    z->_tic = 5;
     z->reg80 = z->p1;
     if (!Z80_COND(z->p1, Fr)) {
+        z->cycles += 1;
+        z->ticks += 5;
+        z->_tic = 5;
         INST_END;
         return;
     }
     z->nested--;
-    z->ticks += 6;
-    z->_tic += 6;
-    z->cycles += 2;
     z->dd2 = z->memory_read(z, SPr);
     z->dd2 |= z->memory_read(z, SPr + 1) << 8;
     SPr += 2;
@@ -1581,22 +1577,18 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
         return;
     }
     unsigned char d;
-    for (int i = 0; i < cnt; i++) {
+    /* i - zużyte takty; każda instrukcja jest rozliczana raz (_tic) przed następną */
+    for (int i = 0; i < cnt;) {
         if (!z->exit) {
             z->call_cnt += z->_tic;
+            /* gwarancja postępu, gdy instrukcja nie zgłosiła czasu */
+            i += z->_tic ? z->_tic : 1;
+            z->_tic = 0;
             if (z->call_cnt >= call) {
                 if (callback) {
                     callback(z, callback_param);
                 }
-                z->call_cnt = z->call_cnt - call;;
-            }
-            if (z->_tic) {
-                i += z->_tic;
-                z->_tic = 0;
-                if (i >= cnt) {
-                    z->_tic = i - cnt + 1;
-                    break;
-                }
+                z->call_cnt = z->call_cnt - call;
             }
         }
         if (z->debug_on && z->debug) {
@@ -1636,9 +1628,10 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                 z->inmi = 0;
                 z->iff2 = z->iff1;
                 z->iff1 = 0;
-                z80_icall(z, 0x66);
+                z80_icall(z, 0x66, 11);
             }
-            if (z->intr) {
+            /* po EI przerwanie dopiero po następnej instrukcji */
+            if (z->intr && z->cmd_type != D_EI) {
                 z->halt = 0;
                 if (z->iff1) {
                     z->intr = 0;
@@ -1646,11 +1639,11 @@ void z80_loop(struct cpu* z, int cnt, int call, void (*callback)(struct cpu*, vo
                     case 0: z->irupt = 1;
                         break; /* następna instrukcja będzie pobrana z magistrali */
                     case 1:
-                        z80_icall(z, 0x38);
+                        z80_icall(z, 0x38, 13);
                         break;
                     case 2:
                         z80_icall(z, z80_mem_rword(
-                                      z, (unsigned short)(*z->I_r << 8) | (z->bus[0] & 0xff)));
+                                      z, (unsigned short)(*z->I_r << 8) | (z->bus[0] & 0xff)), 19);
                         break;
                     }
                 }
@@ -1699,9 +1692,10 @@ void z80_step(struct cpu* z)
             z->inmi = 0;
             z->iff2 = z->iff1;
             z->iff1 = 0;
-            z80_icall(z, 0x66);
+            z80_icall(z, 0x66, 11);
         }
-        if (z->intr) {
+        /* po EI przerwanie dopiero po następnej instrukcji */
+        if (z->intr && z->cmd_type != D_EI) {
             z->halt = 0;
             if (z->iff1) {
                 z->intr = 0;
@@ -1709,11 +1703,11 @@ void z80_step(struct cpu* z)
                 case 0: z->irupt = 1;
                     break; /* następna instrukcja będzie pobrana z magistrali */
                 case 1:
-                    z80_icall(z, 0x38);
+                    z80_icall(z, 0x38, 13);
                     break;
                 case 2:
                     z80_icall(z, z80_mem_rword(
-                                  z, (unsigned short)(*z->I_r << 8) | (z->bus[0] & 0xff)));
+                                  z, (unsigned short)(*z->I_r << 8) | (z->bus[0] & 0xff)), 19);
                     break;
                 }
             }
