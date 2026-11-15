@@ -47,7 +47,7 @@ void screen_border(struct screen* s, const unsigned char color) {
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
     for (int i = 0; i < 16; i++) {
         const unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
-        int color = (i == 7) ? wht : (i & 0x07 ? brt : nrm);
+        int color = (i == 7) ? wht : (i & 0x08 ? brt : nrm);
         s->palettef[i].bf = (float)(s->palettei[i].bi = (unsigned char)((palgen[i & 7] & 1) ? color : 0)) / 256.0f;
         s->palettef[i].gf = (float)(s->palettei[i].gi = (unsigned char)((palgen[i & 7] & 2) ? color : 0)) / 256.0f;
         s->palettef[i].rf = (float)(s->palettei[i].ri = (unsigned char)((palgen[i & 7] & 4) ? color : 0)) / 256.0f;
@@ -113,7 +113,8 @@ void screen_refresh(struct screen* s) {
 
 static void screen_glinit(struct screen* s) {
     memset(s->scr_buffer, 0x80, sizeof(s->scr_buffer));
-    screen_make_palette(s, 0xb0, 0xf0, 0xe0);
+    /* poziomy jasności z konfiguracji; gdy brak (0) - wartości domyślne */
+    screen_make_palette(s, s->nbrt ? s->nbrt : 0xb0, s->bbrt ? s->bbrt : 0xf0, s->wbrt ? s->wbrt : 0xe0);
     glViewport(0, 0, s->width, s->height);
     glClearColor(0.0f, 0.3f, 0.8f, 0.0f);
 
@@ -155,6 +156,7 @@ static Uint32 zx_screen_refresh(void *userdata, SDL_TimerID timerID, Uint32 inte
     struct screen* s = userdata;
     if (!s->refresh) {
         SDL_Event event;
+        SDL_zero(event);
         event.type = SDL_EVENT_USER;
         s->refresh = true;
         SDL_PushEvent(&event);
@@ -167,6 +169,7 @@ static Uint32 zx_cpu_refresh(void *userdata, SDL_TimerID timerID, Uint32 interva
     struct elwro* e = userdata;
     if (!e->tcpu) {
         SDL_Event event;
+        SDL_zero(event);
         event.type = SDL_EVENT_USER;
         e->tcpu = true;
         SDL_PushEvent(&event);
@@ -276,14 +279,14 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     if (window == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't set GL mode: %s\n", SDL_GetError());
         SDL_Quit();
-        return 1;
+        return false;
     }
     s->window = window;
     s->glctx = SDL_GL_CreateContext(window);
     if (s->glctx == 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Couldn't create GL context: %s\n", SDL_GetError());
         SDL_Quit();
-        return 1;
+        return false;
     }
 
     /* informacja o ekranie */
