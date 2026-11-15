@@ -55,7 +55,7 @@ static void snd_prefill(struct sound* w) {
     }
 }
 
-static void snd_emit(struct sound* w, float x) {
+static void snd_emit(struct sound* w, const float x) {
     /* filtr górnoprzepustowy usuwa składową stałą (trzaski przy zmianie stanu bezczynności) */
     const float y = x - w->dc_x + SND_DC_R * w->dc_y;
     w->dc_x = x;
@@ -68,27 +68,54 @@ static void snd_emit(struct sound* w, float x) {
         snd_put(w);
 }
 
-/* renderuje dźwięk do taktu 'now' przy stałym dotychczasowym poziomie wyjścia */
-static void snd_advance(struct sound* w, const long now) {
-    double dt = (double)(now - w->last_ticks);
-    w->last_ticks = now;
-    if (dt <= 0)
-        return;
-    if (dt > w->cpu_hz) /* np. wstrzymanie emulacji w debuggerze */
-        dt = w->cpu_hz;
-    while (dt > 0) {
-        const double room = w->step - w->pos;
-        if (dt < room) {
-            w->acc += w->level * dt;
-            w->pos += dt;
-            return;
+/* jądro BLEP: pasmowo ograniczony impuls (okienkowany sinc) dla SND_BL_PHASES faz przesunięcia
+   ułamkowego; suma współczynników każdej fazy wynosi 1, więc całkowanie impulsów daje czysty skok */
+static float snd_kernel[SND_BL_PHASES][SND_BL_TAPS];
+
+static void snd_kernel_init(void) {
+    const double width = SND_BL_HALF + 0.5;
+    for (int ph = 0; ph < SND_BL_PHASES; ph++) {
+        const double frac = (double)ph / SND_BL_PHASES;
+        double sum = 0, h[SND_BL_TAPS];
+        for (int t = 0; t < SND_BL_TAPS; t++) {
+            const double x = (t - SND_BL_HALF) + frac - 0.5;
+            const double u = x / width;
+            const double sinc = x == 0 ? 1.0 : SDL_sin(SDL_PI_D * x) / (SDL_PI_D * x);
+            const double win = 0.42 + 0.5 * SDL_cos(SDL_PI_D * u) + 0.08 * SDL_cos(2 * SDL_PI_D * u);
+            sum += h[t] = sinc * win;
         }
-        w->acc += w->level * room;
-        dt -= room;
-        snd_emit(w, w->alias ? (float)(w->acc / w->step) : w->level);
-        w->acc = 0;
-        w->pos = 0;
+        for (int t = 0; t < SND_BL_TAPS; t++)
+            snd_kernel[ph][t] = (float)(h[t] / sum);
     }
+}
+
+/* renderuje gotowe próbki do taktu 'now'; próbka jest gotowa, gdy żaden późniejszy skok nie może już
+   na nią wpłynąć (jądro sięga SND_BL_HALF próbek wstecz), stąd opóźnienie rzędu SND_BL_HALF próbek */
+static void snd_run(struct sound* w, const long now) {
+    const double lag = (double)now - w->next_t;
+    if (lag > w->cpu_hz) /* np. wstrzymanie emulacji w debuggerze */
+        w->next_t = (double)now - SND_BL_HALF * w->step;
+    while (w->next_t + SND_BL_HALF * w->step < (double)now) {
+        w->integ += w->delta[w->head];
+        w->delta[w->head] = 0;
+        w->head = (w->head + 1) & (SND_RING - 1);
+        snd_emit(w, (float)w->integ);
+        w->next_t += w->step;
+    }
+}
+
+/* zmiana poziomu wyjścia o 'delta' w takcie 'now' */
+static void snd_edge(struct sound* w, const long now, const float delta) {
+    snd_run(w, now);
+    /* po snd_run pierwsza niewyrenderowana próbka leży SND_BL_HALF - frac próbek przed 'now' */
+    if (w->alias) {
+        const double frac = SND_BL_HALF - ((double)now - w->next_t) / w->step;
+        const float* k = snd_kernel[(int)(frac * SND_BL_PHASES) & (SND_BL_PHASES - 1)];
+        for (int t = 0; t < SND_BL_TAPS; t++)
+            w->delta[(w->head + t) & (SND_RING - 1)] += delta * k[t];
+    }
+    else
+        w->delta[(w->head + SND_BL_HALF) & (SND_RING - 1)] += delta;
 }
 
 /* utrzymuje zakolejkowany dźwięk blisko wartości docelowej: gdy kolejka maleje, próbki są
@@ -99,9 +126,6 @@ static void snd_rate(struct sound* w) {
     double err = (w->target_frames - w->avg_q) / w->target_frames;
     err = err > 1.0 ? 1.0 : err < -1.0 ? -1.0 : err;
     const double step = w->step_nom * (1.0 - SND_RATE_ADJ * err);
-    const double ratio = step / w->step;
-    w->pos *= ratio;
-    w->acc *= ratio;
     w->step = step;
 }
 
@@ -133,9 +157,12 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     w->cpu = cpu;
     w->cpu_hz = cpu_hz;
     w->step = w->step_nom = cpu_hz / w->freq;
-    w->pos = w->acc = 0;
-    w->last_ticks = cpu->ticks;
-    w->level = -1.f;
+    snd_kernel_init();
+    w->head = 0;
+    w->integ = w->level = -1.f;
+    for (int i = 0; i < SND_RING; i++)
+        w->delta[i] = 0;
+    w->next_t = (double)cpu->ticks - SND_BL_HALF * w->step;
     w->amp = 0.3f * w->volume / 128.f;
     w->dc_x = w->dc_y = 0;
     w->nout = 0;
@@ -150,7 +177,7 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
 void snd_flush(struct sound* w) {
     if (w->nosound || w->stream == nullptr)
         return;
-    snd_advance(w, w->cpu->ticks);
+    snd_run(w, w->cpu->ticks);
     snd_put(w);
     snd_rate(w);
 }
@@ -161,6 +188,6 @@ void snd_beeper(struct sound* w, const unsigned char port_fe) {
     const float level = (port_fe & 0x10) ? 1.f : -1.f;
     if (level == w->level)
         return;
-    snd_advance(w, w->cpu->ticks);
+    snd_edge(w, w->cpu->ticks, level - w->level);
     w->level = level;
 }

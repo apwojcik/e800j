@@ -23,6 +23,10 @@
 #include "e800j.h"
 
 #define SND_CHUNK 512 /* ilość ramek renderowanych jednorazowo przed przekazaniem do SDL */
+#define SND_BL_HALF 8 /* połowa szerokości jądra BLEP w próbkach */
+#define SND_BL_TAPS (2 * SND_BL_HALF)
+#define SND_BL_PHASES 64 /* ilość faz przesunięcia ułamkowego jądra BLEP (potęga 2) */
+#define SND_RING 64 /* rozmiar bufora impulsów (potęga 2, > SND_BL_TAPS) */
 
 struct SDL_AudioStream;
 
@@ -34,7 +38,7 @@ struct sound {
     int length; // rozmiar bufora urządzenia w ramkach (podpowiedź dla SDL)
     int chn; // ilość kanałów
     unsigned char nosound : 1; // czy włączyć obsługę dźwięku
-    unsigned char alias : 1; // czy uśredniać sygnał prostokątny w obrębie próbki (anty-aliasing)
+    unsigned char alias : 1; // czy pasmowo ograniczać zbocza sygnału prostokątnego (BLEP, anty-aliasing)
 
     /* stan renderowania; czas liczony w taktach CPU */
     double cpu_hz; // częstotliwość taktowania CPU
@@ -42,9 +46,10 @@ struct sound {
     double step_nom; // nominalna ilość taktów CPU na próbkę
     int target_frames; // docelowa ilość zakolejkowanych ramek
     double avg_q; // wygładzona ilość zakolejkowanych ramek
-    double pos; // takty zużyte w bieżącej próbce
-    double acc; // całka poziomu sygnału w bieżącej próbce
-    long last_ticks; // takt, do którego wyrenderowano dźwięk
+    double next_t; // takt CPU, w którym przypada następna próbka do wyrenderowania
+    unsigned head; // indeks w delta następnej próbki do wyrenderowania
+    double integ; // aktualny poziom sygnału (suma impulsów z delta)
+    float delta[SND_RING]; // impulsy BLEP oczekujące na scałkowanie
     float level; // aktualny poziom wyjścia (-1..1)
     float amp; // wzmocnienie wynikające z volume
     float dc_x, dc_y; // stan filtru górnoprzepustowego (usuwa składową stałą)
