@@ -465,6 +465,10 @@ int zx_main(struct elwro* e) {
         case SDL_EVENT_KEY_DOWN:
             if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
+            } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_CTRL) != 0) {
+                if (!event.key.repeat) {
+                    elwro_reset(e);
+                }
             } else if (event.key.key == SDLK_F12) {
                 /* zapis snapshotu do pierwszego wolnego pliku e800j_NNN.sna */
                 if (!event.key.repeat) {

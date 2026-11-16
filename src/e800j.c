@@ -54,6 +54,31 @@ static void disk_vlookup(int argc, const char** argv, char* dparm, char* mode, s
     }
 }
 
+void elwro_reset(struct elwro* e) {
+    struct cpu* z = e->cpu;
+    /* liczniki taktów i flagi debuggera nie są stanem CPU - zerowanie ticks rozsynchronizowałoby dźwięk i ramkę */
+    const long ticks = z->ticks;
+    const int call_cnt = z->call_cnt;
+    const bool int_off = z->int_off;
+    const bool jmp_off = z->jmp_off;
+    const unsigned char debug_on = z->debug_on;
+    const unsigned char cpu_off = z->cpu_off;
+    z80_reset(z);
+    z->ticks = ticks;
+    z->call_cnt = call_cnt;
+    z->int_off = int_off;
+    z->jmp_off = jmp_off;
+    z->debug_on = debug_on;
+    z->cpu_off = cpu_off;
+    /* mapowanie pamięci i ekran wracają do stanu po włączeniu zasilania; RAM pozostaje nietknięty */
+    e->port_f7 = 0;
+    e->mem_mask = 0;
+    e->scn->zx_patt = e->ram + 0x4000;
+    e->scn->zx_attr = e->ram + 0x5800;
+    fdc_reset(e->fdc);
+    msg_printf(MSG_MSG, "Reset\n");
+}
+
 int main(int argc, const char** argv) {
     struct elwro e;
     int tmp;

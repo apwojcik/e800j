@@ -33,6 +33,7 @@ Dyskietki można wymieniać w trakcie pracy emulatora:
     Shift+F9 / Shift+F10  wysunięcie dyskietki z napędu A / B
     Ctrl+F9 / Ctrl+F10    przełączenie trybu RO/RW dyskietki w napędzie A / B
     F12                   zapis snapshotu e800j_NNN.sna
+    Ctrl+F12              przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
 
 Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F9/F10 zamiast okna wyboru pliku wkładają
 kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Ctrl+F9/F10 (lub

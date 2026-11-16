@@ -938,6 +938,7 @@ void file_help(void) {
         " F9/F10              insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
         " Shift+F9/F10        eject disk from drive A/B\n"
         " Ctrl+F9/F10         toggle RO/RW of disk in drive A/B\n"
+        " Ctrl+F12            reset button (CPU, memory mapping, FDC; RAM is kept)\n"
         " F12                 save snapshot e800j_NNN.sna\n"
         " -msg_lvl <value>    message level 0..6, default 0\n"
         //    " -trap_in_e <value>    trap on IN value enable\n"

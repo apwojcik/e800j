@@ -64,4 +64,6 @@ struct elwro {
     char debug; /* true -> uruchamia w trybie komend */
 };
 
+/* przycisk RESET: CPU, mapowanie pamięci (port 0xF7) i kontroler FDC; zawartość RAM zostaje */
+void elwro_reset(struct elwro*);
 int zx_main(struct elwro*);
