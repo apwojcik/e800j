@@ -43,10 +43,10 @@ There is no test suite in this repository.
 The built `elwro` executable reads `e800j.cfg` from the current working directory for hardware/profile
 configuration (BIOS ROM set, CPU timing, screen palette, SDL video, sound, joystick mapping). Key CLI
 flags (see `file_help()` in `e800j_file.c`):
-- `-adisk <file> [-arw]`, `-bdisk <file> [-brw]` — attach a CPCEmu `.dsk` image to drive A/B (RO unless `-arw`/`-brw` given)
-- `-debug` — start in the text-console Z80 debugger/disassembler instead of free-running
-- `-msg_lvl <n>` — verbosity of `msg_printf` diagnostics (see `e800j_msg.h` for levels)
-- `-help` — full option list
+- `-A/--a-disk <file> [-a/--a-read-write]`, `-B/--b-disk <file> [-b/--b-read-write]` — attach a CPCEmu `.dsk` image to drive A/B (RO unless the read-write flag is given)
+- `--debug` — start in the text-console Z80 debugger/disassembler instead of free-running
+- `--log-level <n>` — verbosity of `msg_printf` diagnostics (see `e800j_msg.h` for levels)
+- `-h/--help` — full option list; others: `-c/--config`, `-p/--profile` (overrides `main::profile`), `-f/--full-screen`, `-n/--no-frame`, `--bits-per-pixel`, `-x`, `-y`. On Windows `/` may replace `-`/`--`
 
 `dsk/` holds sample CPCEmu disk images (`*_g*.dsk` = Spectrum-mode games, `*_p*.dsk` = CP/J programs);
 `dsk/load.txt` explains how to list/load files and boot CP/J.
@@ -98,7 +98,7 @@ buffers and global timing state.
   (`SDL_EVENT_USER + 1`; `SDL_EVENT_USER` is the CPU/screen timer); the swap runs in `zx_main` between `z80_loop` calls via `vfdd_swap()` (opens the new image before closing the
   old one). `struct vfdd_disk` remembers `path`/`rw` across eject. Drives are reachable as `e.disk[0..1]`.
 - **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F2/F3 (volume), F5, F6, F12 are emulator hot keys. Hot-key modifiers go through the `HK_*` macros in `e800j_kbrd.h`; on macOS Ctrl->Cmd, Alt->Option, Win->Control (and the Elwro Ctrl/E-mode key `E8K_CTRL_*` is Cmd), so never hard-code `SDL_KMOD_CTRL/ALT/GUI` or key names in hot-key code or help texts.
-- **Command line** (`e800j_cmdline.c`): `cmdline_parse()` runs once at the start of `main()` and fills `struct cmdline` (options + the positional snapshot argument; unknown options/missing or out-of-range values are errors). The config file is read first (`file_init`, which knows nothing about the command line), then `cmdline_override()` in `e800j.c` overwrites the loaded values (snapshot, debug, bpp/xres/yres, `-fs` -> `scn->fscrn`, `-nf` -> `scn->noframe`) and the disks are opened — never pass `argc`/`argv` around; add new options to the parser and the struct (and to `file_help()`).
+- **Command line** (`e800j_cmdline.c`): `cmdline_parse()` runs once at the start of `main()` and fills `struct cmdline` (options + the positional snapshot argument; unknown options/missing or out-of-range values are errors). The config file is read first (`file_init`, which knows nothing about the command line), then `cmdline_override()` in `e800j.c` overwrites the loaded values (snapshot, debug, bpp/xres/yres, `-f` -> `scn->fscrn`, `-n` -> `scn->noframe`) and the disks are opened — never pass `argc`/`argv` around; add new options to the `options[]` table in the parser and to the struct (and to `file_help()`).
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/
   joystick profiles), plus `.sna`/snapshot loading that restores CPU + RAM state directly from the raw
@@ -108,10 +108,10 @@ buffers and global timing state.
   `CMakeLists.txt` (not built).
 - **Messages/logging** (`e800j_msg.c`/`e800j_msg.h`): all diagnostic output goes through `msg_printf`
   with a severity level (`MSG_CRITICAL_ERROR` .. `MSG_UNVERB_MSG`); verbosity is controlled globally by
-  `msg_level` (settable via `-msg_lvl`). Don't use `printf`/`fprintf` directly for emulator diagnostics —
+  `msg_level` (settable via `--log-level`). Don't use `printf`/`fprintf` directly for emulator diagnostics —
   use `msg_printf` so verbosity filtering stays consistent.
 - **Debugger** (`z80_debug.c`/`z80_debug.h`): an interactive text-console Z80 disassembler/debugger,
-  entered via `-debug` or at runtime; it hooks the CPU via the `debug_t` callback in `struct cpu`.
+  entered via `--debug` or at runtime; it hooks the CPU via the `debug_t` callback in `struct cpu`.
 
 ### ROM/BIOS layout
 

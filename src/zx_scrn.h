@@ -84,8 +84,8 @@ struct screen {
     SDL_GLContext glctx;
     int flash; /* tempo migania atrybutu flash w ms */
     SDL_AtomicInt inverse; /* faza migania (zmieniana w wątku timera) */
-    int fscrn; /* tryb pełnoekranowy (config fscrn, nadpisywany przez -fs) */
-    int noframe; /* okno bez ramki (-nf) */
+    int fscrn; /* tryb pełnoekranowy (config fscrn, nadpisywany przez -f/--full-screen) */
+    int noframe; /* okno bez ramki (-n/--no-frame) */
     int bright;
     int nbrt;
     int bbrt;

@@ -31,18 +31,18 @@
 */
 struct cmdline {
     const char* snapshot;     /* argument pozycyjny: snapshot wczytywany przy starcie, nullptr gdy brak */
-    const char* cfg;          /* -cfg: plik konfiguracji, nullptr = domyślny */
-    const char* profile;      /* -profile: nazwa profilu, nullptr = z sekcji 'main' */
-    const char* disk[2];      /* -adisk/-bdisk: obraz dyskietki w napędzie A/B, nullptr gdy brak */
-    bool disk_rw[2];          /* -arw/-brw: otwarcie obrazu do zapisu */
-    bool help;                /* -h, -help, --help */
-    bool debug;               /* -debug */
-    bool fullscreen;          /* -fs */
-    bool noframe;             /* -nf */
-    int bpp;                  /* -bpp (0..32) lub CMDLINE_UNSET */
-    int xres;                 /* -xres (256..2048) lub CMDLINE_UNSET */
-    int yres;                 /* -yres (256..2048) lub CMDLINE_UNSET */
-    int msg_level;            /* -msg_lvl lub CMDLINE_UNSET */
+    const char* cfg;          /* -c, --config: plik konfiguracji, nullptr = domyślny */
+    const char* profile;      /* -p, --profile: nazwa profilu, nullptr = z sekcji 'main' */
+    const char* disk[2];      /* -A/--a-disk, -B/--b-disk: obraz dyskietki w napędzie A/B, nullptr gdy brak */
+    bool disk_rw[2];          /* -a/--a-read-write, -b/--b-read-write: otwarcie obrazu do zapisu */
+    bool help;                /* -h, --help */
+    bool debug;               /* --debug */
+    bool fullscreen;          /* -f, --full-screen */
+    bool noframe;             /* -n, --no-frame */
+    int bpp;                  /* --bits-per-pixel (0..32) lub CMDLINE_UNSET */
+    int xres;                 /* -x (256..2048) lub CMDLINE_UNSET */
+    int yres;                 /* -y (256..2048) lub CMDLINE_UNSET */
+    int msg_level;            /* --log-level lub CMDLINE_UNSET */
 };
 
 /*

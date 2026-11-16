@@ -160,7 +160,7 @@ int main(const int argc, char** args) {
     struct vfdd_disk disk_a, disk_b;
 
 #ifdef _WIN32
-    /* aplikacja GUI: podlacz sie do konsoli procesu nadrzednego (jesli jest) dla -help/-debug */
+    /* aplikacja GUI: podlacz sie do konsoli procesu nadrzednego (jesli jest) dla --help/--debug */
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         (void)freopen("CONOUT$", "w", stdout);
         (void)freopen("CONOUT$", "w", stderr);

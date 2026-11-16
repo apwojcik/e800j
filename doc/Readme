@@ -15,23 +15,28 @@ programów ZX SPECTRUM, oraz systemu CP/J (zapewne nie wszystkich). Aby używać
 się zaopatrzyć w plik CPCEmu DSK. Jeśli nie podamy pliku dyskietki, do emulatora zostanie podłączona
 atrapa napędu. Aby uruchomić emulator z dyskietką należy wpisać:
 
-    elwro -adisk plik.dsk
+    elwro -A plik.dsk
 
 jeśli chcemy mieć możliwość zapisu:
 
-    elwro -adisk plik.dsk -arw
+    elwro -A plik.dsk -a
 
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
-    elwro -adisk plik1.dsk -bdisk plik2.dsk -brw
+    elwro -A plik1.dsk -B plik2.dsk -b
 
 itp..
+
+Opcje mają formę krótką (-A plik.dsk) lub długą (--a-disk plik.dsk, również --a-disk=plik.dsk); pełna
+lista jest w 'elwro --help'. W systemie Windows zamiast '-' i '--' można użyć '/' (np. /A plik.dsk,
+/a-disk plik.dsk). Opcje bez krótkiej formy: --debug, --log-level, --bits-per-pixel (głębia kolorów)
+i --b-read-write jest równoważne -b. Rozdzielczość okna: -x szer -y wys.
 
 Składnia: elwro [opcje] [argumenty]. Snapshot można wczytać przy starcie podając go jako argument
 pozycyjny (w dowolnym miejscu linii poleceń):
 
     elwro plik.sna
-    elwro -adisk plik.dsk plik.sna
+    elwro -A plik.dsk plik.sna
 
 Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pracy:
 
@@ -69,16 +74,16 @@ domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_scr
 
 Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F5/F6 zamiast okna wyboru pliku wkładają
 kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Alt+F5/F6 (lub
--arw/-brw) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
+-a/-b) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
 powiedzie, dotychczasowa dyskietka pozostaje w napędzie.
 
 Aby dowiedzieć się więcej o opcjach programu należy uruchomić go z parametrem:
 
-    elwro -help
+    elwro --help
 
 Program zawiera również debugger/deasembler, aby emulator uruchomić w jego trybie należy wpisać:
 
-    elwro -debug
+    elwro --debug
 
 W tym momencie sterowanie programu przejmuje konsola tekstowa, aby dowiedzieć się o możliwych opcjach
 debuggera, należy wpisać h i nacisnąć enter.
@@ -88,4 +93,4 @@ Konfiguracja:
 Konfiguracja trzymana jest w pliku e800j.cfg w katalogu bieżącym (o ile nie zostało inne miejsce wymuszone).
 Plik konfiguracji jest podzielony na sekcje, z możliwością tworzenia różnych profili konfiguracji.
 Podstawową sekcją jest 'main', która zawiera nazwę domyślnie użytego profilu (można wymusić inny opcją
-uruchomienia: -profile nazwa, np. elwro -profile profile_01 ).
+uruchomienia: -p nazwa lub --profile nazwa, np. elwro -p profile_01 ). Plik konfiguracji można wskazać opcją -c / --config.
