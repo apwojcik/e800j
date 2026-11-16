@@ -75,8 +75,8 @@ static const struct {
     { OPT_ADISK,       'A', "a-disk",         true  },
     { OPT_BDISK,       'B', "b-disk",         true  },
     { OPT_LOGLEVEL,    0,   "log-level",      true  },
-    { OPT_AREADWRITE,  'a', "a-read-write",   false },
-    { OPT_BREADWRITE,  'b', "b-read-write",   false },
+    { OPT_AREADWRITE,  'a', "a-read-write",   true  },
+    { OPT_BREADWRITE,  'b', "b-read-write",   true  },
 };
 
 static const int option_count = (int)(sizeof options / sizeof options[0]);
@@ -175,10 +175,21 @@ bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
         case OPT_FULLSCREEN:  cl->fullscreen = true; break;
         case OPT_NOFRAME:     cl->noframe = true; break;
         case OPT_DEBUG:       cl->debug = true; break;
-        case OPT_ADISK:       cl->disk[0] = value; break;
-        case OPT_BDISK:       cl->disk[1] = value; break;
-        case OPT_AREADWRITE:  cl->disk_rw[0] = true; break;
-        case OPT_BREADWRITE:  cl->disk_rw[1] = true; break;
+        case OPT_ADISK:
+        case OPT_AREADWRITE:
+        case OPT_BDISK:
+        case OPT_BREADWRITE: {
+            /* -A/-B montują obraz tylko do odczytu, -a/-b do zapisu; dla jednego napędu opcje wykluczają się */
+            const int drive = (options[k].id == OPT_ADISK || options[k].id == OPT_AREADWRITE) ? 0 : 1;
+            if (cl->disk[drive] != nullptr) {
+                msg_printf(MSG_CRITICAL_ERROR, "Drive %c: -%c (read-only) and -%c (read-write) are mutually exclusive and may be given once (at %s).\n",
+                    'A' + drive, 'A' + drive, 'a' + drive, a);
+                return false;
+            }
+            cl->disk[drive] = value;
+            cl->disk_rw[drive] = options[k].id == OPT_AREADWRITE || options[k].id == OPT_BREADWRITE;
+            break;
+        }
         case OPT_BPP:
             if (!cmdline_ranged(a, value, 0, 32, &cl->bpp))
                 return false;

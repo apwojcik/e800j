@@ -43,7 +43,7 @@ There is no test suite in this repository.
 The built `elwro` executable reads `e800j.cfg` from the current working directory for hardware/profile
 configuration (BIOS ROM set, CPU timing, screen palette, SDL video, sound, joystick mapping). Key CLI
 flags (see `file_help()` in `e800j_file.c`):
-- `-A/--a-disk <file> [-a/--a-read-write]`, `-B/--b-disk <file> [-b/--b-read-write]` — attach a CPCEmu `.dsk` image to drive A/B (RO unless the read-write flag is given)
+- `-A/--a-disk <file>` (read-only) or `-a/--a-read-write <file>` (read-write) — mount a CPCEmu `.dsk` image in drive A; `-B/--b-disk` / `-b/--b-read-write` for drive B. The read-only and read-write form of one drive are mutually exclusive
 - `--debug` — start in the text-console Z80 debugger/disassembler instead of free-running
 - `--log-level <n>` — verbosity of `msg_printf` diagnostics (see `e800j_msg.h` for levels)
 - `-h/--help` — full option list; others: `-c/--config`, `-p/--profile` (overrides `main::profile`), `-f/--full-screen`, `-n/--no-frame`, `--bits-per-pixel`, `-x`, `-y`. On Windows `/` may replace `-`/`--`

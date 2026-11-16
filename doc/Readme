@@ -17,20 +17,21 @@ atrapa napędu. Aby uruchomić emulator z dyskietką należy wpisać:
 
     elwro -A plik.dsk
 
-jeśli chcemy mieć możliwość zapisu:
+jeśli chcemy mieć możliwość zapisu (-a montuje obraz do zapisu, -A tylko do odczytu; dla jednego napędu
+opcje -A i -a wykluczają się, tak samo -B i -b):
 
-    elwro -A plik.dsk -a
+    elwro -a plik.dsk
 
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
-    elwro -A plik1.dsk -B plik2.dsk -b
+    elwro -A plik1.dsk -b plik2.dsk
 
 itp..
 
 Opcje mają formę krótką (-A plik.dsk) lub długą (--a-disk plik.dsk, również --a-disk=plik.dsk); pełna
 lista jest w 'elwro --help'. W systemie Windows zamiast '-' i '--' można użyć '/' (np. /A plik.dsk,
-/a-disk plik.dsk). Opcje bez krótkiej formy: --debug, --log-level, --bits-per-pixel (głębia kolorów)
-i --b-read-write jest równoważne -b. Rozdzielczość okna: -x szer -y wys.
+/a-disk plik.dsk). Opcje bez krótkiej formy: --debug, --log-level, --bits-per-pixel (głębia kolorów).
+Rozdzielczość okna: -x szer -y wys.
 
 Składnia: elwro [opcje] [argumenty]. Snapshot można wczytać przy starcie podając go jako argument
 pozycyjny (w dowolnym miejscu linii poleceń):

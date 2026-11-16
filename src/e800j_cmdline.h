@@ -33,8 +33,8 @@ struct cmdline {
     const char* snapshot;     /* argument pozycyjny: snapshot wczytywany przy starcie, nullptr gdy brak */
     const char* cfg;          /* -c, --config: plik konfiguracji, nullptr = domyślny */
     const char* profile;      /* -p, --profile: nazwa profilu, nullptr = z sekcji 'main' */
-    const char* disk[2];      /* -A/--a-disk, -B/--b-disk: obraz dyskietki w napędzie A/B, nullptr gdy brak */
-    bool disk_rw[2];          /* -a/--a-read-write, -b/--b-read-write: otwarcie obrazu do zapisu */
+    const char* disk[2];      /* -A/-a (--a-disk/--a-read-write), -B/-b: obraz dyskietki w napędzie A/B, nullptr gdy brak */
+    bool disk_rw[2];          /* true dla -a/-b (do zapisu), false dla -A/-B (tylko do odczytu); -A i -a wykluczają się (tak samo -B i -b) */
     bool help;                /* -h, --help */
     bool debug;               /* --debug */
     bool fullscreen;          /* -f, --full-screen */
