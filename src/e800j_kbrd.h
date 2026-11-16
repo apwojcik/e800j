@@ -277,11 +277,12 @@ unsigned char key_kempston(const struct keyboard*);
 #define E8K_CTRL_R	SDLK_RCTRL
 #define E8K_DEL		SDLK_DELETE
 #define E8K_BS		SDLK_BACKSPACE
-#define E8K_F1		SDLK_F1
-#define E8K_F2		SDLK_F2
-#define E8K_F3		SDLK_F3
-#define E8K_F4		SDLK_F4
-#define E8K_F5		SDLK_F5
+/* klawisze dedykowane Elwro 800 Junior (F1, F5, F6 i F12 zajmują skróty emulatora, zx_scrn.c / e800j_disk.c) */
+#define E8K_CPJ		SDLK_HOME
+#define E8K_DIR		SDLK_F10
+#define E8K_ERASE	SDLK_END
+#define E8K_LOAD	SDLK_PAGEUP
+#define E8K_SAVE	SDLK_PAGEDOWN
 #define E8K_ARROW_L	SDLK_LEFT
 #define E8K_ARROW_R	SDLK_RIGHT
 #define E8K_ARROW_U	SDLK_UP

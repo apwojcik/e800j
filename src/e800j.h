@@ -37,7 +37,7 @@ struct elwro {
     struct sound* snd;
     struct fdc* fdc;
     struct vfdd_disk* disk[2]; /* napędy A i B */
-    char diskdir[512]; /* katalog z obrazami *.dsk dla F9/F10, pusty -> okno wyboru pliku */
+    char diskdir[512]; /* katalog z obrazami *.dsk dla F5/F6, pusty -> okno wyboru pliku */
 
     // pamięć
     unsigned char* ram;

@@ -803,7 +803,7 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
 }
 
 /*******************************************/
-/* opcjonalny katalog z obrazami dyskietek dla F9/F10 */
+/* opcjonalny katalog z obrazami dyskietek dla F5/F6 */
 static void file_set_diskdir(const char* profile, struct elwro* e) {
     char tmp[512];
     if (file_find_cfg_option(profile, "diskdir", tmp, NULL, 0, 1) == NULL) {
@@ -946,11 +946,18 @@ void file_help(void) {
         "\n"
         "Hot keys (in the emulator window):\n"
         " F1                  show hot keys help overlay (Esc or any hot key closes)\n"
-        " F9/F10              insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
-        " Shift+F9/F10        eject disk from drive A/B\n"
-        " Ctrl+F9/F10         toggle RO/RW of disk in drive A/B\n"
+        " F5/F6               insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
+        " Shift+F5/F6         eject disk from drive A/B\n"
+        " Ctrl+F5/F6          toggle RO/RW of disk in drive A/B\n"
         " F12                 save snapshot e800j_NNN.sna\n"
         " Ctrl+F12            reset button (CPU, memory mapping, FDC; RAM is kept)\n"
+        "\n"
+        "Elwro dedicated keys (in the emulator window):\n"
+        " Home                CP/J\n"
+        " F10                 DIR\n"
+        " End                 ERASE\n"
+        " Page Up             LOAD\n"
+        " Page Down           SAVE\n"
         //    " -trap_in_e <value>    trap on IN value enable\n"
         //    " -trap_in_d <value>    trap on IN value disable\n"
         //    " -trap_out_e <value>   trap on OUT value enable\n"

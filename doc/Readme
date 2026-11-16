@@ -30,18 +30,26 @@ itp..
 Dyskietki można wymieniać w trakcie pracy emulatora:
 
     F1                    nakładka z pomocą (klawisze skrótów), zamyka ją Esc lub użycie dowolnego skrótu
-    F9 / F10              włożenie dyskietki do napędu A / B (okno wyboru pliku)
-    Shift+F9 / Shift+F10  wysunięcie dyskietki z napędu A / B
-    Ctrl+F9 / Ctrl+F10    przełączenie trybu RO/RW dyskietki w napędzie A / B
+    F5 / F6               włożenie dyskietki do napędu A / B (okno wyboru pliku)
+    Shift+F5 / Shift+F6   wysunięcie dyskietki z napędu A / B
+    Ctrl+F5 / Ctrl+F6     przełączenie trybu RO/RW dyskietki w napędzie A / B
     F12                   zapis snapshotu e800j_NNN.sna
     Ctrl+F12              przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
+
+Klawisze dedykowane Elwro 800 Junior są odwzorowane na klawiszach PC:
+
+    Home                  CP/J
+    F10                   DIR
+    End                   ERASE
+    Page Up               LOAD
+    Page Down             SAVE
 
 Po zapisie snapshotu, wymianie dyskietki i resecie w lewym górnym rogu pojawia się komunikat (np.
 "Snapshot saved: e800j_000.sna", "Floppy inserted: A: plik.dsk (RO)"). Czas jego wyświetlania (w sekundach,
 domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_screen) pliku e800j.cfg.
 
-Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F9/F10 zamiast okna wyboru pliku wkładają
-kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Ctrl+F9/F10 (lub
+Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F5/F6 zamiast okna wyboru pliku wkładają
+kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Ctrl+F5/F6 (lub
 -arw/-brw) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
 powiedzie, dotychczasowa dyskietka pozostaje w napędzie.
 

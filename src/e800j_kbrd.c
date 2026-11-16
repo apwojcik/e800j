@@ -200,15 +200,15 @@ static unsigned int key_special(const unsigned int key) {
         return KB_DEL;
     case E8K_BS:
         return KB_BS;
-    case E8K_F1:
+    case E8K_CPJ:
         return KB_CPJ;
-    case E8K_F2:
+    case E8K_DIR:
         return KB_DIR;
-    case E8K_F3:
+    case E8K_LOAD:
         return KB_LOAD;
-    case E8K_F4:
+    case E8K_SAVE:
         return KB_SAVE;
-    case E8K_F5:
+    case E8K_ERASE:
         return KB_ERASE;
     case E8K_ARROW_L:
         return KB_CUR_L;

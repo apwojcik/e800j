@@ -144,10 +144,10 @@ static void SDLCALL disk_dialog_done(void* userdata, const char* const* filelist
 }
 
 bool disk_hotkey(struct elwro* e, const SDL_Keycode key, const SDL_Keymod mod) {
-    if (key != SDLK_F9 && key != SDLK_F10) {
+    if (key != SDLK_F5 && key != SDLK_F6) {
         return false;
     }
-    const int drive = key == SDLK_F9 ? 0 : 1;
+    const int drive = key == SDLK_F5 ? 0 : 1;
     if ((mod & SDL_KMOD_SHIFT) != 0) {
         disk_eject(e, drive);
     } else if ((mod & SDL_KMOD_CTRL) != 0) {
@@ -155,9 +155,16 @@ bool disk_hotkey(struct elwro* e, const SDL_Keycode key, const SDL_Keymod mod) {
     } else if (e->diskdir[0] != 0) {
         disk_cycle(e, drive);
     } else {
-        const char* start = e->disk[drive]->path[0] != 0 ? e->disk[drive]->path : nullptr;
+        /* początkowo katalog bieżący (z którego uruchomiono emulator), potem miejsce ostatnio wczytanej dyskietki */
+        char* cwd = nullptr;
+        const char* start = e->disk[drive]->path;
+        if (start[0] == 0) {
+            cwd = SDL_GetCurrentDirectory();
+            start = cwd;
+        }
         SDL_ShowOpenFileDialog(disk_dialog_done, (void*)(intptr_t)drive, e->scn->window,
             disk_filters, SDL_arraysize(disk_filters), start, false);
+        SDL_free(cwd);
     }
     return true;
 }

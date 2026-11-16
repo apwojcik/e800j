@@ -17,7 +17,7 @@
  *
  */
 
-/* Wymiana dyskietek w trakcie pracy emulatora (klawisze F9/F10) */
+/* Wymiana dyskietek w trakcie pracy emulatora (klawisze F5/F6) */
 
 #pragma once
 
@@ -27,7 +27,7 @@
 struct elwro;
 
 /*
- F9/F10 - wymiana dyskietki w napędzie A/B (okno wyboru pliku lub, gdy ustawiono diskdir,
+ F5/F6 - wymiana dyskietki w napędzie A/B (okno wyboru pliku lub, gdy ustawiono diskdir,
  kolejny plik *.dsk z katalogu), Shift - wysunięcie, Ctrl - przełączenie RO/RW.
  Zwraca true, jeśli klawisz został obsłużony.
 */
