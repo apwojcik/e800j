@@ -29,6 +29,7 @@ itp..
 
 Dyskietki można wymieniać w trakcie pracy emulatora:
 
+    F1                    nakładka z pomocą (klawisze skrótów), zamyka ją Esc lub użycie dowolnego skrótu
     F9 / F10              włożenie dyskietki do napędu A / B (okno wyboru pliku)
     Shift+F9 / Shift+F10  wysunięcie dyskietki z napędu A / B
     Ctrl+F9 / Ctrl+F10    przełączenie trybu RO/RW dyskietki w napędzie A / B

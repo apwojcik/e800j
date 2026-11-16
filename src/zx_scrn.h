@@ -86,11 +86,18 @@ struct screen {
     float bsize;
     int yresv; /* yrsv - rozmiar zarezerwowanego górnego pasa na menu GTK, bsize - rozmiar ramki*/
     SDL_Window* window;
+    bool help; /* nakładka z pomocą (klawisze skrótów) jest widoczna */
+    unsigned int help_tex; /* tekstura OpenGL z tekstem pomocy, 0 -> jeszcze nie utworzona */
+    int help_w;
+    int help_h;
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
 
 void screen_refresh(struct screen* s);
+
+/* pokazuje/ukrywa nakładkę z pomocą, od następnego odświeżenia ekranu */
+void screen_help(struct screen* s, bool show);
 
 /* argv -> -fullscreen, -noframe */
 bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);

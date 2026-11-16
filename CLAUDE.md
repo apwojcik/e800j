@@ -80,7 +80,7 @@ buffers and global timing state.
   (see `doc/ToDo`).
 - **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL3 window/GL context (legacy `glDrawPixels`/`SDL_GL_SwapWindow`) and renders the ZX Spectrum
   pixel+attribute framebuffer (`screen.zx_patt`/`zx_attr`, pointers directly into `e.ram` at the
-  standard Spectrum screen addresses). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
+  standard Spectrum screen addresses). F1 shows a help overlay (hot-key list rendered once with SDL's built-in debug font into a GL texture, drawn in `screen_refresh`; Esc or any other hot key closes it). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
   FDC, and screen refresh together.
 - **Sound** (`e800j_sound.c`): a beeper emulator (port 0xFE bit) rendered on the CPU clock: `snd_beeper()`
   records each level change at the current T-state (`cpu` ticks), so timing is independent of the SDL timer.

@@ -174,11 +174,104 @@ static void screen_draw_border(struct screen* s) {
     glEnd();
 }
 
+static const char* const help_lines[] = {
+    "ELWRO 800 JUNIOR - HOT KEYS",
+    "",
+    "F1            this help",
+    "F9 / F10      insert disk in drive A / B",
+    "Shift+F9/F10  eject disk from drive A / B",
+    "Ctrl+F9/F10   toggle RO/RW of disk in A / B",
+    "F12           save snapshot (e800j_NNN.sna)",
+    "Ctrl+F12      reset button",
+    "",
+    "Esc           close this help",
+};
+
+#define HELP_PAD 12
+#define HELP_LINE_H 12
+
+/* tekst pomocy rysowany wbudowaną czcionką SDL na powierzchni programowej, następnie wysłany jako tekstura */
+static void screen_help_make(struct screen* s) {
+    const int n = (int)SDL_arraysize(help_lines);
+    int chars = 0;
+    for (int i = 0; i < n; i++) {
+        chars = SDL_max(chars, (int)strlen(help_lines[i]));
+    }
+    const int w = chars * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE + 2 * HELP_PAD;
+    const int h = n * HELP_LINE_H + 2 * HELP_PAD - (HELP_LINE_H - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE);
+    SDL_Surface* surface = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
+    if (surface == NULL) {
+        msg_printf(MSG_ERROR, "Could not create help surface: %s\n", SDL_GetError());
+        return;
+    }
+    SDL_Renderer* renderer = SDL_CreateSoftwareRenderer(surface);
+    if (renderer == NULL) {
+        msg_printf(MSG_ERROR, "Could not create help renderer: %s\n", SDL_GetError());
+        SDL_DestroySurface(surface);
+        return;
+    }
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 210);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    for (int i = 0; i < n; i++) {
+        SDL_RenderDebugText(renderer, HELP_PAD, (float)(HELP_PAD + i * HELP_LINE_H), help_lines[i]);
+    }
+    SDL_FlushRenderer(renderer);
+    SDL_DestroyRenderer(renderer);
+
+    glGenTextures(1, &s->help_tex);
+    glBindTexture(GL_TEXTURE_2D, s->help_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitch / 4);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    s->help_w = w;
+    s->help_h = h;
+    SDL_DestroySurface(surface);
+}
+
+/* nakładka wyśrodkowana w oknie, powiększana całkowitą krotnością, o ile się mieści */
+static void screen_draw_help(struct screen* s) {
+    if (s->help_tex == 0) {
+        screen_help_make(s);
+        if (s->help_tex == 0) {
+            s->help = false;
+            return;
+        }
+    }
+    const int zoom = SDL_max(1, SDL_min(s->width * 9 / 10 / s->help_w, s->height * 9 / 10 / s->help_h));
+    const float hw = (float)(s->help_w * zoom) / (float)s->width / 2.0f;
+    const float hh = (float)(s->help_h * zoom) / (float)s->height / 2.0f;
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, s->help_tex);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(0.5f - hw, 0.5f - hh);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(0.5f + hw, 0.5f - hh);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(0.5f + hw, 0.5f + hh);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(0.5f - hw, 0.5f + hh);
+    glEnd();
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+}
+
+void screen_help(struct screen* s, const bool show) {
+    s->help = show;
+}
+
 void screen_refresh(struct screen* s) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
     screen_draw_border(s);
     screen_transform(s);
     screen_draw(s);
+    if (s->help) {
+        screen_draw_help(s);
+    }
     SDL_GL_SwapWindow(s->window);
 }
 
@@ -463,13 +556,22 @@ int zx_main(struct elwro* e) {
         }
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
-            if (disk_hotkey(e, event.key.key, event.key.mod)) {
+            if (event.key.key == SDLK_ESCAPE && e->scn->help) {
+                screen_help(e->scn, false);
+            } else if (event.key.key == SDLK_F1) {
+                if (!event.key.repeat) {
+                    screen_help(e->scn, true);
+                }
+            } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
+                screen_help(e->scn, false);
             } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_CTRL) != 0) {
+                screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     elwro_reset(e);
                 }
             } else if (event.key.key == SDLK_F12) {
+                screen_help(e->scn, false);
                 /* zapis snapshotu do pierwszego wolnego pliku e800j_NNN.sna */
                 if (!event.key.repeat) {
                     char name[32];

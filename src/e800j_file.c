@@ -935,6 +935,7 @@ void file_help(void) {
         " -bdisk <fname>      disk image in CPCEMU *.DSK format for Drive B\n"
         " -arw                disk image A open in R/W mode\n"
         " -brw                disk image B open in R/W mode\n"
+        " F1                  show hot keys help overlay (Esc or any hot key closes)\n"
         " F9/F10              insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
         " Shift+F9/F10        eject disk from drive A/B\n"
         " Ctrl+F9/F10         toggle RO/RW of disk in drive A/B\n"
