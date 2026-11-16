@@ -27,6 +27,8 @@
 #define SND_MAX_LATENCY_MS 200 /* powyżej tego opóźnienia nadmiarowe próbki są odrzucane */
 #define SND_TARGET_LATENCY_MS 50 /* docelowa ilość zakolejkowanego dźwięku, utrzymywana korektą tempa */
 #define SND_RATE_ADJ 0.01 /* maksymalna korekta tempa renderowania (1% ~ 17 centów) */
+#define SND_RATE_INT 3e-5 /* wzmocnienie członu całkującego (uczy się stałej różnicy zegarów emulacji i urządzenia) */
+#define SND_RATE_MAX 0.03 /* maksymalna wartość członu całkującego */
 #define SND_QUEUE_SMOOTH 0.2 /* współczynnik wygładzania pomiaru kolejki */
 #define SND_DC_R 0.999f /* współczynnik filtru górnoprzepustowego (odcięcie ok. 7 Hz przy 44.1 kHz) */
 
@@ -125,7 +127,10 @@ static void snd_rate(struct sound* w) {
     w->avg_q += SND_QUEUE_SMOOTH * (queued - w->avg_q);
     double err = (w->target_frames - w->avg_q) / w->target_frames;
     err = err > 1.0 ? 1.0 : err < -1.0 ? -1.0 : err;
-    const double step = w->step_nom * (1.0 - SND_RATE_ADJ * err);
+    /* człon całkujący usuwa stały błąd kolejki, który regulator proporcjonalny zostawiałby przy stałej różnicy zegarów */
+    w->rate_i += SND_RATE_INT * err;
+    w->rate_i = w->rate_i > SND_RATE_MAX ? SND_RATE_MAX : w->rate_i < -SND_RATE_MAX ? -SND_RATE_MAX : w->rate_i;
+    const double step = w->step_nom * (1.0 - w->rate_i - SND_RATE_ADJ * err);
     w->step = step;
     if (++w->dbg_cnt >= 50) {
         w->dbg_cnt = 0;
@@ -175,6 +180,7 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     w->max_queue = w->freq * SND_MAX_LATENCY_MS / 1000 * w->chn * (int)sizeof(short);
     w->target_frames = w->freq * SND_TARGET_LATENCY_MS / 1000;
     w->avg_q = w->target_frames;
+    w->rate_i = 0;
     snd_prefill(w);
     SDL_ResumeAudioStreamDevice(w->stream);
 }

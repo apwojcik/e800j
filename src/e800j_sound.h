@@ -45,6 +45,7 @@ struct sound {
     double step; // ilość taktów CPU na jedną próbkę (z korektą tempa)
     double step_nom; // nominalna ilość taktów CPU na próbkę
     int target_frames; // docelowa ilość zakolejkowanych ramek
+    double rate_i; // człon całkujący korekty tempa (ułamek)
     double avg_q; // wygładzona ilość zakolejkowanych ramek
     double next_t; // takt CPU, w którym przypada następna próbka do wyrenderowania
     unsigned head; // indeks w delta następnej próbki do wyrenderowania
