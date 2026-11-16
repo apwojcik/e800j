@@ -36,6 +36,10 @@ Dyskietki można wymieniać w trakcie pracy emulatora:
     F12                   zapis snapshotu e800j_NNN.sna
     Ctrl+F12              przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
 
+Po zapisie snapshotu, wymianie dyskietki i resecie w lewym górnym rogu pojawia się komunikat (np.
+"Snapshot saved: e800j_000.sna", "Floppy inserted: A: plik.dsk (RO)"). Czas jego wyświetlania (w sekundach,
+domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_screen) pliku e800j.cfg.
+
 Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F9/F10 zamiast okna wyboru pliku wkładają
 kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Ctrl+F9/F10 (lub
 -arw/-brw) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie

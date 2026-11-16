@@ -77,6 +77,7 @@ void elwro_reset(struct elwro* e) {
     e->scn->zx_attr = e->ram + 0x5800;
     fdc_reset(e->fdc);
     msg_printf(MSG_MSG, "Reset\n");
+    screen_toast(e->scn, "Reset");
 }
 
 int main(int argc, const char** argv) {
@@ -97,6 +98,7 @@ int main(int argc, const char** argv) {
     e.disk[0] = &disk_a;
     e.disk[1] = &disk_b;
     e.diskdir[0] = 0;
+    screen.toast_ms = 10000;
     e.mem_mask = 0;
     e.junet_addr = 0xf3;
     e.debug = 0;

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include "zx_scrn.h"
@@ -187,77 +188,136 @@ static const char* const help_lines[] = {
     "Esc           close this help",
 };
 
-#define HELP_PAD 12
-#define HELP_LINE_H 12
+#define OSD_PAD 12
+#define OSD_LINE_H 12
+#define OSD_TOAST_VPAD 4 /* komunikat ma ciaśniejsze marginesy pionowe niż pomoc */
+#define OSD_TOAST_MARGIN 6 /* odstęp komunikatu od lewej i górnej krawędzi okna (przed powiększeniem) */
 
-/* tekst pomocy rysowany wbudowaną czcionką SDL na powierzchni programowej, następnie wysłany jako tekstura */
-static void screen_help_make(struct screen* s) {
-    const int n = (int)SDL_arraysize(help_lines);
+/* tekst rysowany wbudowaną czcionką SDL na powierzchni programowej, następnie wysłany jako tekstura GL;
+ * zwraca 0 w razie błędu */
+static void screen_text_size(const char* const* lines, const int n, const int vpad, int* width, int* height) {
     int chars = 0;
     for (int i = 0; i < n; i++) {
-        chars = SDL_max(chars, (int)strlen(help_lines[i]));
+        chars = SDL_max(chars, (int)strlen(lines[i]));
     }
-    const int w = chars * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE + 2 * HELP_PAD;
-    const int h = n * HELP_LINE_H + 2 * HELP_PAD - (HELP_LINE_H - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE);
+    *width = chars * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE + 2 * OSD_PAD;
+    *height = n * OSD_LINE_H + 2 * vpad - (OSD_LINE_H - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE);
+}
+
+static unsigned int screen_text_texture(const char* const* lines, const int n, const int vpad, int* width, int* height) {
+    int w, h;
+    screen_text_size(lines, n, vpad, &w, &h);
     SDL_Surface* surface = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
     if (surface == NULL) {
-        msg_printf(MSG_ERROR, "Could not create help surface: %s\n", SDL_GetError());
-        return;
+        msg_printf(MSG_ERROR, "Could not create overlay surface: %s\n", SDL_GetError());
+        return 0;
     }
     SDL_Renderer* renderer = SDL_CreateSoftwareRenderer(surface);
     if (renderer == NULL) {
-        msg_printf(MSG_ERROR, "Could not create help renderer: %s\n", SDL_GetError());
+        msg_printf(MSG_ERROR, "Could not create overlay renderer: %s\n", SDL_GetError());
         SDL_DestroySurface(surface);
-        return;
+        return 0;
     }
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 210);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     for (int i = 0; i < n; i++) {
-        SDL_RenderDebugText(renderer, HELP_PAD, (float)(HELP_PAD + i * HELP_LINE_H), help_lines[i]);
+        SDL_RenderDebugText(renderer, OSD_PAD, (float)(vpad + i * OSD_LINE_H), lines[i]);
     }
     SDL_FlushRenderer(renderer);
     SDL_DestroyRenderer(renderer);
 
-    glGenTextures(1, &s->help_tex);
-    glBindTexture(GL_TEXTURE_2D, s->help_tex);
+    unsigned int tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitch / 4);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    s->help_w = w;
-    s->help_h = h;
+    *width = w;
+    *height = h;
     SDL_DestroySurface(surface);
+    return tex;
 }
 
-/* nakładka wyśrodkowana w oknie, powiększana całkowitą krotnością, o ile się mieści */
+/* rysuje teksturę o rozmiarze w x h pikseli z lewym górnym rogiem w (x, y) pikseli okna */
+static void screen_draw_texture(const struct screen* s, const unsigned int tex, const int x, const int y, const int w, const int h) {
+    const float x0 = (float)x / (float)s->width;
+    const float x1 = (float)(x + w) / (float)s->width;
+    const float y0 = 1.0f - (float)(y + h) / (float)s->height;
+    const float y1 = 1.0f - (float)y / (float)s->height;
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y0);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y0);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y1);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y1);
+    glEnd();
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+}
+
+/* wspólna krotność powiększenia nakładek: największa całkowita, przy której mieści się okno pomocy */
+static int screen_osd_zoom(const struct screen* s) {
+    int w, h;
+    screen_text_size(help_lines, (int)SDL_arraysize(help_lines), OSD_PAD, &w, &h);
+    return SDL_max(1, SDL_min(s->width * 9 / 10 / w, s->height * 9 / 10 / h));
+}
+
+/* nakładka z pomocą wyśrodkowana w oknie, powiększana całkowitą krotnością, o ile się mieści */
 static void screen_draw_help(struct screen* s) {
     if (s->help_tex == 0) {
-        screen_help_make(s);
+        s->help_tex = screen_text_texture(help_lines, (int)SDL_arraysize(help_lines), OSD_PAD, &s->help_w, &s->help_h);
         if (s->help_tex == 0) {
             s->help = false;
             return;
         }
     }
-    const int zoom = SDL_max(1, SDL_min(s->width * 9 / 10 / s->help_w, s->height * 9 / 10 / s->help_h));
-    const float hw = (float)(s->help_w * zoom) / (float)s->width / 2.0f;
-    const float hh = (float)(s->help_h * zoom) / (float)s->height / 2.0f;
+    const int zoom = screen_osd_zoom(s);
+    const int w = s->help_w * zoom;
+    const int h = s->help_h * zoom;
+    screen_draw_texture(s, s->help_tex, (s->width - w) / 2, (s->height - h) / 2, w, h);
+}
 
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, s->help_tex);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(0.5f - hw, 0.5f - hh);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(0.5f + hw, 0.5f - hh);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(0.5f + hw, 0.5f + hh);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(0.5f - hw, 0.5f + hh);
-    glEnd();
-    glDisable(GL_BLEND);
-    glDisable(GL_TEXTURE_2D);
+/* komunikat o ostatniej operacji w lewym górnym rogu, znika po s->toast_ms */
+static void screen_draw_toast(struct screen* s) {
+    if (s->toast_tex == 0) {
+        return;
+    }
+    if (SDL_GetTicks() >= s->toast_until) {
+        glDeleteTextures(1, &s->toast_tex);
+        s->toast_tex = 0;
+        return;
+    }
+    /* ten sam rozmiar znaków co pomoc, zmniejszany tylko, gdy komunikat nie mieści się w oknie */
+    const int zoom = SDL_max(1, SDL_min(screen_osd_zoom(s), (s->width - OSD_TOAST_MARGIN) / s->toast_w));
+    const int margin = OSD_TOAST_MARGIN * zoom;
+    screen_draw_texture(s, s->toast_tex, margin, margin, s->toast_w * zoom, s->toast_h * zoom);
+}
+
+void screen_toast(struct screen* s, const char* fmt, ...) {
+    if (s->toast_ms <= 0) {
+        return;
+    }
+    char text[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(text, sizeof(text), fmt, args);
+    va_end(args);
+
+    if (s->toast_tex != 0) {
+        glDeleteTextures(1, &s->toast_tex);
+    }
+    const char* const line = text;
+    s->toast_tex = screen_text_texture(&line, 1, OSD_TOAST_VPAD, &s->toast_w, &s->toast_h);
+    s->toast_until = SDL_GetTicks() + (Uint64)s->toast_ms;
 }
 
 void screen_help(struct screen* s, const bool show) {
@@ -272,6 +332,7 @@ void screen_refresh(struct screen* s) {
     if (s->help) {
         screen_draw_help(s);
     }
+    screen_draw_toast(s);
     SDL_GL_SwapWindow(s->window);
 }
 
@@ -582,7 +643,11 @@ int zx_main(struct elwro* e) {
                             break;
                         fclose(f);
                     }
-                    file_snap_save(name, e);
+                    if (file_snap_save(name, e) == 0) {
+                        screen_toast(e->scn, "Snapshot saved: %s", name);
+                    } else {
+                        screen_toast(e->scn, "Snapshot failed: %s", name);
+                    }
                 }
             } else if (!event.key.repeat) {
                 zx_kbrd(event.key.key, 1, e);

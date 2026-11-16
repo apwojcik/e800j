@@ -660,6 +660,12 @@ static char file_set_screen(const char* cfg, const struct elwro* e, const char* 
     e->scn->bsize = (float)strtod(tmp0, NULL);
     msg_printf(MSG_MSG, "Border size: %f of window size \n", e->scn->bsize);
     msg_printf(MSG_MSG, "Refresh screen: %i [ms]\n", e->scn->rfsh);
+    /* opcjonalny czas wyświetlania komunikatów o operacjach (s), 0 -> wyłączone */
+    if (file_find_cfg_option(tmp1, "osd_time", tmp0, NULL, 0, 1) != NULL) {
+        const double seconds = strtod(tmp0, NULL);
+        e->scn->toast_ms = seconds > 0 ? (int)(seconds * 1000.0) : 0;
+        msg_printf(MSG_MSG, "Operation message time: %i [ms]\n", e->scn->toast_ms);
+    }
     if (file_find_cfg_section(tmp1, "palette", tmp0, NULL, 0) == NULL) {
         free(tmp1);
         return 1;
@@ -922,6 +928,7 @@ void file_help(void) {
     printf(
         "e800j v0.2 - Elwro 800 Junior emulator - (C)2006 Krzysztof Komarnicki\n"
         "Usage:   e800j [snapshot filename] [options]\n\n"
+        "Command line options:\n"
         " -h,-help,--help     this text\n"
         " -cfg <fname>        alternative configiguration file\n"
         " -profile <pname>    configuration profile name\n"
@@ -935,13 +942,15 @@ void file_help(void) {
         " -bdisk <fname>      disk image in CPCEMU *.DSK format for Drive B\n"
         " -arw                disk image A open in R/W mode\n"
         " -brw                disk image B open in R/W mode\n"
+        " -msg_lvl <value>    message level 0..6, default 0\n"
+        "\n"
+        "Hot keys (in the emulator window):\n"
         " F1                  show hot keys help overlay (Esc or any hot key closes)\n"
         " F9/F10              insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
         " Shift+F9/F10        eject disk from drive A/B\n"
         " Ctrl+F9/F10         toggle RO/RW of disk in drive A/B\n"
-        " Ctrl+F12            reset button (CPU, memory mapping, FDC; RAM is kept)\n"
         " F12                 save snapshot e800j_NNN.sna\n"
-        " -msg_lvl <value>    message level 0..6, default 0\n"
+        " Ctrl+F12            reset button (CPU, memory mapping, FDC; RAM is kept)\n"
         //    " -trap_in_e <value>    trap on IN value enable\n"
         //    " -trap_in_d <value>    trap on IN value disable\n"
         //    " -trap_out_e <value>   trap on OUT value enable\n"

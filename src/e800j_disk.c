@@ -52,9 +52,12 @@ static void disk_insert(struct elwro* e, const int drive, const char* path) {
     struct vfdd_disk* disk = e->disk[drive];
     if (vfdd_swap(disk, path, disk->rw) < 0) {
         msg_printf(MSG_ERROR, "Drive %c: opening file %s failed.\n", drive_name(drive), path);
+        screen_toast(e->scn, "Floppy insert failed: %c: %s", drive_name(drive), disk_basename(path));
         return;
     }
     msg_printf(MSG_MSG, "Drive %c: loaded %s (%s)\n", drive_name(drive), path,
+        (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
+    screen_toast(e->scn, "Floppy inserted: %c: %s (%s)", drive_name(drive), disk_basename(path),
         (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
 }
 
@@ -62,10 +65,12 @@ static void disk_eject(struct elwro* e, const int drive) {
     struct vfdd_disk* disk = e->disk[drive];
     if (disk->f == nullptr) {
         msg_printf(MSG_MSG, "Drive %c: already empty\n", drive_name(drive));
+        screen_toast(e->scn, "Floppy drive %c: already empty", drive_name(drive));
         return;
     }
     vfdd_dsk_floppy(disk, VFDD_UNLOAD, 0, 0, 0, nullptr);
     msg_printf(MSG_MSG, "Drive %c: ejected\n", drive_name(drive));
+    screen_toast(e->scn, "Floppy ejected: %c: %s", drive_name(drive), disk_basename(disk->path));
 }
 
 static void disk_toggle_rw(struct elwro* e, const int drive) {
@@ -75,13 +80,17 @@ static void disk_toggle_rw(struct elwro* e, const int drive) {
         disk->rw = mode;
         msg_printf(MSG_MSG, "Drive %c: next disk will be opened %s\n", drive_name(drive),
             mode == VFDD_RW ? "RW" : "RO");
+        screen_toast(e->scn, "Floppy drive %c: next disk will be %s", drive_name(drive), mode == VFDD_RW ? "RW" : "RO");
         return;
     }
     if (vfdd_swap(disk, disk->path, mode) < 0) {
         msg_printf(MSG_ERROR, "Drive %c: reopening file %s failed.\n", drive_name(drive), disk->path);
+        screen_toast(e->scn, "Floppy reopen failed: %c: %s", drive_name(drive), disk_basename(disk->path));
         return;
     }
     msg_printf(MSG_MSG, "Drive %c: %s reopened (%s)\n", drive_name(drive), disk->path,
+        (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
+    screen_toast(e->scn, "Floppy mode changed: %c: %s (%s)", drive_name(drive), disk_basename(disk->path),
         (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
 }
 
@@ -95,6 +104,7 @@ static void disk_cycle(struct elwro* e, const int drive) {
     char** list = SDL_GlobDirectory(e->diskdir, "*.dsk", SDL_GLOB_CASEINSENSITIVE, &count);
     if (list == nullptr || count == 0) {
         msg_printf(MSG_ERROR, "No *.dsk files in %s\n", e->diskdir);
+        screen_toast(e->scn, "No *.dsk files in %s", e->diskdir);
         SDL_free(list);
         return;
     }

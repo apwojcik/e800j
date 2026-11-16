@@ -90,6 +90,11 @@ struct screen {
     unsigned int help_tex; /* tekstura OpenGL z tekstem pomocy, 0 -> jeszcze nie utworzona */
     int help_w;
     int help_h;
+    int toast_ms; /* czas wyświetlania komunikatu o operacji w ms, 0 -> wyłączony (osd_time w konfiguracji) */
+    unsigned int toast_tex;
+    int toast_w;
+    int toast_h;
+    Uint64 toast_until; /* SDL_GetTicks(), po którym komunikat znika */
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
@@ -98,6 +103,9 @@ void screen_refresh(struct screen* s);
 
 /* pokazuje/ukrywa nakładkę z pomocą, od następnego odświeżenia ekranu */
 void screen_help(struct screen* s, bool show);
+
+/* komunikat o operacji (printf) w lewym górnym rogu na czas s->toast_ms, zastępuje poprzedni */
+void screen_toast(struct screen* s, const char* fmt, ...);
 
 /* argv -> -fullscreen, -noframe */
 bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
