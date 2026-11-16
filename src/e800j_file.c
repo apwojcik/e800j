@@ -156,6 +156,72 @@ int file_snap_load(const char* filename, const struct elwro* e, unsigned char* r
     return error;
 }
 
+int file_snap_save(const char* filename, const struct elwro* e) {
+    const struct cpu* z = e->cpu;
+    libspectrum_snap* snap = libspectrum_snap_alloc();
+    if (snap == NULL) {
+        msg_printf(MSG_ERROR, "Error saving snapshot file: %s\n", filename);
+        return 1;
+    }
+    libspectrum_snap_set_machine(snap, LIBSPECTRUM_MACHINE_48);
+
+    /* rejestry aktywne (bank 0 lub 1) idą jako główne, nieaktywne jako zapasowe */
+    const int rg = z->alt_rg != 0, af = z->alt_af != 0;
+    libspectrum_snap_set_a(snap, af ? z->As1 : z->As0);
+    libspectrum_snap_set_f(snap, af ? z->Fs1 : z->Fs0);
+    libspectrum_snap_set_a_(snap, af ? z->As0 : z->As1);
+    libspectrum_snap_set_f_(snap, af ? z->Fs0 : z->Fs1);
+    libspectrum_snap_set_bc(snap, rg ? z->BCs1 : z->BCs0);
+    libspectrum_snap_set_bc_(snap, rg ? z->BCs0 : z->BCs1);
+    libspectrum_snap_set_de(snap, rg ? z->DEs1 : z->DEs0);
+    libspectrum_snap_set_de_(snap, rg ? z->DEs0 : z->DEs1);
+    libspectrum_snap_set_hl(snap, rg ? z->HLs1 : z->HLs0);
+    libspectrum_snap_set_hl_(snap, rg ? z->HLs0 : z->HLs1);
+    libspectrum_snap_set_ix(snap, z->IXs);
+    libspectrum_snap_set_iy(snap, z->IYs);
+    libspectrum_snap_set_i(snap, z->Is);
+    libspectrum_snap_set_r(snap, z->Rs);
+    libspectrum_snap_set_sp(snap, z->SPs);
+    libspectrum_snap_set_pc(snap, z->PCs);
+    libspectrum_snap_set_iff1(snap, z->iff1);
+    libspectrum_snap_set_iff2(snap, z->iff2);
+    libspectrum_snap_set_im(snap, z->imode);
+    libspectrum_snap_set_halted(snap, z->halt != 0);
+    libspectrum_snap_set_out_ula(snap, e->scn->border_color & 0x07);
+
+    /* strony 5, 2, 0 = 0x4000, 0x8000, 0xc000 (jak w file_snap_cpy) */
+    static const struct { int page; int addr; } map[] = {{5, 0x4000}, {2, 0x8000}, {0, 0xc000}};
+    for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
+        libspectrum_byte* page = libspectrum_new(libspectrum_byte, 0x4000);
+        memcpy(page, e->ram + map[i].addr, 0x4000);
+        libspectrum_snap_set_pages(snap, map[i].page, page);
+    }
+
+    libspectrum_byte* buffer = NULL;
+    size_t length = 0;
+    int flags = 0;
+    int error = libspectrum_snap_write(&buffer, &length, &flags, snap, LIBSPECTRUM_ID_SNAPSHOT_SNA, NULL, 0);
+    libspectrum_snap_free(snap);
+    if (error == LIBSPECTRUM_ERROR_NONE) {
+        FILE* f = fopen(filename, "wb");
+        if (f == NULL || fwrite(buffer, length, 1, f) != 1) {
+            msg_printf(MSG_ERROR, "Error writing snapshot file: %s\n", filename);
+            error = 1;
+        }
+        if (f != NULL)
+            fclose(f);
+    } else {
+        msg_printf(MSG_ERROR, "Error saving snapshot file: %s\n", filename);
+    }
+    libspectrum_free(buffer);
+    if (error == 0) {
+        msg_printf(MSG_MSG, "Snapshot saved: %s\n", filename);
+        if (e->port_f7 != 0)
+            msg_printf(MSG_WARN, "Port 0xF7 = 0x%02x (memory paging) is not stored in .sna\n", e->port_f7);
+    }
+    return error;
+}
+
 void file_get_cline(const int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, const char rest) {
     if (argc == 2 && *argv[1] != '-') {
         msg_printf(MSG_MSG, "Loading snapshot: %s\n", argv[1]);

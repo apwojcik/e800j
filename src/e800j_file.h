@@ -40,7 +40,11 @@ void file_get_cline(int argc, const char** argv, const struct elwro* e, unsigned
 */
 int file_snap_load(const char* filename, const struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
 
-//int file_snap_save(const char *filename, struct elwro *e, unsigned char *ram, unsigned char *reg373);
+/*
+ Zapisuje snapshot .sna (48K): rejestry CPU, RAM 0x4000-0xFFFF i kolor ramki.
+ Stan portu 0xF7 (mapowanie pamięci) nie jest zapisywany.
+*/
+int file_snap_save(const char* filename, const struct elwro* e);
 // xx - jeśli 1 to brak opcji nie generuje błędu
 char* file_find_cfg_option(const char* cfg, const char* name, char* str, const char* err, int lvl, int xx);
 char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl);

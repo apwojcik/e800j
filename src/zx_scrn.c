@@ -459,8 +459,22 @@ int zx_main(struct elwro* e) {
     while (SDL_WaitEvent(&event)) {
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
-            if (!event.key.repeat)
+            if (event.key.key == SDLK_F12) {
+                /* zapis snapshotu do pierwszego wolnego pliku e800j_NNN.sna */
+                if (!event.key.repeat) {
+                    char name[32];
+                    for (int n = 0; n < 1000; n++) {
+                        snprintf(name, sizeof(name), "e800j_%03d.sna", n);
+                        FILE* f = fopen(name, "rb");
+                        if (f == NULL)
+                            break;
+                        fclose(f);
+                    }
+                    file_snap_save(name, e);
+                }
+            } else if (!event.key.repeat) {
                 zx_kbrd(event.key.key, 1, e);
+            }
             break;
         case SDL_EVENT_KEY_UP:
             zx_kbrd(event.key.key, 0, e);
