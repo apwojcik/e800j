@@ -888,6 +888,8 @@ int zx_main(struct elwro* e) {
                     }
                 }
             } else if (!event.key.repeat) {
+                /* dowolny inny klawisz zamyka też ekran pomocy */
+                screen_help(e->scn, false);
                 zx_kbrd(event.key.key, 1, e);
             }
             break;
