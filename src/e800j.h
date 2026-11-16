@@ -68,6 +68,8 @@ struct elwro {
 };
 
 /* przycisk RESET: CPU, mapowanie pamięci (port 0xF7) i kontroler FDC; zawartość RAM zostaje */
+/* reset samego CPU z zachowaniem liczników taktów i flag debuggera (z80_reset zerowałby ticks i rozsynchronizował dźwięk) */
+void elwro_cpu_reset(struct elwro*);
 void elwro_reset(struct elwro*);
 
 /* zimny restart: jak świeży start emulatora (RAM wypełniony losowo, jak po włączeniu zasilania) + reset */

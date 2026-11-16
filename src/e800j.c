@@ -62,7 +62,7 @@ static void disk_open(const struct config* cfg, const int n, struct vfdd_disk* d
     msg_printf(MSG_MSG, "Open file %s for %s as drive %c.\n", path, rw ? "RW" : "RO", dn);
 }
 
-void elwro_reset(struct elwro* e) {
+void elwro_cpu_reset(struct elwro* e) {
     struct cpu* z = e->cpu;
     /* liczniki taktów i flagi debuggera nie są stanem CPU - zerowanie ticks rozsynchronizowałoby dźwięk i ramkę */
     const long ticks = z->ticks;
@@ -78,6 +78,10 @@ void elwro_reset(struct elwro* e) {
     z->jmp_off = jmp_off;
     z->debug_on = debug_on;
     z->cpu_off = cpu_off;
+}
+
+void elwro_reset(struct elwro* e) {
+    elwro_cpu_reset(e);
     /* mapowanie pamięci i ekran wracają do stanu po włączeniu zasilania; RAM pozostaje nietknięty */
     e->port_f7 = 0;
     e->mem_mask = 0;

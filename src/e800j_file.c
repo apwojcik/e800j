@@ -44,7 +44,7 @@ static int file_snap_cpy(libspectrum_snap* snap, const struct elwro* e, unsigned
     }
 
     /* ustawienie rejestrów */
-    z80_reset(e->cpu);
+    elwro_cpu_reset((struct elwro*)e);
 
     e->cpu->As0 = libspectrum_snap_a(snap);
     e->cpu->Fs0 = libspectrum_snap_f(snap);

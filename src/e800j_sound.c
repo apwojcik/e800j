@@ -95,7 +95,7 @@ static void snd_kernel_init(void) {
    na nią wpłynąć (jądro sięga SND_BL_HALF próbek wstecz), stąd opóźnienie rzędu SND_BL_HALF próbek */
 static void snd_run(struct sound* w, const long now) {
     const double lag = (double)now - w->next_t;
-    if (lag > w->cpu_hz) /* np. wstrzymanie emulacji w debuggerze */
+    if (lag > w->cpu_hz || lag < -w->cpu_hz) /* np. wstrzymanie emulacji w debuggerze albo cofnięcie licznika taktów */
         w->next_t = (double)now - SND_BL_HALF * w->step;
     while (w->next_t + SND_BL_HALF * w->step < (double)now) {
         w->integ += w->delta[w->head];
