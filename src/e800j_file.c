@@ -224,8 +224,21 @@ int file_snap_save(const char* filename, const struct elwro* e) {
 }
 
 const char* file_snap_cline(const int argc, const char** argv) {
-    if (argc >= 2 && *argv[1] != '-')
-        return argv[1];
+    /* opcje wymagające wartości (następny argument nie jest parametrem pozycyjnym) */
+    static const char* const with_value[] = {
+        "-cfg", "-profile", "-bpp", "-xres", "-yres", "-adisk", "-bdisk", "-msg_lvl"
+    };
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--") == 0)
+            return i + 1 < argc ? argv[i + 1] : nullptr;
+        if (*argv[i] != '-')
+            return argv[i];
+        for (size_t k = 0; k < sizeof with_value / sizeof with_value[0]; k++)
+            if (strcmp(argv[i], with_value[k]) == 0) {
+                i++;
+                break;
+            }
+    }
     return nullptr;
 }
 
@@ -927,8 +940,9 @@ void file_option_param(const int argc, const char** argv, const int pos, const i
 void file_help(void) {
     printf(
         "e800j v0.2 - Elwro 800 Junior emulator - (C)2006 Krzysztof Komarnicki\n"
-        "Usage:   e800j [snapshot filename] [options]\n"
-        "         (the snapshot is loaded at startup; " HK_ALT_NAME "+F12 reloads it)\n\n"
+        "Usage:   e800j [options] [arguments]\n\n"
+        "Arguments:\n"
+        " <snapshot>          snapshot file loaded at startup (" HK_ALT_NAME "+F12 reloads it)\n\n"
         "Command line options:\n"
         " -h,-help,--help     this text\n"
         " -cfg <fname>        alternative configiguration file\n"

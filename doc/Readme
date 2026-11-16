@@ -27,9 +27,11 @@ jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
 itp..
 
-Snapshot można wczytać przy starcie podając go jako pierwszy argument:
+Składnia: elwro [opcje] [argumenty]. Snapshot można wczytać przy starcie podając go jako argument
+pozycyjny (w dowolnym miejscu linii poleceń):
 
     elwro plik.sna
+    elwro -adisk plik.dsk plik.sna
 
 Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pracy:
 

@@ -24,7 +24,7 @@
 
 struct elwro;
 
-/* Nazwa snapshotu z linii poleceń: pierwszy parametr pozycyjny (nie zaczynający się od '-'); nullptr gdy brak */
+/* Nazwa snapshotu z linii poleceń: pierwszy parametr pozycyjny w dowolnym miejscu linii poleceń (pomija opcje i ich wartości; "--" kończy opcje); nullptr gdy brak */
 const char* file_snap_cline(int argc, const char** argv);
 
 /*
