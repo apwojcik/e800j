@@ -222,10 +222,20 @@ int file_snap_save(const char* filename, const struct elwro* e) {
     return error;
 }
 
+const char* file_snap_cline(const int argc, const char** argv) {
+    const int i = file_lookup_option(argc, argv, "-snap");
+    if (i != 0 && i + 1 < argc)
+        return argv[i + 1];
+    if (argc == 2 && *argv[1] != '-')
+        return argv[1];
+    return nullptr;
+}
+
 void file_get_cline(const int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, const char rest) {
-    if (argc == 2 && *argv[1] != '-') {
-        msg_printf(MSG_MSG, "Loading snapshot: %s\n", argv[1]);
-        file_snap_load(argv[1], e, ram, r373, rest);
+    const char* name = file_snap_cline(argc, argv);
+    if (name != nullptr) {
+        msg_printf(MSG_MSG, "Loading snapshot: %s\n", name);
+        file_snap_load(name, e, ram, r373, rest);
     }
 }
 
@@ -930,6 +940,7 @@ void file_help(void) {
         "Usage:   e800j [snapshot filename] [options]\n\n"
         "Command line options:\n"
         " -h,-help,--help     this text\n"
+        " -snap <fname>       load snapshot at startup (also Alt+F12 reloads it)\n"
         " -cfg <fname>        alternative configiguration file\n"
         " -profile <pname>    configuration profile name\n"
         " -fs                 fullscreen\n"
@@ -953,6 +964,11 @@ void file_help(void) {
         " Shift+F12           soft reset (CPU, memory mapping, FDC; RAM is kept)\n"
         " Ctrl+F12            cold restart (as a fresh start: RAM randomized, then reset)\n"
         " Alt+F12             cold restart, then reload the snapshot given on the command line\n"
+#ifdef __APPLE__
+        " Cmd+F12             cold restart, then load a snapshot chosen in a file dialog (cancel: restart only)\n"
+#else
+        " Win+F12             cold restart, then load a snapshot chosen in a file dialog (cancel: restart only)\n"
+#endif
         "\n"
         "Elwro dedicated keys (in the emulator window):\n"
         " Home                CP/J\n"

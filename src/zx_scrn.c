@@ -186,6 +186,11 @@ static const char* const help_lines[] = {
     "Shift+F12     soft reset (reset button)",
     "Ctrl+F12      cold restart (fresh start)",
     "Alt+F12       cold restart + reload command-line snapshot",
+#ifdef __APPLE__
+    "Cmd+F12       cold restart + snapshot from file dialog",
+#else
+    "Win+F12       cold restart + snapshot from file dialog",
+#endif
     "",
     "Elwro keys:",
     "Home          CP/J",
@@ -642,6 +647,39 @@ static void time_int(struct cpu* z, void* ptr) {
     z80_int(z, NULL);
 }
 
+/* SDL_EVENT_USER = zegar CPU/ekranu, +1 = dyskietki (e800j_disk.c) */
+#define SNAP_EVENT_TYPE (SDL_EVENT_USER + 2)
+
+static const SDL_DialogFileFilter snap_filters[] = {
+    { "Snapshots", "sna;z80;szx;sp;snp;zxs;sit;slt" },
+    { "All files", "*" },
+};
+
+/* wywoływane przez SDL, często z innego wątku - wynik (ścieżka albo nullptr po anulowaniu/błędzie) trafia do głównej pętli */
+static void SDLCALL snap_dialog_done(void* userdata, const char* const* filelist, const int filter) {
+    (void)userdata;
+    (void)filter;
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = SNAP_EVENT_TYPE;
+    if (filelist == nullptr) {
+        msg_printf(MSG_ERROR, "File dialog failed: %s\n", SDL_GetError());
+    } else if (filelist[0] != nullptr) {
+        event.user.data1 = SDL_strdup(filelist[0]);
+    }
+    if (!SDL_PushEvent(&event)) {
+        SDL_free(event.user.data1);
+    }
+}
+
+static void snap_dialog(struct elwro* e) {
+    char* cwd = nullptr;
+    const char* start = e->snap_path[0] != 0 ? e->snap_path : (cwd = SDL_GetCurrentDirectory());
+    SDL_ShowOpenFileDialog(snap_dialog_done, nullptr, e->scn->window,
+        snap_filters, SDL_arraysize(snap_filters), start, false);
+    SDL_free(cwd);
+}
+
 int zx_main(struct elwro* e) {
     e->tcpu = false;
     e->t1 = SDL_AddTimer(e->cpu_refresh, zx_cpu_refresh, e);
@@ -662,6 +700,15 @@ int zx_main(struct elwro* e) {
         if (disk_event(e, &event)) {
             continue;
         }
+        if (event.type == SNAP_EVENT_TYPE) {
+            char status[128];
+            char* path = event.user.data1;
+            elwro_restart_snap(e, path);
+            SDL_free(path);
+            disk_status(e, "Floppy ", status, sizeof(status));
+            screen_toast_next(e->scn, status);
+            continue;
+        }
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_ESCAPE && e->scn->help) {
@@ -677,6 +724,11 @@ int zx_main(struct elwro* e) {
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
                 screen_help(e->scn, false);
+            } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_GUI) != 0) {
+                screen_help(e->scn, false);
+                if (!event.key.repeat) {
+                    snap_dialog(e);
+                }
             } else if (event.key.key == SDLK_F12 && (event.key.mod & (SDL_KMOD_CTRL | SDL_KMOD_SHIFT | SDL_KMOD_ALT)) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {

@@ -24,9 +24,11 @@
 
 struct elwro;
 
+/* Nazwa snapshotu z linii poleceń: opcja -snap <plik> lub jedyny parametr pozycyjny; nullptr gdy brak */
+const char* file_snap_cline(int argc, const char** argv);
+
 /*
- Czyta parametry wejściowe programu poszukując opcji -f, po jej znalezieniu jako
-  nazwę snapshotu uznaje następny parametr, a następnie wczytuje snapshot
+ Wczytuje snapshot podany w linii poleceń (patrz file_snap_cline), jeśli go podano
 */
 void file_get_cline(int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
 

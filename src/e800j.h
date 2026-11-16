@@ -73,4 +73,6 @@ void elwro_cold_reset(struct elwro*);
 
 /* zimny restart + ponowne wczytanie snapshotu z linii poleceń; zwraca 0 gdy wczytano, != 0 gdy brak snapshotu lub błąd */
 int elwro_snap_restart(struct elwro*);
+/* zimny restart + wczytanie snapshotu z podanej ścieżki (nullptr/pusta -> sam zimny restart); zwraca 0 gdy wczytano */
+int elwro_restart_snap(struct elwro*, const char* path);
 int zx_main(struct elwro*);

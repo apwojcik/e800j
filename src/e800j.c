@@ -93,16 +93,18 @@ void elwro_cold_reset(struct elwro* e) {
     screen_toast(e->scn, "Cold restart");
 }
 
-int elwro_snap_restart(struct elwro* e) {
-    if (e->snap_path[0] == 0) {
-        elwro_cold_reset(e);
-        return 1;
-    }
+int elwro_restart_snap(struct elwro* e, const char* path) {
     elwro_cold_reset(e);
-    if (file_snap_load(e->snap_path, e, e->ram, &e->scn->border_color, 0) != 0)
+    if (path == nullptr || path[0] == 0)
         return 1;
-    screen_toast(e->scn, "Snapshot restarted: %s", e->snap_path);
+    if (file_snap_load(path, e, e->ram, &e->scn->border_color, 0) != 0)
+        return 1;
+    screen_toast(e->scn, "Snapshot restarted: %s", path);
     return 0;
+}
+
+int elwro_snap_restart(struct elwro* e) {
+    return elwro_restart_snap(e, e->snap_path);
 }
 
 int main(int argc, const char** argv) {
@@ -124,8 +126,9 @@ int main(int argc, const char** argv) {
     e.disk[1] = &disk_b;
     e.diskdir[0] = 0;
     e.snap_path[0] = 0;
-    if (argc == 2 && *argv[1] != '-')
-        snprintf(e.snap_path, sizeof(e.snap_path), "%s", argv[1]);
+    const char* snap_name = file_snap_cline(argc, argv);
+    if (snap_name != nullptr)
+        snprintf(e.snap_path, sizeof(e.snap_path), "%s", snap_name);
     screen.toast_ms = 10000;
     e.mem_mask = 0;
     e.junet_addr = 0xf3;
