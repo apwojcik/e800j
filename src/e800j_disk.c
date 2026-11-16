@@ -171,7 +171,7 @@ bool disk_hotkey(struct elwro* e, const SDL_Keycode key, const SDL_Keymod mod) {
     const int drive = key == SDLK_F5 ? 0 : 1;
     if ((mod & SDL_KMOD_SHIFT) != 0) {
         disk_eject(e, drive);
-    } else if ((mod & HK_CTRL_MOD) != 0) {
+    } else if ((mod & HK_ALT_MOD) != 0) {
         disk_toggle_rw(e, drive);
     } else if (e->diskdir[0] != 0) {
         disk_cycle(e, drive);

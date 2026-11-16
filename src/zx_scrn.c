@@ -181,7 +181,8 @@ static const char* const help_lines[] = {
     "F1            this help",
     "F5 / F6       insert disk in drive A / B",
     "Shift+F5/F6   eject disk from drive A / B",
-    HK_CTRL_NAME "+F5/F6" HK_CTRL_PAD "    toggle RO/RW of disk in A / B",
+    HK_ALT_NAME "+F5/F6" HK_ALT_PAD "     toggle RO/RW of disk in A / B",
+    HK_CTRL_NAME "+F1..F5" HK_CTRL_PAD "   window scale x1 / 1.5 / 2 / 2.5 / 3",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
     HK_CTRL_NAME "+F12" HK_CTRL_PAD "      cold restart (fresh start)",
@@ -406,6 +407,19 @@ static void screen_layout(struct screen* s) {
 
     s->py0 = s->bsize;
     s->py1 = s->bsize + (height - 2 * height * s->bsize - yresv) / height;
+}
+
+/* ustawia rozmiar okna tak, by obraz Spectrum (256x192) miał podane powiększenie (z ramką) */
+static void screen_set_scale(struct screen* s, const float scale) {
+    if ((SDL_GetWindowFlags(s->window) & SDL_WINDOW_FULLSCREEN) != 0)
+        return;
+    const float inner = 1.0f - 2 * s->bsize;
+    const float density = SDL_max(SDL_GetWindowPixelDensity(s->window), 1.0f);
+    const int w = (int)(256 * scale / inner / density + 0.5f);
+    const int h = (int)((192 * scale + (float)s->yresv) / inner / density + 0.5f);
+    SDL_RestoreWindow(s->window);
+    SDL_SetWindowSize(s->window, w, h);
+    screen_toast(s, "Window scale x%g", (double)scale);
 }
 
 static void screen_glinit(struct screen* s) {
@@ -721,6 +735,12 @@ int zx_main(struct elwro* e) {
                     disk_status(e, "Floppy ", status, sizeof(status));
                     screen_toast(e->scn, "%s", status);
                     e->scn->toast_sticky = e->scn->toast_tex != 0;
+                }
+            } else if ((event.key.mod & HK_CTRL_MOD) != 0 && event.key.key >= SDLK_F1 && event.key.key <= SDLK_F5) {
+                static const float scales[] = { 1.0f, 1.5f, 2.0f, 2.5f, 3.0f };
+                if (!event.key.repeat) {
+                    screen_help(e->scn, false);
+                    screen_set_scale(e->scn, scales[event.key.key - SDLK_F1]);
                 }
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
