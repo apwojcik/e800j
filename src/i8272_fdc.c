@@ -84,7 +84,12 @@ void i8272_init(struct i8272* fdc) {
 /* reakcja na stan linii RESET */
 void i8272_reset(struct i8272* fdc, const unsigned char reset) {
     if (reset != 0) {
-        fdc->msr = (fdc->msr & FDC_NDM) | 0x80;
+        /* jak po i8272_init: także bit NDM i parametry Specify z poprzedniej sesji są zerowane,
+           inaczej ROM po resecie widzi MSR=0xA0 zamiast 0x80 i wykrywa inną konfigurację niż przy starcie */
+        fdc->msr = 0x80;
+        fdc->srt = 0;
+        fdc->hut = 0;
+        fdc->hlt = 0;
         fdc->st0 = 0x80;
         fdc->st1 = 0;
         fdc->st2 = 0;
