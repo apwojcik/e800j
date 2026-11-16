@@ -183,7 +183,9 @@ static const char* const help_lines[] = {
     "Shift+F5/F6   eject disk from drive A / B",
     "Ctrl+F5/F6    toggle RO/RW of disk in A / B",
     "F12           save snapshot (e800j_NNN.sna)",
-    "Ctrl+F12      reset button",
+    "Shift+F12     soft reset (reset button)",
+    "Ctrl+F12      cold restart (fresh start)",
+    "Alt+F12       cold restart + reload command-line snapshot",
     "",
     "Elwro keys:",
     "Home          CP/J",
@@ -675,12 +677,17 @@ int zx_main(struct elwro* e) {
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
                 screen_help(e->scn, false);
-            } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_CTRL) != 0) {
+            } else if (event.key.key == SDLK_F12 && (event.key.mod & (SDL_KMOD_CTRL | SDL_KMOD_SHIFT | SDL_KMOD_ALT)) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     char status[128];
-                    elwro_reset(e);
-                    screen_toast(e->scn, "Reset");
+                    if ((event.key.mod & SDL_KMOD_ALT) != 0) {
+                        elwro_snap_restart(e);
+                    } else if ((event.key.mod & SDL_KMOD_CTRL) != 0) {
+                        elwro_cold_reset(e);
+                    } else {
+                        elwro_reset(e);
+                    }
                     disk_status(e, "Floppy ", status, sizeof(status));
                     screen_toast_next(e->scn, status);
                 }

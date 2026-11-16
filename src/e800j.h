@@ -38,6 +38,7 @@ struct elwro {
     struct fdc* fdc;
     struct vfdd_disk* disk[2]; /* napędy A i B */
     char diskdir[512]; /* katalog z obrazami *.dsk dla F5/F6, pusty -> okno wyboru pliku */
+    char snap_path[512]; /* snapshot podany w linii poleceń (dla Alt+F12), pusty -> brak */
 
     // pamięć
     unsigned char* ram;
@@ -66,4 +67,10 @@ struct elwro {
 
 /* przycisk RESET: CPU, mapowanie pamięci (port 0xF7) i kontroler FDC; zawartość RAM zostaje */
 void elwro_reset(struct elwro*);
+
+/* zimny restart: jak świeży start emulatora (RAM wypełniony losowo, jak po włączeniu zasilania) + reset */
+void elwro_cold_reset(struct elwro*);
+
+/* zimny restart + ponowne wczytanie snapshotu z linii poleceń; zwraca 0 gdy wczytano, != 0 gdy brak snapshotu lub błąd */
+int elwro_snap_restart(struct elwro*);
 int zx_main(struct elwro*);
