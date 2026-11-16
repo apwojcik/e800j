@@ -57,6 +57,8 @@ struct elwro {
     unsigned char port_fe; /* port głośniczka, koloru ramki, wyjścia magnetofonu */
 
     // inne
+    const unsigned char* rpage[64]; /* tablica stron 1 kB do odczytu pamięci (e800j_mem.c) */
+    int map_mask; /* mem_mask, dla którego zbudowano rpage; -1 -> do przebudowania */
     unsigned short mem_mask; /* maska ostatnich 3 bitów adresu PROM 'MEM' - A6,A7,A8 */
 
     // JUNET

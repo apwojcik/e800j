@@ -18,6 +18,7 @@
  *
  */
 
+#include <string.h>
 #include "e800j_mem.h"
 #include "z80_cpu.h"
 #include "e800j.h"
@@ -79,29 +80,36 @@ void mem_zx48_write(const void* p, const unsigned short addr, const unsigned cha
 /*                                         PAMIĘĆ                                            */
 /*********************************************************************************************/
 
+/* tablica stron 1 kB (64 wpisy) dla bieżącej wartości mem_mask: odczyt = rpage[addr >> 10][addr & 0x3ff];
+   przebudowywana leniwie przy zmianie mem_mask (zapis portu 0xF7, reset), zamiast dekodowania PROM przy każdym odczycie */
+static unsigned char open_page[1024];
+
+static void mem_e800j_remap(struct elwro* e) {
+    memset(open_page, 0xff, sizeof(open_page));
+    for (unsigned page = 0; page < 64; page++) {
+        const unsigned char bank = ~prom_mem[(e->mem_mask | page) & 0x1ff];
+        const unsigned rom_off = (page << 10) & 0x1fff;
+        const unsigned char* src = open_page;
+
+        //    if(bank & 0x20); /* RST 48 */
+        if (bank & 0x01)
+            src = e->rom + 0x0000 + rom_off; /* BAS0 */
+        else if (bank & 0x02)
+            src = e->rom + 0x2000 + rom_off; /* BAS1 */
+        else if (bank & 0x10)
+            src = e->rom + 0x4000 + rom_off; /* BOOT */
+        else if (bank & 0x0c)
+            src = e->ram + (page << 10); /* pamięć RAM / atrybutów */
+        e->rpage[page] = src;
+    }
+    e->map_mask = e->mem_mask;
+}
+
 unsigned char mem_e800j_read(const void* p, const unsigned short addr) {
-    const struct elwro* e = ((struct cpu*)(p))->ptr;
-    const unsigned char bank = ~prom_mem[(e->mem_mask | (addr >> 10)) & 0x1ff];
-    const unsigned short rom_addr = addr & 0x1fff;
-
-    //    if(bank & 0x20); /* RST 48 */
-    if (bank & 0x01) {
-        return e->rom[0x0000 + rom_addr]; /* BAS0 */
-    }
-    if (bank & 0x02) {
-        return e->rom[0x2000 + rom_addr]; /* BAS1 */
-    }
-    if (bank & 0x10) {
-        return e->rom[0x4000 + rom_addr]; /* BOOT */
-    }
-    if (bank & 0x08) {
-        return e->ram[addr]; // pamięć RAM
-    }
-    if (bank & 0x04) {
-        return e->ram[addr]; // pamięć atrybutów
-    }
-
-    return 0xff;
+    struct elwro* e = ((struct cpu*)(p))->ptr;
+    if (e->map_mask != e->mem_mask)
+        mem_e800j_remap(e);
+    return e->rpage[addr >> 10][addr & 0x3ff];
 }
 
 void mem_e800j_write(const void* p, const unsigned short addr, const unsigned char data) {

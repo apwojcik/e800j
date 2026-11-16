@@ -23,6 +23,7 @@
     Implementacja realizacji emulacji rozkazów
 
 */
+#include <string.h>
 #include "z80_cpu.h"
 #include "z80_core.h"
 #include "z80_dtbl.h"
@@ -1560,15 +1561,10 @@ void z80_int(struct cpu* z, const unsigned char* bus) {
     if (z->int_off == false) {
         z->intr = 1;
         z->int_t = 32;
-        if (bus) {
-            for (int i = 0; i < 8; ++i) {
-                z->bus[i] = bus[i];
-            }
-        } else {
-            for (int i = 0; i < 8; ++i) {
-                z->bus[i] = 0xff;
-            }
-        }
+        if (bus)
+            memcpy(z->bus, bus, sizeof(z->bus));
+        else
+            memset(z->bus, 0xff, sizeof(z->bus));
     }
 }
 

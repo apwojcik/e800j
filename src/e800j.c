@@ -180,6 +180,7 @@ int main(int argc, char** args) {
         snprintf(e.snap_path, sizeof(e.snap_path), "%s", snap_name);
     screen.toast_ms = 10000;
     e.mem_mask = 0;
+    e.map_mask = -1;
     e.junet_addr = 0xf3;
     e.debug = 0;
 
