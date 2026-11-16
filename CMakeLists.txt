@@ -2,7 +2,11 @@
 
 cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 
-project(elwro LANGUAGES C)
+if(WIN32)
+    project(elwro LANGUAGES C RC)
+else()
+    project(elwro LANGUAGES C)
+endif()
 
 option(DEBUG_FDC "Debug FDC" OFF)
 
@@ -76,8 +80,11 @@ if(APPLE)
     target_sources(elwro PRIVATE "${CMAKE_SOURCE_DIR}/e800j.cfg" ${ELWRO_ROMS})
     set_source_files_properties("${CMAKE_SOURCE_DIR}/e800j.cfg" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set_source_files_properties(${ELWRO_ROMS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/rom)
+    target_sources(elwro PRIVATE "${CMAKE_SOURCE_DIR}/res/elwro.icns")
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/res/elwro.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set_target_properties(elwro PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME "Elwro 800 Junior"
+        MACOSX_BUNDLE_ICON_FILE "elwro.icns"
         MACOSX_BUNDLE_GUI_IDENTIFIER "pl.elwro.e800j"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3"
         MACOSX_BUNDLE_BUNDLE_VERSION "0.3")
@@ -90,6 +97,8 @@ endif()
 target_link_libraries(elwro PRIVATE SDL3::SDL3-static libspectrum::spectrum OpenGL::GL OpenGL::GLU)
 
 if(WIN32)
+    # ikona aplikacji (res/elwro.ico) wkompilowana w exe
+    target_sources(elwro PRIVATE res/elwro.rc)
     target_compile_definitions(elwro PRIVATE LIBSPECTRUM_EXPORTS _CRT_SECURE_NO_WARNINGS NOMINMAX)
 endif()
 
