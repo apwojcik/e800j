@@ -224,10 +224,7 @@ int file_snap_save(const char* filename, const struct elwro* e) {
 }
 
 const char* file_snap_cline(const int argc, const char** argv) {
-    const int i = file_lookup_option(argc, argv, "-snap");
-    if (i != 0 && i + 1 < argc)
-        return argv[i + 1];
-    if (argc == 2 && *argv[1] != '-')
+    if (argc >= 2 && *argv[1] != '-')
         return argv[1];
     return nullptr;
 }
@@ -930,10 +927,10 @@ void file_option_param(const int argc, const char** argv, const int pos, const i
 void file_help(void) {
     printf(
         "e800j v0.2 - Elwro 800 Junior emulator - (C)2006 Krzysztof Komarnicki\n"
-        "Usage:   e800j [snapshot filename] [options]\n\n"
+        "Usage:   e800j [snapshot filename] [options]\n"
+        "         (the snapshot is loaded at startup; " HK_ALT_NAME "+F12 reloads it)\n\n"
         "Command line options:\n"
         " -h,-help,--help     this text\n"
-        " -snap <fname>       load snapshot at startup (also " HK_ALT_NAME "+F12 reloads it)\n"
         " -cfg <fname>        alternative configiguration file\n"
         " -profile <pname>    configuration profile name\n"
         " -fs                 fullscreen\n"

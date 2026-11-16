@@ -19,21 +19,27 @@ atrapa napędu. Aby uruchomić emulator z dyskietką należy wpisać:
 
 jeśli chcemy mieć możliwość zapisu:
 
-    elwro -adisk plik.dsk -awr
+    elwro -adisk plik.dsk -arw
 
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
-    elwro -adisk plik1.dsk -bdisk plik2.dsk -bwr
+    elwro -adisk plik1.dsk -bdisk plik2.dsk -brw
 
 itp..
 
-Dyskietki można wymieniać w trakcie pracy emulatora:
+Snapshot można wczytać przy starcie podając go jako pierwszy argument:
+
+    elwro plik.sna
+
+Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pracy:
 
     F1                    nakładka z pomocą (klawisze skrótów), zamyka ją Esc lub użycie dowolnego skrótu
+    F2 / F3               ciszej / głośniej (na dole ekranu pojawia się pasek głośności)
     F5 / F6               włożenie dyskietki do napędu A / B (okno wyboru pliku)
     Shift+F5 / Shift+F6   wysunięcie dyskietki z napędu A / B
-    Ctrl+F5 / Ctrl+F6     przełączenie trybu RO/RW dyskietki w napędzie A / B
-    F12                   zapis snapshotu e800j_NNN.sna
+    Alt+F5 / Alt+F6       przełączenie trybu RO/RW dyskietki w napędzie A / B
+    Ctrl+F1 .. Ctrl+F9    skala okna x1 .. x5 co 0,5 (F1 = x1, F9 = x5)
+    F12                  zapis snapshotu e800j_NNN.sna
     Shift+F12             przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
     Ctrl+F12              zimny restart (jak po włączeniu zasilania, RAM losowy)
     Alt+F12               zimny restart i ponowne wczytanie snapshotu z linii poleceń
@@ -52,12 +58,15 @@ Klawisze dedykowane Elwro 800 Junior są odwzorowane na klawiszach PC:
 
 Home i End wpisują komendy CP/J i ERASE jako sekwencję klawiszy: Ctrl (tryb E), a następnie Alt+6 / Alt+7.
 
+Dźwięk (beeper, port 0xFE) jest generowany w oparciu o zegar CPU; początkową głośność ustawia opcja
+'mixvol' w pliku e800j.cfg, a opcja 'alias' włącza wygładzanie zboczy (band-limited).
+
 Po zapisie snapshotu, wymianie dyskietki i resecie w lewym górnym rogu pojawia się komunikat (np.
 "Snapshot saved: e800j_000.sna", "Floppy inserted: A: plik.dsk (RO)"). Czas jego wyświetlania (w sekundach,
 domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_screen) pliku e800j.cfg.
 
 Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F5/F6 zamiast okna wyboru pliku wkładają
-kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Ctrl+F5/F6 (lub
+kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Alt+F5/F6 (lub
 -arw/-brw) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
 powiedzie, dotychczasowa dyskietka pozostaje w napędzie.
 
