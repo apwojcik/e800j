@@ -140,6 +140,22 @@ static void snd_rate(struct sound* w) {
     }
 }
 
+static void snd_set_volume(struct sound* w, const float volume) {
+    w->volume = volume < 0.f ? 0.f : volume > SND_VOL_MAX ? SND_VOL_MAX : volume;
+    w->amp = 0.3f * w->volume / 128.f;
+}
+
+int snd_volume_level(const struct sound* w) {
+    return (int)(w->volume / SND_VOL_STEP + 0.5f);
+}
+
+int snd_volume_step(struct sound* w, const int dir) {
+    int level = snd_volume_level(w) + dir;
+    level = level < 0 ? 0 : level > SND_VOL_LEVELS ? SND_VOL_LEVELS : level;
+    snd_set_volume(w, (float)(level * SND_VOL_STEP));
+    return level;
+}
+
 void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     if (w->nosound)
         return;
@@ -174,7 +190,7 @@ void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {
     for (int i = 0; i < SND_RING; i++)
         w->delta[i] = 0;
     w->next_t = (double)cpu->ticks - SND_BL_HALF * w->step;
-    w->amp = 0.3f * w->volume / 128.f;
+    snd_set_volume(w, w->volume);
     w->dc_x = w->dc_y = 0;
     w->nout = 0;
     w->max_queue = w->freq * SND_MAX_LATENCY_MS / 1000 * w->chn * (int)sizeof(short);

@@ -90,13 +90,14 @@ buffers and global timing state.
   channels if requested) pushed into an `SDL_AudioStream`, through a DC-blocking high-pass filter. The queue
   is kept near a 50 ms target: silence is prefilled at start and `snd_rate()` nudges the render step by up to
   +-1% (smoothed queue length), with a 200 ms hard cap that drops excess samples. `snd_flush()` is called from
-  `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80` config section). AY-3-8910
-  sound is listed in `doc/ToDo` as unimplemented.
+  `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80` config section).
+  Volume is `volume` 0..`SND_VOL_MAX` (192; config `mixvol` = start value, default 128) in steps of `SND_VOL_STEP` (16, 12 levels):
+  F2/F3 call `snd_volume_step()` and `screen_volume()` draws a bottom-centre bar (0 .. max) for 1.5 s (`osd_time` 0 = off). AY-3-8910 sound is listed in `doc/ToDo` as unimplemented.
 - **Disk hot-swap** (`e800j_disk.c`): F5/F6 insert a disk in drive A/B (SDL file dialog, or the next `*.dsk` from the
   profile's optional `diskdir`), Shift+F5/F6 / Alt+F5/F6 eject/toggle RO/RW (Ctrl+F1..F9 set the window scale x1..x5 in steps of 0.5; internally 2..10, the shown value is halved). The dialog callback only pushes an SDL event
   (`SDL_EVENT_USER + 1`; `SDL_EVENT_USER` is the CPU/screen timer); the swap runs in `zx_main` between `z80_loop` calls via `vfdd_swap()` (opens the new image before closing the
   old one). `struct vfdd_disk` remembers `path`/`rw` across eject. Drives are reachable as `e.disk[0..1]`.
-- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F5, F6, F12 are emulator hot keys. Hot-key modifiers go through the `HK_*` macros in `e800j_kbrd.h`; on macOS Ctrl->Cmd, Alt->Option, Win->Control (and the Elwro Ctrl/E-mode key `E8K_CTRL_*` is Cmd), so never hard-code `SDL_KMOD_CTRL/ALT/GUI` or key names in hot-key code or help texts.
+- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F2/F3 (volume), F5, F6, F12 are emulator hot keys. Hot-key modifiers go through the `HK_*` macros in `e800j_kbrd.h`; on macOS Ctrl->Cmd, Alt->Option, Win->Control (and the Elwro Ctrl/E-mode key `E8K_CTRL_*` is Cmd), so never hard-code `SDL_KMOD_CTRL/ALT/GUI` or key names in hot-key code or help texts.
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/
   joystick profiles), plus `.sna`/snapshot loading that restores CPU + RAM state directly from the raw

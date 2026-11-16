@@ -952,6 +952,7 @@ void file_help(void) {
         " F1                  show hot keys help overlay (Esc or any hot key closes)\n"
         " F5/F6               insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
         " Shift+F5/F6         eject disk from drive A/B\n"
+        " F2 / F3             volume down / up (progress bar shown at the bottom)\n"
         " " HK_ALT_NAME "+F5/F6" HK_ALT_PAD "           toggle RO/RW of disk in drive A/B\n"
         " " HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "         window scale x1 .. x5, step 0.5 (F1 = x1, F9 = x5)\n"
         " F12                 save snapshot e800j_NNN.sna\n"

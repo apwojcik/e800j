@@ -105,6 +105,10 @@ struct screen {
     int toast_queued;
     bool toast_sticky; /* komunikat nie wygasa w czasie, dopóki widoczna jest pomoc (F1) */
     Uint64 toast_until; /* SDL_GetTicks(), po którym komunikat znika */
+    unsigned int vol_tex; /* pasek głośności u dołu okna, 0 -> niewidoczny */
+    int vol_w;
+    int vol_h;
+    Uint64 vol_until; /* SDL_GetTicks(), po którym pasek znika */
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
@@ -120,6 +124,9 @@ void screen_toast(struct screen* s, const char* fmt, ...);
 /* komunikat (wiersze rozdzielone '\n') dodawany do kolejki (TOAST_QUEUE) i pokazywany po zniknięciu bieżącego i wcześniejszych, a gdy
  * ich nie ma - od razu; screen_toast() czyści kolejkę */
 void screen_toast_next(struct screen* s, const char* text);
+
+/* pasek głośności (0 .. max, wypełniony do level) na środku dołu okna, na krótki czas (nie dłużej niż s->toast_ms) */
+void screen_volume(struct screen* s, int level, int max);
 
 /* argv -> -fullscreen, -noframe */
 bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);

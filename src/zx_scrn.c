@@ -215,6 +215,7 @@ static const char* const help_lines[] = {
     "Shift+F5/F6   eject disk from drive A / B",
     HK_ALT_NAME "+F5/F6" HK_ALT_PAD "     toggle RO/RW of disk in A / B",
     HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
+    "F2 / F3       volume down / up",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
     HK_CTRL_NAME "+F12" HK_CTRL_PAD "      cold restart (fresh start)",
@@ -234,6 +235,9 @@ static const char* const help_lines[] = {
 #define OSD_PAD 12
 #define OSD_LINE_H 12
 #define OSD_TOAST_VPAD 4 /* komunikat ma ciaśniejsze marginesy pionowe niż pomoc */
+#define OSD_VOL_CELL 10 /* szerokość jednego poziomu głośności na pasku */
+#define OSD_VOL_GAP 6 /* odstęp paska od cyfr 0 i max */
+#define OSD_VOL_MS 1500 /* czas wyświetlania paska głośności (nie dłużej niż osd_time) */
 #define OSD_TOAST_MARGIN 6 /* odstęp komunikatu od lewej i górnej krawędzi okna (przed powiększeniem) */
 
 /* tekst rysowany wbudowaną czcionką SDL na powierzchni programowej, następnie wysłany jako tekstura GL;
@@ -245,6 +249,21 @@ static void screen_text_size(const char* const* lines, const int n, const int vp
     }
     *width = chars * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE + 2 * OSD_PAD;
     *height = n * OSD_LINE_H + 2 * vpad - (OSD_LINE_H - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE);
+}
+
+/* wysyła powierzchnię RGBA32 jako teksturę GL i zwalnia ją */
+static unsigned int screen_surface_texture(SDL_Surface* surface) {
+    unsigned int tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitch / 4);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    SDL_DestroySurface(surface);
+    return tex;
 }
 
 static unsigned int screen_text_texture(const char* const* lines, const int n, const int vpad, int* width, int* height) {
@@ -270,19 +289,9 @@ static unsigned int screen_text_texture(const char* const* lines, const int n, c
     SDL_FlushRenderer(renderer);
     SDL_DestroyRenderer(renderer);
 
-    unsigned int tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitch / 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     *width = w;
     *height = h;
-    SDL_DestroySurface(surface);
-    return tex;
+    return screen_surface_texture(surface);
 }
 
 /* rysuje teksturę o rozmiarze w x h pikseli z lewym górnym rogiem w (x, y) pikseli okna */
@@ -378,6 +387,73 @@ static void screen_draw_toast(struct screen* s) {
     screen_draw_texture(s, s->toast_tex, margin, margin, s->toast_w * zoom, s->toast_h * zoom);
 }
 
+/* pasek głośności: tytuł oraz "0 [pasek] max", w stylu komunikatu; zwraca 0 w razie błędu */
+static unsigned int screen_volume_texture(const int level, const int max, int* width, int* height) {
+    const int ch = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+    char title[32], maxs[16];
+    snprintf(title, sizeof(title), "Volume %d%%", max > 0 ? level * 100 / max : 0);
+    snprintf(maxs, sizeof(maxs), "%d", max);
+    const int bar_w = max * OSD_VOL_CELL + 4;
+    const int bar_x = OSD_PAD + ch + OSD_VOL_GAP;
+    const int w = bar_x + bar_w + OSD_VOL_GAP + (int)strlen(maxs) * ch + OSD_PAD;
+    const int h = 2 * OSD_LINE_H + 2 * OSD_TOAST_VPAD - (OSD_LINE_H - ch);
+    SDL_Surface* surface = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
+    if (surface == NULL) {
+        msg_printf(MSG_ERROR, "Could not create overlay surface: %s\n", SDL_GetError());
+        return 0;
+    }
+    SDL_Renderer* renderer = SDL_CreateSoftwareRenderer(surface);
+    if (renderer == NULL) {
+        msg_printf(MSG_ERROR, "Could not create overlay renderer: %s\n", SDL_GetError());
+        SDL_DestroySurface(surface);
+        return 0;
+    }
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 210);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    const float row = (float)(OSD_TOAST_VPAD + OSD_LINE_H);
+    SDL_RenderDebugText(renderer, (float)(w - (int)strlen(title) * ch) / 2.0f, (float)OSD_TOAST_VPAD, title);
+    SDL_RenderDebugText(renderer, OSD_PAD, row, "0");
+    SDL_RenderDebugText(renderer, (float)(bar_x + bar_w + OSD_VOL_GAP), row, maxs);
+    const SDL_FRect frame = { (float)bar_x, row, (float)bar_w, (float)ch };
+    SDL_RenderRect(renderer, &frame);
+    const SDL_FRect fill = { (float)(bar_x + 2), row + 2, (float)(level * OSD_VOL_CELL), (float)(ch - 4) };
+    SDL_RenderFillRect(renderer, &fill);
+    SDL_FlushRenderer(renderer);
+    SDL_DestroyRenderer(renderer);
+
+    *width = w;
+    *height = h;
+    return screen_surface_texture(surface);
+}
+
+/* pasek głośności na dole okna, wyśrodkowany, znika po OSD_VOL_MS */
+static void screen_draw_volume(struct screen* s) {
+    if (s->vol_tex == 0) {
+        return;
+    }
+    if (SDL_GetTicks() >= s->vol_until) {
+        glDeleteTextures(1, &s->vol_tex);
+        s->vol_tex = 0;
+        return;
+    }
+    const int zoom = SDL_max(1, SDL_min(screen_osd_zoom(s), s->width / s->vol_w));
+    const int w = s->vol_w * zoom;
+    const int h = s->vol_h * zoom;
+    screen_draw_texture(s, s->vol_tex, (s->width - w) / 2, s->height - h - OSD_TOAST_MARGIN * zoom, w, h);
+}
+
+void screen_volume(struct screen* s, const int level, const int max) {
+    if (s->toast_ms <= 0) {
+        return;
+    }
+    if (s->vol_tex != 0) {
+        glDeleteTextures(1, &s->vol_tex);
+    }
+    s->vol_tex = screen_volume_texture(level, max, &s->vol_w, &s->vol_h);
+    s->vol_until = SDL_GetTicks() + (Uint64)SDL_min(s->toast_ms, OSD_VOL_MS);
+}
+
 void screen_toast(struct screen* s, const char* fmt, ...) {
     if (s->toast_ms <= 0) {
         return;
@@ -418,6 +494,7 @@ void screen_refresh(struct screen* s) {
         screen_draw_help(s);
     }
     screen_draw_toast(s);
+    screen_draw_volume(s);
     SDL_GL_SwapWindow(s->window);
 }
 
@@ -782,6 +859,17 @@ int zx_main(struct elwro* e) {
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
                 screen_help(e->scn, false);
+            } else if ((event.key.key == SDLK_F2 || event.key.key == SDLK_F3) && e->snd != nullptr) {
+                /* głośność; przytrzymanie klawisza powtarza zmianę */
+                screen_help(e->scn, false);
+                if (e->snd->nosound) {
+                    if (!event.key.repeat) {
+                        screen_toast(e->scn, "Sound is disabled");
+                    }
+                } else {
+                    const int level = snd_volume_step(e->snd, event.key.key == SDLK_F3 ? 1 : -1);
+                    screen_volume(e->scn, level, SND_VOL_LEVELS);
+                }
             } else if (event.key.key == SDLK_F12 && (event.key.mod & HK_WIN_MOD) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {

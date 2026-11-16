@@ -27,13 +27,16 @@
 #define SND_BL_TAPS (2 * SND_BL_HALF)
 #define SND_BL_PHASES 64 /* ilość faz przesunięcia ułamkowego jądra BLEP (potęga 2) */
 #define SND_RING 64 /* rozmiar bufora impulsów (potęga 2, > SND_BL_TAPS) */
+#define SND_VOL_MAX 192 /* maksymalna głośność (mixvol); 128 = wartość domyślna, powyżej wzrasta ryzyko przesterowania */
+#define SND_VOL_STEP 16 /* skok głośności klawiszami skrótów (SND_VOL_MAX / SND_VOL_STEP = 12 poziomów) */
+#define SND_VOL_LEVELS (SND_VOL_MAX / SND_VOL_STEP)
 
 struct SDL_AudioStream;
 
 struct sound {
     struct SDL_AudioStream* stream; // strumień audio SDL (bezpieczny wątkowo)
 
-    float volume; // głośność (0..128)
+    float volume; // głośność (0..SND_VOL_MAX)
     int freq; /* ilość sampli / sekundę */
     int length; // rozmiar bufora urządzenia w ramkach (podpowiedź dla SDL)
     int chn; // ilość kanałów
@@ -65,3 +68,8 @@ void snd_beeper(struct sound* snd, unsigned char port_fe);
 void snd_flush(struct sound* snd);
 void snd_init(struct sound* snd, const struct cpu* cpu, double cpu_hz);
 void snd_free_buffers(struct sound* snd);
+
+/* aktualny poziom głośności 0..SND_VOL_LEVELS */
+int snd_volume_level(const struct sound* snd);
+/* zmienia poziom głośności o 'dir' poziomów (z ograniczeniem do 0..SND_VOL_LEVELS), zwraca nowy poziom */
+int snd_volume_step(struct sound* snd, int dir);
