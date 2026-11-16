@@ -47,6 +47,7 @@ void screen_border(struct screen* s, const unsigned char color) {
 }
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
+    s->scr_valid = false; /* zmiana palety wymaga ponownej konwersji */
     for (int i = 0; i < 16; i++) {
         const unsigned char palgen[8] = {0, 1, 4, 5, 2, 3, 6, 7};
         int color = (i == 7) ? wht : (i & 0x08 ? brt : nrm);
@@ -56,21 +57,51 @@ void screen_make_palette(struct screen* s, int nrm, int brt, int wht) {
     }
 }
 
+/* obraz jako tekstura 256x192 rozciągnięta na pole obrazu (py0..py1, bsize..1-bsize) */
 static void screen_draw(struct screen* s) {
-    glDrawPixels(256, 192, GL_RGB, GL_UNSIGNED_BYTE, s->scr_buffer);
+    const float x0 = s->bsize;
+    const float x1 = 1.0f - s->bsize;
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, s->scr_tex);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, s->py0);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, s->py0);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, s->py1);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, s->py1);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+}
+
+static void screen_upload(struct screen* s) {
+    glBindTexture(GL_TEXTURE_2D, s->scr_tex);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 192, GL_RGBA, GL_UNSIGNED_BYTE, s->scr_buffer);
 }
 
 #define PCPY_SCRN(b) \
-        memcpy(fb, pal + ((aa >> ((pt >> b) & 0x04)) & 0x0f), 3);\
-        fb += 3;
+        *fb++ = pal[(aa >> ((pt >> b) & 0x04)) & 0x0f];
 
-static void screen_transform(struct screen* s) {
-    unsigned char* fb = s->scr_buffer;
-    struct rgbi* pal = s->palettei;
+/* przelicza ekran Spectrum na piksele; zwraca false, gdy nic się nie zmieniło od poprzedniej konwersji */
+static bool screen_transform(struct screen* s) {
+    uint32_t* fb = s->scr_buffer;
+    uint32_t pal[16];
     const unsigned char* attr = s->zx_attr;
     const unsigned char* patt = s->zx_patt;
     int pt = 0;
     const int inv = SDL_GetAtomicInt(&s->inverse) ? -1 : 0;
+
+    if (s->scr_valid && inv == s->prev_inv && memcmp(patt, s->prev_patt, sizeof(s->prev_patt)) == 0 &&
+        memcmp(attr, s->prev_attr, sizeof(s->prev_attr)) == 0)
+        return false;
+    memcpy(s->prev_patt, patt, sizeof(s->prev_patt));
+    memcpy(s->prev_attr, attr, sizeof(s->prev_attr));
+    s->prev_inv = inv;
+    s->scr_valid = true;
+    for (int i = 0; i < 16; i++)
+        memcpy(&pal[i], &s->palettei[i], sizeof(pal[i]));
 
     for (short i = 0; i < 6144; i++) {
         const short yy = (short)(i >> 5);
@@ -93,6 +124,7 @@ static void screen_transform(struct screen* s) {
         PCPY_SCRN(1)
         PCPY_SCRN(0)
     }
+    return true;
 }
 
 /* układ linii ekranu (jak w ZX Spectrum 48K): 312 linii na klatkę, widoczne 288 */
@@ -379,7 +411,8 @@ void screen_help(struct screen* s, const bool show) {
 void screen_refresh(struct screen* s) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
     screen_draw_border(s);
-    screen_transform(s);
+    if (screen_transform(s))
+        screen_upload(s);
     screen_draw(s);
     if (s->help) {
         screen_draw_help(s);
@@ -396,15 +429,11 @@ static void screen_layout(struct screen* s) {
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
 
-    const float width = (float)s->width;
     const float height = (float)s->height;
     const float yresv = (float)s->yresv;
 
     if (s->bsize > 0.5f)
         s->bsize = 0.4f;
-    glPixelZoom((width - 2 * width * s->bsize) / 256, (height - 2 * height * s->bsize - yresv) / 192);
-    glRasterPos2d(s->bsize, s->bsize);
-
     s->py0 = s->bsize;
     s->py1 = s->bsize + (height - 2 * height * s->bsize - yresv) / height;
 }
@@ -424,6 +453,14 @@ static void screen_set_scale(struct screen* s, const float scale) {
 
 static void screen_glinit(struct screen* s) {
     memset(s->scr_buffer, 0x80, sizeof(s->scr_buffer));
+    s->scr_valid = false;
+    glGenTextures(1, &s->scr_tex);
+    glBindTexture(GL_TEXTURE_2D, s->scr_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 192, 0, GL_RGBA, GL_UNSIGNED_BYTE, s->scr_buffer);
     /* poziomy jasności z konfiguracji; gdy brak (0) - wartości domyślne */
     screen_make_palette(s, s->nbrt ? s->nbrt : 0xb0, s->bbrt ? s->bbrt : 0xf0, s->wbrt ? s->wbrt : 0xe0);
     glClearColor(0.0f, 0.3f, 0.8f, 0.0f);

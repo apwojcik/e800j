@@ -54,7 +54,12 @@ struct border_frame {
 
 struct screen {
     char msg[256];
-    unsigned char scr_buffer[192 * 256 * 3];
+    uint32_t scr_buffer[192 * 256]; /* piksele RGBA (bajty R,G,B,A), wiersz 0 = dół obrazu */
+    unsigned int scr_tex; /* tekstura OpenGL 256x192 z obrazem */
+    bool scr_valid; /* false -> następna klatka musi być przeliczona i wysłana do tekstury */
+    unsigned char prev_patt[6144]; /* zawartość ekranu z ostatniej konwersji (wykrywanie zmian) */
+    unsigned char prev_attr[768];
+    int prev_inv;
     struct rgbi palettei[16];
     struct rgbf palettef[16];
     int width;

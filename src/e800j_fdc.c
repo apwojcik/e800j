@@ -31,7 +31,7 @@ void fdc_clk(struct fdc* fdc) {
     if (fdc->drive_a)
         fdc->drive_a--;
     if (fdc->drive_b)
-        fdc->drive_a--;
+        fdc->drive_b--;
     /* wykonanie sekwencji i8272 */
     //    i8272_step(fdc->i8272);
 }
@@ -56,8 +56,8 @@ void fdc_r175_write(struct fdc* fdc, unsigned char data) {
 #endif
     if (data & FDC_R175_DRIVE_A)
         fdc->drive_a = fdc->drive_mtime;
-    if (data & FDC_R175_DRIVE_A)
-        fdc->drive_a = fdc->drive_mtime;
+    if (data & FDC_R175_DRIVE_B)
+        fdc->drive_b = fdc->drive_mtime;
 #ifdef DEBUG_FDC
     if(data & FDC_R175_DRIVE_A)
         printf("   |-> Drive A motor on\n");

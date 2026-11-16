@@ -10,6 +10,15 @@ endif()
 
 option(DEBUG_FDC "Debug FDC" OFF)
 
+# generatory jednokonfiguracyjne (Ninja, Makefiles): domyslnie Release, inaczej kod bylby bez optymalizacji
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# LTO pozwala wstawic inline wywolania pamieci/IO do rdzenia Z80
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ELWRO_IPO OUTPUT ELWRO_IPO_MSG LANGUAGES C)
+
 include(FetchContent)
 
 set(CACHE{BUILD_SHARED_LIBS} TYPE INTERNAL VALUE OFF)
@@ -88,6 +97,10 @@ if(APPLE)
         MACOSX_BUNDLE_GUI_IDENTIFIER "pl.elwro.e800j"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3"
         MACOSX_BUNDLE_BUNDLE_VERSION "0.3")
+endif()
+
+if(ELWRO_IPO)
+    set_property(TARGET elwro PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 endif()
 
 if(DEBUG_FDC)
