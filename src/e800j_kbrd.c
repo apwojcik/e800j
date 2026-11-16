@@ -35,6 +35,18 @@ void key_init(struct keyboard* kb) {
         kb->held[i].idx = KB_NONE;
 }
 
+void key_reset(struct keyboard* kb) {
+    /* skrót resetu (Ctrl/Shift+F12) jest wciśnięty razem z modyfikatorem, który ROM zobaczyłby przy starcie
+       (np. Ctrl -> wersja bezdyskowa); klawisze wciśnięte w chwili resetu są ignorowane do puszczenia */
+    memset(kb->matrix, 0xff, sizeof(kb->matrix));
+    memset(kb->down, 0, sizeof(kb->down));
+    for (int i = 0; i < KB_HELD_MAX; i++) {
+        if (kb->held[i].idx != KB_NONE)
+            kb->held[i].idx = KB_IGNORED;
+    }
+    kb->macro_pos = -1;
+}
+
 unsigned char key_matrix(const struct keyboard* kb, unsigned short int addr) {
     /* skanowanie klawiatury dla linii KA0..KA8 */
     int i = 0x8000;
@@ -103,7 +115,8 @@ static void key_press(struct keyboard* kb, const unsigned int key, const unsigne
 static void key_release(struct keyboard* kb, const unsigned int key) {
     for (int i = 0; i < KB_HELD_MAX; i++) {
         if (kb->held[i].idx != KB_NONE && kb->held[i].key == key) {
-            key_matrix_update(kb, kb->held[i].idx, 0);
+            if (kb->held[i].idx != KB_IGNORED)
+                key_matrix_update(kb, kb->held[i].idx, 0);
             kb->held[i].idx = KB_NONE;
             return;
         }

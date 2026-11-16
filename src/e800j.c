@@ -84,6 +84,7 @@ void elwro_reset(struct elwro* e) {
     e->scn->zx_patt = e->ram + 0x4000;
     e->scn->zx_attr = e->ram + 0x5800;
     fdc_reset(e->fdc);
+    key_reset(e->kbd);
     msg_printf(MSG_MSG, "Reset\n");
     screen_toast(e->scn, "Reset");
 }

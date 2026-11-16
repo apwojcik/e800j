@@ -82,6 +82,9 @@ enum {
 /*******************************************************************/
 void key_init(struct keyboard*);
 
+/* reset komputera: zwalnia matrycę, klawisze wciśnięte w tej chwili są ignorowane do puszczenia */
+void key_reset(struct keyboard*);
+
 /*	..:: Inicjuje klawiaturę w trybie 'mode' ::..
         mode - tryb mapowania klawiatury
 */
@@ -268,6 +271,7 @@ unsigned char key_kempston(const struct keyboard*);
 #define KB_LET_START	(KB_DIG_START + KEY_DIGITS_CNT)
 #define KB_ALL_CNT	(KB_LET_START + KEY_LETTERS_CNT)
 #define KB_NONE		0xff	/* brak klawisza w tabeli mapowania */
+#define KB_IGNORED	0xfe	/* klawisz wciśnięty w chwili resetu: nie wciska matrycy do puszczenia */
 
 #define KB_LOAD		('j' - 'a' + KB_LET_START)
 #define KB_SAVE		('s' - 'a' + KB_LET_START)
