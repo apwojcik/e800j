@@ -1228,10 +1228,3 @@ void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*)) {
     d->in = s_in;
 }
 
-void dbg_don(struct dbg* d, const char flag) {
-    d->z->debug_on = flag;
-}
-
-void dbg_con(struct dbg* d, char flag) {
-    d->console = flag;
-}

@@ -739,21 +739,9 @@ bool screen_init(struct screen* s, const int refresh) {
     return true;
 }
 
-void zx_quit(void) {
-    SDL_Event event;
-    SDL_zero(event);
-    event.type = SDL_EVENT_QUIT;
-    SDL_PushEvent(&event);
-}
-
-static void zx_kbrd_(const unsigned int key, const int state, void* a) {
-//   if(key == 316) {
-//       ((elwro*)a)->cpu->dbg_on = state;
-//   }
+static void zx_kbrd(const unsigned int key, const int state, void* a) {
     key_set(((struct elwro*)a)->kbd, key, state);
 }
-
-static void (*zx_kbrd)(unsigned int, int, void*) = zx_kbrd_;
 
 static void time_int(struct cpu* z, void* ptr) {
     const struct elwro* e = ptr;

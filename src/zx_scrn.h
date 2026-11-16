@@ -140,4 +140,3 @@ void screen_border_set(struct screen* s, long ticks, unsigned char color);
 /* początek klatki (przerwanie) w takcie CPU 'ticks'; 'len' - długość klatki w taktach */
 void screen_frame_start(struct screen* s, long ticks, int len);
 
-void zx_quit(void);

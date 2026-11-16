@@ -91,7 +91,6 @@ static void mem_e800j_remap(struct elwro* e) {
         const unsigned rom_off = (page << 10) & 0x1fff;
         const unsigned char* src = open_page;
 
-        //    if(bank & 0x20); /* RST 48 */
         if (bank & 0x01)
             src = e->rom + 0x0000 + rom_off; /* BAS0 */
         else if (bank & 0x02)
@@ -125,8 +124,6 @@ void mem_e800j_write(const void* p, const unsigned short addr, const unsigned ch
 unsigned char mem_zx128_read(const void* p, const unsigned short addr) {
     (void)p;
     (void)addr;
-    //const struct elwro* e = ((struct cpu*)(p))->ptr;
-    //return addr < 16384 ? e->rom[addr] : e->ram[addr];
     return 0xff;
 }
 
@@ -134,6 +131,4 @@ void mem_zx128_write(const void* p, const unsigned short addr, const unsigned ch
     (void)p;
     (void)addr;
     (void)data;
-    //const struct elwro* e = ((struct cpu*)(p))->ptr;
-    //e->ram[addr] = data;
 }

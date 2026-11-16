@@ -692,10 +692,8 @@ bool config_apply(const struct config* cfg, struct elwro* e) {
     snd->alias = cfg->alias;
     msg_printf(MSG_MSG, "Sound: %s\n", cfg->nosound ? "off" : "on");
 
-    memcpy(e->diskdir, cfg->diskdir, sizeof(e->diskdir) < sizeof(cfg->diskdir) ? sizeof(e->diskdir) : sizeof(cfg->diskdir));
-    memcpy(e->snap_path, cfg->snapshot, sizeof(e->snap_path) < sizeof(cfg->snapshot) ? sizeof(e->snap_path) : sizeof(cfg->snapshot));
-    e->diskdir[sizeof(e->diskdir) - 1] = 0;
-    e->snap_path[sizeof(e->snap_path) - 1] = 0;
+    snprintf(e->diskdir, sizeof(e->diskdir), "%s", cfg->diskdir);
+    snprintf(e->snap_path, sizeof(e->snap_path), "%s", cfg->snapshot);
     e->debug = cfg->debug;
     return true;
 }

@@ -117,7 +117,6 @@ void io_write(void* p, const unsigned short addr, unsigned char data) {
     if (adec & PORT_CFE) {
         screen_border_set(e->scn, ((struct cpu*)p)->ticks, data & 0x07);
         snd_beeper(e->snd, data);
-        //	tape_save(data, z);
     }
     if (adec & PORT_CF1)
         fdc_r175_write(e->fdc, data);

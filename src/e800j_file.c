@@ -19,22 +19,12 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 #include <libspectrum.h>
 #include "e800j_file.h"
-
-#include <sys/stat.h>
-
-#ifdef _WIN32
-#define stat _stat
-#endif
-
 #include "e800j.h"
 #include "e800j_kbrd.h"
-#include "e800j_compat.h"
 #include "z80_cpu.h"
 #include "e800j_msg.h"
 #include "e800j_sound.h"

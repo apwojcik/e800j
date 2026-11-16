@@ -87,13 +87,3 @@ void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on);
     przekierowanie strumienia komunikatów I/O
 */
 void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*));
-
-/*
-    włączenie/wyłączenie debuggera
-*/
-void dbg_don(struct dbg* d, char flag);
-
-/*
-    włączenie/wyłączenie konsoli
-*/
-void dbg_con(struct dbg* d, char flag);

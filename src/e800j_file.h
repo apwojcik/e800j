@@ -20,10 +20,7 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 struct elwro;
-
 
 /*
  Wczytuje snapshot:

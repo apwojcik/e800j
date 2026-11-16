@@ -102,8 +102,7 @@ buffers and global timing state.
 - **Command line** (`e800j_cmdline.c`): table-driven (`options[]`), two passes over the same `struct config` in `main()`: `cmdline_preparse()` picks only `--config`, `--profile`, `--log-level`, `--help` (so the right config file/profile is loaded and logging obeys the level), then `config_load()`, then `cmdline_parse()` validates everything and overrides the values from the file (snapshot, disks, debug, `-x/-y/--bits-per-pixel`, `-f`, `-n`). Never pass `argc`/`argv` around; add new options to the `options[]` table, to `struct config` (and to `file_help()`).
 - **Snapshot loading / help** (`e800j_file.c`): `.sna`/snapshot loading and saving that restores CPU + RAM state directly from the raw `struct cpu` byte layout, and `file_help()` (the `--help` text).
 - **Portability shims** (`e800j_compat.c`/`.h`): MSVC/Windows replacement for glibc's `on_exit()` (backed by
-  `atexit()`). `e800j_string.c`/`.h` is a placeholder for string helpers and is currently commented out of
-  `CMakeLists.txt` (not built).
+  `atexit()`), used by `zx_scrn.c` for resource cleanup.
 - **Messages/logging** (`e800j_msg.c`/`e800j_msg.h`): all diagnostic output goes through `msg_printf`
   with a severity level (`MSG_CRITICAL_ERROR` .. `MSG_UNVERB_MSG`); verbosity is controlled globally by
   `msg_level` (settable via `--log-level`). Don't use `printf`/`fprintf` directly for emulator diagnostics —
