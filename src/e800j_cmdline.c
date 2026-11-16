@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "e800j_config.h"
+#include "e800j_cfg.h"
 #include "e800j_cmdline.h"
 #include "e800j_msg.h"
 
@@ -72,11 +73,11 @@ static const struct {
     { OPT_XRES,        'x', nullptr,          true  },
     { OPT_YRES,        'y', nullptr,          true  },
     { OPT_DEBUG,       0,   "debug",          false },
-    { OPT_ADISK,       'A', "a-disk",         true  },
-    { OPT_BDISK,       'B', "b-disk",         true  },
+    { OPT_ADISK,       'a', "a-read-only",    true  },
+    { OPT_BDISK,       'b', "b-read-only",    true  },
     { OPT_LOGLEVEL,    0,   "log-level",      true  },
-    { OPT_AREADWRITE,  'a', "a-read-write",   true  },
-    { OPT_BREADWRITE,  'b', "b-read-write",   true  },
+    { OPT_AREADWRITE,  'A', "a-read-write",   true  },
+    { OPT_BREADWRITE,  'B', "b-read-write",   true  },
 };
 
 static const int option_count = (int)(sizeof options / sizeof options[0]);
@@ -96,10 +97,26 @@ static int cmdline_find_long(const char* name, const size_t len) {
     return -1;
 }
 
-bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
-    memset(cl, 0, sizeof(*cl));
-    cl->bpp = cl->xres = cl->yres = cl->msg_level = CMDLINE_UNSET;
+/* kopiuje wartość opcji do bufora kontekstu */
+static bool cmdline_copy(char* dst, const size_t size, const char* opt, const char* value) {
+    if (value[0] == '\0') {
+        msg_printf(MSG_CRITICAL_ERROR, "Empty value for option %s.\n", opt);
+        return false;
+    }
+    if (strlen(value) >= size) {
+        msg_printf(MSG_CRITICAL_ERROR, "Value of option %s is too long: %s\n", opt, value);
+        return false;
+    }
+    memcpy(dst, value, strlen(value) + 1);
+    return true;
+}
 
+/*
+ Jeden przebieg po argv. early == true: tylko opcje potrzebne przed wczytaniem pliku
+ konfiguracji (--config, --profile, --log-level, --help); reszta jest pomijana bez
+ sprawdzania i bez komunikatów, błędy zgłasza dopiero pełny przebieg.
+*/
+static bool cmdline_run(struct config* cfg, const int argc, const char** argv, const bool early) {
     bool options_end = false;
     for (int i = 1; i < argc; i++) {
         const char* a = argv[i];
@@ -116,6 +133,8 @@ bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
             const char* eq = strchr(name, '=');
             k = cmdline_find_long(name, eq != nullptr ? (size_t)(eq - name) : strlen(name));
             if (k < 0) {
+                if (early)
+                    continue;
                 msg_printf(MSG_CRITICAL_ERROR, "Unknown option: %s (try --help)\n", a);
                 return false;
             }
@@ -123,6 +142,8 @@ bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
             /* flaga krótka: -x (dokładnie jedna litera) */
             k = a[2] == '\0' ? cmdline_find_short(a[1]) : -1;
             if (k < 0) {
+                if (early)
+                    continue;
                 msg_printf(MSG_CRITICAL_ERROR, "Unknown option: %s (long options start with --, try --help)\n", a);
                 return false;
             }
@@ -139,12 +160,15 @@ bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
 #endif
 
         if (k < 0) {
-            /* argument pozycyjny */
-            if (cl->snapshot != nullptr) {
-                msg_printf(MSG_CRITICAL_ERROR, "Unexpected argument: %s (snapshot already given: %s)\n", a, cl->snapshot);
+            /* argument pozycyjny: snapshot */
+            if (early)
+                continue;
+            if (cfg->snapshot[0] != '\0') {
+                msg_printf(MSG_CRITICAL_ERROR, "Unexpected argument: %s (snapshot already given: %s)\n", a, cfg->snapshot);
                 return false;
             }
-            cl->snapshot = a;
+            if (!cmdline_copy(cfg->snapshot, sizeof(cfg->snapshot), "<snapshot>", a))
+                return false;
             continue;
         }
 
@@ -158,55 +182,90 @@ bool cmdline_parse(struct cmdline* cl, const int argc, const char** argv) {
             } else if (i + 1 < argc) {
                 value = argv[++i];
             } else {
+                if (early && options[k].id != OPT_CONFIG && options[k].id != OPT_PROFILE)
+                    continue;
                 msg_printf(MSG_CRITICAL_ERROR, "Missing an argument for the %s option.\n", a);
                 return false;
             }
         } else if (eq != nullptr && is_long) {
+            if (early)
+                continue;
             msg_printf(MSG_CRITICAL_ERROR, "Option %s does not take a value.\n", a);
             return false;
         }
 
         switch (options[k].id) {
         case OPT_HELP:
-            cl->help = true;
+            cfg->help = true;
             return true;
-        case OPT_CONFIG:      cl->cfg = value; break;
-        case OPT_PROFILE:     cl->profile = value; break;
-        case OPT_FULLSCREEN:  cl->fullscreen = true; break;
-        case OPT_NOFRAME:     cl->noframe = true; break;
-        case OPT_DEBUG:       cl->debug = true; break;
+        case OPT_CONFIG:
+            if (!cmdline_copy(cfg->path, sizeof(cfg->path), a, value))
+                return false;
+            break;
+        case OPT_PROFILE:
+            if (!cmdline_copy(cfg->profile, sizeof(cfg->profile), a, value))
+                return false;
+            break;
+        case OPT_LOGLEVEL: {
+            int level = -1;
+            if (!cmdline_ranged(a, value, 0, 6, &level)) {
+                if (early)
+                    continue;
+                return false;
+            }
+            cfg->msg_level = level;
+            break;
+        }
+        default:
+            break;
+        }
+        if (early)
+            continue;
+
+        /* pozostałe opcje nadpisują wartości z pliku konfiguracji; tylko pełny przebieg */
+        switch (options[k].id) {
+        case OPT_FULLSCREEN:  cfg->fullscreen = true; break;
+        case OPT_NOFRAME:     cfg->noframe = true; break;
+        case OPT_DEBUG:       cfg->debug = true; break;
         case OPT_ADISK:
         case OPT_AREADWRITE:
         case OPT_BDISK:
         case OPT_BREADWRITE: {
             /* -A/-B montują obraz tylko do odczytu, -a/-b do zapisu; dla jednego napędu opcje wykluczają się */
             const int drive = (options[k].id == OPT_ADISK || options[k].id == OPT_AREADWRITE) ? 0 : 1;
-            if (cl->disk[drive] != nullptr) {
+            if (cfg->disk[drive][0] != '\0') {
                 msg_printf(MSG_CRITICAL_ERROR, "Drive %c: -%c (read-only) and -%c (read-write) are mutually exclusive and may be given once (at %s).\n",
-                    'A' + drive, 'A' + drive, 'a' + drive, a);
+                    'A' + drive, 'a' + drive, 'A' + drive, a);
                 return false;
             }
-            cl->disk[drive] = value;
-            cl->disk_rw[drive] = options[k].id == OPT_AREADWRITE || options[k].id == OPT_BREADWRITE;
+            if (!cmdline_copy(cfg->disk[drive], sizeof(cfg->disk[drive]), a, value))
+                return false;
+            cfg->disk_rw[drive] = options[k].id == OPT_AREADWRITE || options[k].id == OPT_BREADWRITE;
             break;
         }
         case OPT_BPP:
-            if (!cmdline_ranged(a, value, 0, 32, &cl->bpp))
+            if (!cmdline_ranged(a, value, 0, 32, &cfg->bpp))
                 return false;
             break;
         case OPT_XRES:
-            if (!cmdline_ranged(a, value, 256, 2048, &cl->xres))
+            if (!cmdline_ranged(a, value, 256, 2048, &cfg->width))
                 return false;
             break;
         case OPT_YRES:
-            if (!cmdline_ranged(a, value, 256, 2048, &cl->yres))
+            if (!cmdline_ranged(a, value, 256, 2048, &cfg->height))
                 return false;
             break;
-        case OPT_LOGLEVEL:
-            if (!cmdline_ranged(a, value, 0, 6, &cl->msg_level))
-                return false;
+        default:
             break;
         }
     }
     return true;
+}
+
+bool cmdline_preparse(struct config* cfg, const int argc, const char** argv) {
+    return cmdline_run(cfg, argc, argv, true);
+}
+
+bool cmdline_parse(struct config* cfg, const int argc, const char** argv) {
+    return cmdline_run(cfg, argc, argv, false);
 }

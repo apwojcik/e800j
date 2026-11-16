@@ -22,32 +22,21 @@
 
 #include <stdbool.h>
 
-/* Wartość "nie podano" dla opcji liczbowych */
-#define CMDLINE_UNSET (-1)
+struct config;
 
 /*
- Opcje i argumenty linii poleceń po jednokrotnym przetworzeniu w main().
- Napisy wskazują na argv, więc struktura jest ważna tak długo jak argv.
-*/
-struct cmdline {
-    const char* snapshot;     /* argument pozycyjny: snapshot wczytywany przy starcie, nullptr gdy brak */
-    const char* cfg;          /* -c, --config: plik konfiguracji, nullptr = domyślny */
-    const char* profile;      /* -p, --profile: nazwa profilu, nullptr = z sekcji 'main' */
-    const char* disk[2];      /* -A/-a (--a-disk/--a-read-write), -B/-b: obraz dyskietki w napędzie A/B, nullptr gdy brak */
-    bool disk_rw[2];          /* true dla -a/-b (do zapisu), false dla -A/-B (tylko do odczytu); -A i -a wykluczają się (tak samo -B i -b) */
-    bool help;                /* -h, --help */
-    bool debug;               /* --debug */
-    bool fullscreen;          /* -f, --full-screen */
-    bool noframe;             /* -n, --no-frame */
-    int bpp;                  /* --bits-per-pixel (0..32) lub CMDLINE_UNSET */
-    int xres;                 /* -x (256..2048) lub CMDLINE_UNSET */
-    int yres;                 /* -y (256..2048) lub CMDLINE_UNSET */
-    int msg_level;            /* --log-level lub CMDLINE_UNSET */
-};
+ Przetwarzanie linii poleceń w dwóch przebiegach nad tym samym kontekstem (struct config):
 
-/*
- Przetwarza argv (bez wywoływania exit). Zwraca false i wypisuje komunikat (msg_printf)
- przy nieznanej opcji, braku lub błędnej wartości opcji albo nadmiarowym argumencie.
- Po napotkaniu opcji pomocy ustawia 'help' i kończy przetwarzanie.
+ 1. cmdline_preparse() - przed wczytaniem pliku konfiguracji: wybiera tylko to, co jest potrzebne
+    do jego wczytania (--config, --profile, --log-level, --help). Pozostałe opcje pomija
+    bez komunikatów. Zwraca false tylko przy brakującej/zbyt długiej wartości --config/--profile.
+ 2. config_load() (e800j_cfg.h) wypełnia kontekst z pliku wskazanego przez --config.
+ 3. cmdline_parse() - pełny przebieg po wczytaniu konfiguracji: sprawdza wszystkie opcje
+    i argumenty (snapshot) i nadpisuje nimi wartości z pliku konfiguracji.
+
+ Zwracają false i wypisują komunikat (msg_printf) przy nieznanej opcji, braku lub błędnej
+ wartości opcji albo nadmiarowym argumencie. Po napotkaniu opcji pomocy ustawiają 'help'
+ i kończą przetwarzanie.
 */
-bool cmdline_parse(struct cmdline* cl, int argc, const char** argv);
+bool cmdline_preparse(struct config* cfg, int argc, const char** argv);
+bool cmdline_parse(struct config* cfg, int argc, const char** argv);

@@ -40,20 +40,5 @@ int file_snap_load(const char* filename, const struct elwro* e, unsigned char* r
  Stan portu 0xF7 (mapowanie pamięci) nie jest zapisywany.
 */
 int file_snap_save(const char* filename, const struct elwro* e);
-// xx - jeśli 1 to brak opcji nie generuje błędu
-char* file_find_cfg_option(const char* cfg, const char* name, char* str, const char* err, int lvl, int xx);
-char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl);
-
-/* forced: nazwa profilu z linii poleceń (nadpisuje main::profile) lub NULL */
-char* file_get_profile(const char* cfg, const char* forced, char* profile);
-
-int file_bios_load(const char* cfg, const unsigned char* rom, const char* profile, int rom_size);
-
-bool file_init(struct elwro*, const char* config_path, const char* forced_profile);
-
-/*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji,
-    jeśli znajdzie zwraca jej numer, inaczej zwraca 0
-*/
-
-
+/* Tekst pomocy (--help) na stdout i exit(0) */
 void file_help(void);

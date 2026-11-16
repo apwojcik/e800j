@@ -15,29 +15,29 @@ programów ZX SPECTRUM, oraz systemu CP/J (zapewne nie wszystkich). Aby używać
 się zaopatrzyć w plik CPCEmu DSK. Jeśli nie podamy pliku dyskietki, do emulatora zostanie podłączona
 atrapa napędu. Aby uruchomić emulator z dyskietką należy wpisać:
 
-    elwro -A plik.dsk
-
-jeśli chcemy mieć możliwość zapisu (-a montuje obraz do zapisu, -A tylko do odczytu; dla jednego napędu
-opcje -A i -a wykluczają się, tak samo -B i -b):
-
     elwro -a plik.dsk
+
+jeśli chcemy mieć możliwość zapisu (-A montuje obraz do zapisu, -a tylko do odczytu; dla jednego napędu
+opcje -a i -A wykluczają się, tak samo -b i -B):
+
+    elwro -A plik.dsk
 
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
-    elwro -A plik1.dsk -b plik2.dsk
+    elwro -a plik1.dsk -B plik2.dsk
 
 itp..
 
-Opcje mają formę krótką (-A plik.dsk) lub długą (--a-disk plik.dsk, również --a-disk=plik.dsk); pełna
-lista jest w 'elwro --help'. W systemie Windows zamiast '-' i '--' można użyć '/' (np. /A plik.dsk,
-/a-disk plik.dsk). Opcje bez krótkiej formy: --debug, --log-level, --bits-per-pixel (głębia kolorów).
+Opcje mają formę krótką (-a plik.dsk) lub długą (--a-read-only plik.dsk, również --a-read-only=plik.dsk); pełna
+lista jest w 'elwro --help'. W systemie Windows zamiast '-' i '--' można użyć '/' (np. /a plik.dsk,
+/a-read-only plik.dsk). Opcje bez krótkiej formy: --debug, --log-level, --bits-per-pixel (głębia kolorów).
 Rozdzielczość okna: -x szer -y wys.
 
 Składnia: elwro [opcje] [argumenty]. Snapshot można wczytać przy starcie podając go jako argument
 pozycyjny (w dowolnym miejscu linii poleceń):
 
     elwro plik.sna
-    elwro -A plik.dsk plik.sna
+    elwro -a plik.dsk plik.sna
 
 Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pracy:
 
@@ -75,7 +75,7 @@ domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_scr
 
 Jeśli w sekcji profilu ustawiono 'diskdir = "katalog";', F5/F6 zamiast okna wyboru pliku wkładają
 kolejny (alfabetycznie) plik *.dsk z tego katalogu. Tryb RO/RW ustawiony przez Alt+F5/F6 (lub
--a/-b) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
+-A/-B) dotyczy również kolejnych wkładanych dyskietek. Jeśli otwarcie nowego pliku się nie
 powiedzie, dotychczasowa dyskietka pozostaje w napędzie.
 
 Aby dowiedzieć się więcej o opcjach programu należy uruchomić go z parametrem:
@@ -95,3 +95,8 @@ Konfiguracja trzymana jest w pliku e800j.cfg w katalogu bieżącym (o ile nie zo
 Plik konfiguracji jest podzielony na sekcje, z możliwością tworzenia różnych profili konfiguracji.
 Podstawową sekcją jest 'main', która zawiera nazwę domyślnie użytego profilu (można wymusić inny opcją
 uruchomienia: -p nazwa lub --profile nazwa, np. elwro -p profile_01 ). Plik konfiguracji można wskazać opcją -c / --config.
+
+Plik konfiguracji ma składnię 'section nazwa { klucz = wartość; }' (sekcje mogą być zagnieżdżone, komentarz
+zaczyna się od '#', wartości mogą być w cudzysłowie). Liczby szesnastkowe zapisuje się z prefiksem 0x.
+Brakujące opcje (poza listą plików BIOS) mają wartości domyślne, a błędy w pliku są zgłaszane z numerem
+linii. Opcje z linii poleceń nadpisują wartości z pliku konfiguracji.

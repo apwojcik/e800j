@@ -42,6 +42,7 @@
 #include "e800j_mem.h"
 #include "e800j_io.h"
 #include "e800j_fdc.h"
+#include "e800j_cfg.h"
 #include "e800j_cmdline.h"
 #include "e800j_disk.h"
 #include "virt_fdd.h"
@@ -49,34 +50,16 @@
 
 static struct screen screen;
 
-static void disk_open(const struct cmdline* cl, const int n, struct vfdd_disk* disk) {
-    const char* path = cl->disk[n];
-    if (path == nullptr)
+static void disk_open(const struct config* cfg, const int n, struct vfdd_disk* disk) {
+    const char* path = cfg->disk[n];
+    if (path[0] == '\0')
         return;
     const char dn = (char)('A' + n);
-    const bool rw = cl->disk_rw[n];
+    const bool rw = cfg->disk_rw[n];
     if (vfdd_dsk_floppy(disk, VFDD_LOAD, rw ? VFDD_RW : VFDD_RO, 0, 0, path) < 0) {
         msg_printf(MSG_ERROR, "Opening file %s failed.\n", path);
     }
     msg_printf(MSG_MSG, "Open file %s for %s as drive %c.\n", path, rw ? "RW" : "RO", dn);
-}
-
-/* Opcje linii poleceń nadpisują wartości wczytane z pliku konfiguracji (wywoływane po file_init). */
-static void cmdline_override(struct elwro* e, const struct cmdline* cmd) {
-    if (cmd->snapshot != nullptr)
-        snprintf(e->snap_path, sizeof(e->snap_path), "%s", cmd->snapshot);
-    if (cmd->debug)
-        e->debug = 1;
-    if (cmd->bpp != CMDLINE_UNSET)
-        e->scn->bpp = cmd->bpp;
-    if (cmd->xres != CMDLINE_UNSET)
-        e->scn->width = cmd->xres;
-    if (cmd->yres != CMDLINE_UNSET)
-        e->scn->height = cmd->yres;
-    if (cmd->fullscreen)
-        e->scn->fscrn = 1;
-    if (cmd->noframe)
-        e->scn->noframe = 1;
 }
 
 void elwro_reset(struct elwro* e) {
@@ -151,7 +134,7 @@ int elwro_snap_restart(struct elwro* e) {
 
 int main(const int argc, char** args) {
     struct elwro e;
-    struct cmdline cmd;
+    struct config cfg;
     struct fdc fdc;
     struct cpu cpu;
     struct dbg dbg;
@@ -186,34 +169,44 @@ int main(const int argc, char** args) {
     e.disk[1] = &disk_b;
     e.diskdir[0] = 0;
     e.snap_path[0] = 0;
-    screen.toast_ms = 10000;
     e.mem_mask = 0;
     e.map_mask = -1;
     e.junet_addr = 0xf3;
     e.debug = 0;
 
-    /* linia poleceń jest interpretowana jednorazowo, dalej używana jest tylko struct cmdline */
-    if (!cmdline_parse(&cmd, argc, (const char**)args)) {
+    /*
+     Kolejność: domyślne wartości -> wstępny przebieg po linii poleceń (tylko --config, --profile,
+     --log-level, --help) -> plik konfiguracji -> pełny przebieg po linii poleceń, który nadpisuje
+     wartości z pliku. Wszystko trafia do jednego kontekstu (struct config), który potem
+     jest przenoszony do emulatora.
+    */
+    config_init(&cfg);
+    if (!cmdline_preparse(&cfg, argc, (const char**)args)) {
         return 1;
     }
-    if (cmd.help) {
+    if (cfg.help) {
         file_help();
     }
-    if (cmd.msg_level != CMDLINE_UNSET) {
-        msg_level = cmd.msg_level;
+    if (cfg.msg_level >= 0) {
+        msg_level = cfg.msg_level;
     }
+    if (!config_load(&cfg)) {
+        return 1;
+    }
+    if (!cmdline_parse(&cfg, argc, (const char**)args)) {
+        return 1;
+    }
+    if (cfg.msg_level >= 0) {
+        msg_level = cfg.msg_level;
+    }
+    if (!config_apply(&cfg, &e)) {
+        return 1;
+    }
+
     vfdd_dsk_floppy(&disk_a, VFDD_INIT, 0, 0, 0, nullptr);
     vfdd_dsk_floppy(&disk_b, VFDD_INIT, 0, 0, 0, nullptr);
-
-    /* najpierw odczyt konfiguracji i na tej podstawie ustawienie e800, potem nadpisanie jej opcjami z linii poleceń */
-
-    if (file_init(&e, cmd.cfg != nullptr ? cmd.cfg : "e800j.cfg", cmd.profile) == false) {
-        return -1;
-    }
-    cmdline_override(&e, &cmd);
-
-    disk_open(&cmd, 0, &disk_a);
-    disk_open(&cmd, 1, &disk_b);
+    disk_open(&cfg, 0, &disk_a);
+    disk_open(&cfg, 1, &disk_b);
 
     screen.zx_patt = e.ram + 16384;
     screen.zx_attr = e.ram + 16384 + 6 * 1024;
