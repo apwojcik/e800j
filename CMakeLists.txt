@@ -34,7 +34,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3)
 
-add_executable(elwro
+add_executable(elwro WIN32 MACOSX_BUNDLE
         src/e800j.c
         src/e800j.h
         src/e800j_compat.c
@@ -69,6 +69,19 @@ add_executable(elwro
         src/z80_dtbl.h
         src/zx_scrn.c
         src/zx_scrn.h)
+
+if(APPLE)
+    # elwro.app: start bez Terminala; konfiguracja i ROM-y trafiaja do Contents/Resources
+    file(GLOB ELWRO_ROMS "${CMAKE_SOURCE_DIR}/rom/*")
+    target_sources(elwro PRIVATE "${CMAKE_SOURCE_DIR}/e800j.cfg" ${ELWRO_ROMS})
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/e800j.cfg" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set_source_files_properties(${ELWRO_ROMS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/rom)
+    set_target_properties(elwro PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "Elwro 800 Junior"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "pl.elwro.e800j"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.3"
+        MACOSX_BUNDLE_BUNDLE_VERSION "0.3")
+endif()
 
 if(DEBUG_FDC)
     target_compile_definitions(elwro PRIVATE DEBUG_FDC)

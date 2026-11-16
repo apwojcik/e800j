@@ -21,6 +21,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <SDL3/SDL_main.h>
+#ifdef __APPLE__
+#include <string.h>
+#include <unistd.h>
+#include <SDL3/SDL_filesystem.h>
+#endif
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include "z80_cpu.h"
 #include "z80_debug.h"
 #include "zx_scrn.h"
@@ -126,7 +137,8 @@ int elwro_snap_restart(struct elwro* e) {
     return elwro_restart_snap(e, e->snap_path);
 }
 
-int main(int argc, const char** argv) {
+int main(int argc, char** args) {
+    const char** argv = (const char**)args;
     struct elwro e;
     int tmp;
     struct fdc fdc;
@@ -135,6 +147,24 @@ int main(int argc, const char** argv) {
     struct sound snd;
     struct keyboard kbd;
     struct vfdd_disk disk_a, disk_b;
+
+#ifdef _WIN32
+    /* aplikacja GUI: podlacz sie do konsoli procesu nadrzednego (jesli jest) dla -help/-debug */
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        (void)freopen("CONOUT$", "w", stdout);
+        (void)freopen("CONOUT$", "w", stderr);
+        (void)freopen("CONIN$", "r", stdin);
+    }
+#endif
+#ifdef __APPLE__
+    /* uruchomienie z elwro.app (Finder): katalog biezacy to "/", zasoby sa w Contents/Resources */
+    {
+        char cwd[8];
+        const char* base = SDL_GetBasePath();
+        if (base != nullptr && getcwd(cwd, sizeof(cwd)) != nullptr && strcmp(cwd, "/") == 0)
+            (void)chdir(base);
+    }
+#endif
 
     e.cpu = &cpu;
     e.scn = &screen;
