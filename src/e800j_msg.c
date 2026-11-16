@@ -90,7 +90,7 @@ void msg_printf(int level, const char* fmt, ...) {
                 msg_putstr(va_arg(ap, const char *));
                 break;
             case 'c':
-                msg_putchar(va_arg(ap, char));
+                msg_putchar((char)va_arg(ap, int));
                 break;
             case 'i':
                 msg_putint(va_arg(ap, int));

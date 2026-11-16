@@ -127,6 +127,12 @@ static void snd_rate(struct sound* w) {
     err = err > 1.0 ? 1.0 : err < -1.0 ? -1.0 : err;
     const double step = w->step_nom * (1.0 - SND_RATE_ADJ * err);
     w->step = step;
+    if (++w->dbg_cnt >= 50) {
+        w->dbg_cnt = 0;
+        /* msg_printf nie obsługuje szerokości/precyzji, więc wartości są podawane jako liczby całkowite */
+        msg_printf(MSG_VERB_MSG, "snd: queued %i frames (avg %i, target %i), step %i ppm\n",
+                   (int)queued, (int)w->avg_q, w->target_frames, (int)((step / w->step_nom - 1.0) * 1e6));
+    }
 }
 
 void snd_init(struct sound* w, const struct cpu* cpu, const double cpu_hz) {

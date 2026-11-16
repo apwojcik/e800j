@@ -80,7 +80,7 @@ int main(int argc, const char** argv) {
         file_help();
     }
 
-    if ((tmp = file_lookup_option(argc, argv, "-msg_lvl")) != 0) {
+    if ((tmp = file_lookup_option(argc, argv, "-msg_lvl")) != 0 && tmp + 1 < argc) {
         msg_level = strtol(argv[tmp + 1], nullptr, 0);
     }
 

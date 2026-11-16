@@ -54,6 +54,7 @@ struct sound {
     float amp; // wzmocnienie wynikające z volume
     float dc_x, dc_y; // stan filtru górnoprzepustowego (usuwa składową stałą)
     int max_queue; // maksymalna ilość bajtów w kolejce SDL (opóźnienie)
+    int dbg_cnt; // licznik klatek diagnostyki kolejki
     int nout; // ilość ramek w out
     short out[SND_CHUNK * 2];
     const struct cpu* cpu;
