@@ -25,6 +25,7 @@
 #include "i8272_fdc.h"
 
 static int vfdd_open_image(struct vfdd_disk* dsk, const char* path, unsigned char write_mode) {
+    const unsigned char requested = write_mode;
     if ((dsk->f = fopen(path, write_mode != 0 ? "rb+" : "rb")) == nullptr) {
         if ((dsk->f = fopen(path, "rb")) == nullptr) {
             return -1;
@@ -38,6 +39,8 @@ static int vfdd_open_image(struct vfdd_disk* dsk, const char* path, unsigned cha
     dsk->stat = write_mode ? 0 : VFDD_WPROT;
     dsk->sbyte = 0;
     dsk->lbytes = 0;
+    dsk->rw = requested;
+    snprintf(dsk->path, sizeof(dsk->path), "%s", path);
     return FDD_OK;
 }
 
@@ -141,6 +144,8 @@ int vfdd_dsk_floppy(struct vfdd_disk* dsk, const char action,
         dsk->sbyte = 0;
         dsk->lbytes = 0;
         dsk->stat = 0;
+        dsk->path[0] = 0;
+        dsk->rw = VFDD_RO;
         break;
     case VFDD_LOAD:
         if (dsk->f == nullptr) {
@@ -176,6 +181,23 @@ int vfdd_dsk_floppy(struct vfdd_disk* dsk, const char action,
         break;
     }
     return 0;
+}
+
+int vfdd_swap(struct vfdd_disk* dsk, const char* path, const unsigned char write_mode) {
+    if (dsk->f != nullptr) {
+        /* ten sam plik może zostać otwarty ponownie (zmiana RO/RW), więc zapisz bufor */
+        fflush(dsk->f);
+    }
+    struct vfdd_disk next = *dsk;
+    next.f = nullptr;
+    if (vfdd_open_image(&next, path, write_mode) < 0) {
+        return -1;
+    }
+    if (dsk->f != nullptr) {
+        fclose(dsk->f);
+    }
+    *dsk = next;
+    return FDD_OK;
 }
 
 int vfdd_drive(const void* ptr, void* dsk, const unsigned char action, const unsigned char wdata) {

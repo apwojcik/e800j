@@ -63,6 +63,8 @@ struct vfdd_disk {
     long seek;
     int stat;
     int emulation;              // rodzaj emulacji
+    char path[1024];            // ścieżka ostatnio wczytanego obrazu (zachowana po wysunięciu)
+    unsigned char rw;           // żądany tryb otwarcia (VFDD_RO/VFDD_RW), zachowany po wysunięciu
 };
 
 enum {
@@ -105,6 +107,12 @@ int vfdd_dsk_floppy(
     unsigned char parm2, /* głowica */
     const char* path /* ścieżka do pliku/katalogu */
 );
+
+/*
+    Wymiana dyskietki: najpierw otwiera nowy obraz i dopiero po sukcesie zamyka stary,
+    więc przy błędzie (-1) poprzednia dyskietka pozostaje we flopie. Dozwolone path == dsk->path.
+*/
+int vfdd_swap(struct vfdd_disk*, const char* path, unsigned char write_mode);
 
 /*
     Emulacja napędu

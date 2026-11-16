@@ -92,6 +92,10 @@ buffers and global timing state.
   +-1% (smoothed queue length), with a 200 ms hard cap that drops excess samples. `snd_flush()` is called from
   `zx_main` each frame. The CPU clock is ~3.54 MHz (`atom`/`intfq` in the `Z80` config section). AY-3-8910
   sound is listed in `doc/ToDo` as unimplemented.
+- **Disk hot-swap** (`e800j_disk.c`): F9/F10 insert a disk in drive A/B (SDL file dialog, or the next `*.dsk` from the
+  profile's optional `diskdir`), Shift+F/Ctrl+F eject/toggle RO/RW. The dialog callback only pushes an SDL event
+  (`SDL_EVENT_USER + 1`; `SDL_EVENT_USER` is the CPU/screen timer); the swap runs in `zx_main` between `z80_loop` calls via `vfdd_swap()` (opens the new image before closing the
+  old one). `struct vfdd_disk` remembers `path`/`rw` across eject. Drives are reachable as `e.disk[0..1]`.
 - **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O.
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/

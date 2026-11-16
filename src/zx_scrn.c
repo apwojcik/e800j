@@ -33,6 +33,7 @@
 #include "e800j_fdc.h"
 #include "e800j_sound.h"
 #include "e800j_file.h"
+#include "e800j_disk.h"
 #include "e800j_msg.h"
 #include "zx_scrn.h"
 #include "e800j_fdc.h"
@@ -457,9 +458,14 @@ int zx_main(struct elwro* e) {
 
     SDL_Event event;
     while (SDL_WaitEvent(&event)) {
+        if (disk_event(e, &event)) {
+            continue;
+        }
         switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
-            if (event.key.key == SDLK_F12) {
+            if (disk_hotkey(e, event.key.key, event.key.mod)) {
+                /* wymiana dyskietki */
+            } else if (event.key.key == SDLK_F12) {
                 /* zapis snapshotu do pierwszego wolnego pliku e800j_NNN.sna */
                 if (!event.key.repeat) {
                     char name[32];

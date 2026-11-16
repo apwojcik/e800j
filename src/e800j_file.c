@@ -797,6 +797,29 @@ static char file_set_sound(const char* cfg, struct elwro* e, const char* profile
 }
 
 /*******************************************/
+/* opcjonalny katalog z obrazami dyskietek dla F9/F10 */
+static void file_set_diskdir(const char* profile, struct elwro* e) {
+    char tmp[512];
+    if (file_find_cfg_option(profile, "diskdir", tmp, NULL, 0, 1) == NULL) {
+        return;
+    }
+    char* dir = file_unquote(tmp);
+    if (dir == NULL) {
+        return;
+    }
+    size_t length = strlen(dir);
+    while (length > 1 && (dir[length - 1] == '/' || dir[length - 1] == '\\')) {
+        dir[--length] = 0;
+    }
+    if (length == 0 || length >= sizeof(e->diskdir)) {
+        msg_printf(MSG_WARN, "Ignoring invalid diskdir: %s\n", dir);
+    } else {
+        memcpy(e->diskdir, dir, length + 1);
+        msg_printf(MSG_MSG, "Disk directory: %s\n", e->diskdir);
+    }
+    free(dir);
+}
+
 bool file_init(struct elwro* e, const char* config_path, const int argc, const char** argv) {
     char *cfg, *profile;
     int i;
@@ -869,6 +892,7 @@ bool file_init(struct elwro* e, const char* config_path, const int argc, const c
     if (file_set_sound(cfg, e, profile)) {
         return false;
     }
+    file_set_diskdir(profile, e);
 
     /* dojdą dodatkowe*/
     free(profile);
@@ -911,6 +935,10 @@ void file_help(void) {
         " -bdisk <fname>      disk image in CPCEMU *.DSK format for Drive B\n"
         " -arw                disk image A open in R/W mode\n"
         " -brw                disk image B open in R/W mode\n"
+        " F9/F10              insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
+        " Shift+F9/F10        eject disk from drive A/B\n"
+        " Ctrl+F9/F10         toggle RO/RW of disk in drive A/B\n"
+        " F12                 save snapshot e800j_NNN.sna\n"
         " -msg_lvl <value>    message level 0..6, default 0\n"
         //    " -trap_in_e <value>    trap on IN value enable\n"
         //    " -trap_in_d <value>    trap on IN value disable\n"

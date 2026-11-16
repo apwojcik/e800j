@@ -69,6 +69,9 @@ int main(int argc, const char** argv) {
     e.snd = &snd;
     e.kbd = &kbd;
     e.fdc = &fdc;
+    e.disk[0] = &disk_a;
+    e.disk[1] = &disk_b;
+    e.diskdir[0] = 0;
     e.mem_mask = 0;
     e.junet_addr = 0xf3;
     e.debug = 0;
