@@ -50,13 +50,6 @@ static int file_cfg_int(const char* str, int base) {
     return (int)val;
 }
 
-int file_lookup_option(const int argc, const char** argv, const char* name) {
-    for (int i = 0; i < argc; i++)
-        if (strcmp(argv[i], name) == 0)
-            return i;
-    return 0;
-}
-
 static int file_snap_cpy(libspectrum_snap* snap, const struct elwro* e, unsigned char* ram, unsigned char* reg373, const char rest) {
     if (snap == NULL || e == NULL || ram == NULL || reg373 == NULL)
         return 1;
@@ -221,25 +214,6 @@ int file_snap_save(const char* filename, const struct elwro* e) {
             msg_printf(MSG_WARN, "Port 0xF7 = 0x%02x (memory paging) is not stored in .sna\n", e->port_f7);
     }
     return error;
-}
-
-const char* file_snap_cline(const int argc, const char** argv) {
-    /* opcje wymagające wartości (następny argument nie jest parametrem pozycyjnym) */
-    static const char* const with_value[] = {
-        "-cfg", "-profile", "-bpp", "-xres", "-yres", "-adisk", "-bdisk", "-msg_lvl"
-    };
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--") == 0)
-            return i + 1 < argc ? argv[i + 1] : nullptr;
-        if (*argv[i] != '-')
-            return argv[i];
-        for (size_t k = 0; k < sizeof with_value / sizeof with_value[0]; k++)
-            if (strcmp(argv[i], with_value[k]) == 0) {
-                i++;
-                break;
-            }
-    }
-    return nullptr;
 }
 
 /****************************************************************/
@@ -839,20 +813,9 @@ static void file_set_diskdir(const char* profile, struct elwro* e) {
     free(dir);
 }
 
-bool file_init(struct elwro* e, const char* config_path, const int argc, const char** argv) {
+bool file_init(struct elwro* e, const char* config_path, const char* forced_profile) {
     char *cfg, *profile;
-    int i;
 
-    if (file_lookup_option(argc, argv, "-debug")) {
-        e->debug = 1;
-    }
-    if ((i = file_lookup_option(argc, argv, "-cfg"))) {
-        if (i + 1 >= argc) {
-            msg_printf(MSG_ERROR, "Missing an argument for the -cfg option.\n");
-            return false;
-        }
-        config_path = argv[i + 1];
-    }
     struct stat st;
     if (stat(config_path, &st) != 0) {
         msg_printf(MSG_ERROR, "Config file does not exists: %s\n", config_path);
@@ -888,10 +851,9 @@ bool file_init(struct elwro* e, const char* config_path, const int argc, const c
     if (file_get_profile(cfg, profile) == nullptr) {
         return false;
     }
-    if (file_lookup_option(argc, argv, "-profile")) {
-        //	strcpy(profile,argv[i+1]);
-        //	msg_printf(MSG_MSG, "Forced profile by command line option to %s\n", profile);
-        //        if(!file_find_cfg_section(cfg,tmp,profile,NULL,0)) { free(tmp); return NULL; }
+    if (forced_profile != nullptr) {
+        /* TODO: wymuszenie profilu opcją -profile nie jest jeszcze zaimplementowane */
+        msg_printf(MSG_WARN, "Option -profile is not supported yet, ignored: %s\n", forced_profile);
     }
     if (file_memo_set(cfg, e, profile)) {
         return false;
@@ -918,23 +880,6 @@ bool file_init(struct elwro* e, const char* config_path, const int argc, const c
     free(cfg);
 
     return true;
-}
-
-void file_option_param(const int argc, const char** argv, const int pos, const int min, const int max, int* val) {
-    if (pos + 1 >= argc) {
-        msg_printf(MSG_WARN, "Missing parameter to option %s\n", argv[pos]);
-        return;
-    }
-    const int tmp = strtol(argv[pos + 1], NULL, 0);
-    if (tmp < min) {
-        msg_printf(MSG_WARN, "Too small parameter for option %s=%i (min=%i)\n", argv[pos], tmp, min);
-        return;
-    }
-    if (tmp > max) {
-        msg_printf(MSG_WARN, "Too large parameter for option %s=%i (max=%i)\n", argv[pos], tmp, max);
-        return;
-    }
-    *val = tmp;
 }
 
 void file_help(void) {

@@ -607,23 +607,11 @@ static void zx_free_flash(const int n, void* zx) {
     SDL_RemoveTimer(((struct screen*)zx)->t2);
 }
 
-bool screen_init(struct screen* s, int width, int height, int bpp, const int argc, const char** argv, const int refresh) {
-    int i = file_lookup_option(argc, argv, "-bpp");
-    if (i)
-        file_option_param(argc, argv, i, 0, 32, &bpp);
-    if ((i = file_lookup_option(argc, argv, "-xres")))
-        file_option_param(argc, argv, i, 256, 2048, &width);
-    if ((i = file_lookup_option(argc, argv, "-yres")))
-        file_option_param(argc, argv, i, 256, 2048, &height);
-
+bool screen_init(struct screen* s, const int refresh) {
     if (refresh <= 0 || s->flash <= 0) {
         msg_printf(MSG_CRITICAL_ERROR, "Invalid screen refresh (%i ms) or blink (%i ms) time\n", refresh, s->flash);
         return false;
     }
-
-    s->width = width;
-    s->height = height;
-    s->bpp = bpp;
 
     /* zainicjowanie ekranu SDL */
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -649,7 +637,7 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     }
 
     /* automatyczne ustawienie głębi kolorów */
-    if (bpp == 0) {
+    if (s->bpp == 0) {
         const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
         if (mode && SDL_BITSPERPIXEL(mode->format) <= 8)
             s->bpp = 8;
@@ -658,9 +646,9 @@ bool screen_init(struct screen* s, int width, int height, int bpp, const int arg
     }
 
     Uint32 video_flags = SDL_WINDOW_OPENGL;
-    if (file_lookup_option(argc, argv, "-fs"))
+    if (s->fscrn)
         video_flags |= SDL_WINDOW_FULLSCREEN;
-    if (file_lookup_option(argc, argv, "-nf"))
+    if (s->noframe)
         video_flags |= SDL_WINDOW_BORDERLESS;
 
     /* rozmiar bitowy składowych koloru */

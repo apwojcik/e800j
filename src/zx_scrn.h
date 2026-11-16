@@ -84,7 +84,8 @@ struct screen {
     SDL_GLContext glctx;
     int flash; /* tempo migania atrybutu flash w ms */
     SDL_AtomicInt inverse; /* faza migania (zmieniana w wątku timera) */
-    int fscrn;
+    int fscrn; /* tryb pełnoekranowy (config fscrn, nadpisywany przez -fs) */
+    int noframe; /* okno bez ramki (-nf) */
     int bright;
     int nbrt;
     int bbrt;
@@ -128,8 +129,8 @@ void screen_toast_next(struct screen* s, const char* text);
 /* pasek głośności (0 .. max, wypełniony do level) na środku dołu okna, na krótki czas (nie dłużej niż s->toast_ms) */
 void screen_volume(struct screen* s, int level, int max);
 
-/* argv -> -fullscreen, -noframe */
-bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
+/* używa s->width/height/bpp/fscrn/noframe (konfiguracja, potem ewentualne nadpisanie z linii poleceń) */
+bool screen_init(struct screen* s, int refresh);
 
 void screen_border(struct screen* s, unsigned char color);
 

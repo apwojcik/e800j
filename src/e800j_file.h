@@ -24,8 +24,6 @@
 
 struct elwro;
 
-/* Nazwa snapshotu z linii poleceń: pierwszy parametr pozycyjny w dowolnym miejscu linii poleceń (pomija opcje i ich wartości; "--" kończy opcje); nullptr gdy brak */
-const char* file_snap_cline(int argc, const char** argv);
 
 /*
  Wczytuje snapshot:
@@ -50,13 +48,11 @@ char* file_get_profile(const char* cfg, char* profile);
 
 int file_bios_load(const char* cfg, const unsigned char* rom, const char* profile, int rom_size);
 
-bool file_init(struct elwro*, const char* config_path, int argc, const char** argv);
+bool file_init(struct elwro*, const char* config_path, const char* forced_profile);
 
 /*  przeszukuje parametry wejściowe wywołania w poszukiwaniu opcji,
     jeśli znajdzie zwraca jej numer, inaczej zwraca 0
 */
-int file_lookup_option(int argc, const char** argv, const char* name);
 
-void file_option_param(int argc, const char** argv, int pos, int min, int max, int* val);
 
 void file_help(void);

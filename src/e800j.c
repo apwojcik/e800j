@@ -42,29 +42,41 @@
 #include "e800j_mem.h"
 #include "e800j_io.h"
 #include "e800j_fdc.h"
+#include "e800j_cmdline.h"
 #include "e800j_disk.h"
 #include "virt_fdd.h"
 #include "e800j_msg.h"
 
 static struct screen screen;
 
-static void disk_vlookup(int argc, const char** argv, char* dparm, char* mode, struct vfdd_disk* disk, char dn) {
-    const int tmp = file_lookup_option(argc, argv, dparm);
-    if (tmp != 0) {
-        if (tmp < argc) {
-            if (file_lookup_option(argc, argv, mode) != 0) {
-                if (vfdd_dsk_floppy(disk, VFDD_LOAD, VFDD_RW, 0, 0, argv[tmp + 1]) < 0) {
-                    msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
-                }
-                msg_printf(MSG_MSG, "Open file %s for RW as drive %c.\n", argv[tmp + 1], dn);
-            } else {
-                if (vfdd_dsk_floppy(disk, VFDD_LOAD, VFDD_RO, 0, 0, argv[tmp + 1]) < 0) {
-                    msg_printf(MSG_ERROR, "Opening file %s failed.\n", argv[tmp + 1]);
-                }
-       	        msg_printf(MSG_MSG, "Open file %s for RO as drive %c.\n", argv[tmp + 1], dn);
-            }
-        }
+static void disk_open(const struct cmdline* cl, const int n, struct vfdd_disk* disk) {
+    const char* path = cl->disk[n];
+    if (path == nullptr)
+        return;
+    const char dn = (char)('A' + n);
+    const bool rw = cl->disk_rw[n];
+    if (vfdd_dsk_floppy(disk, VFDD_LOAD, rw ? VFDD_RW : VFDD_RO, 0, 0, path) < 0) {
+        msg_printf(MSG_ERROR, "Opening file %s failed.\n", path);
     }
+    msg_printf(MSG_MSG, "Open file %s for %s as drive %c.\n", path, rw ? "RW" : "RO", dn);
+}
+
+/* Opcje linii poleceń nadpisują wartości wczytane z pliku konfiguracji (wywoływane po file_init). */
+static void cmdline_override(struct elwro* e, const struct cmdline* cmd) {
+    if (cmd->snapshot != nullptr)
+        snprintf(e->snap_path, sizeof(e->snap_path), "%s", cmd->snapshot);
+    if (cmd->debug)
+        e->debug = 1;
+    if (cmd->bpp != CMDLINE_UNSET)
+        e->scn->bpp = cmd->bpp;
+    if (cmd->xres != CMDLINE_UNSET)
+        e->scn->width = cmd->xres;
+    if (cmd->yres != CMDLINE_UNSET)
+        e->scn->height = cmd->yres;
+    if (cmd->fullscreen)
+        e->scn->fscrn = 1;
+    if (cmd->noframe)
+        e->scn->noframe = 1;
 }
 
 void elwro_reset(struct elwro* e) {
@@ -137,10 +149,9 @@ int elwro_snap_restart(struct elwro* e) {
     return elwro_restart_snap(e, e->snap_path);
 }
 
-int main(int argc, char** args) {
-    const char** argv = (const char**)args;
+int main(const int argc, char** args) {
     struct elwro e;
-    int tmp;
+    struct cmdline cmd;
     struct fdc fdc;
     struct cpu cpu;
     struct dbg dbg;
@@ -175,37 +186,34 @@ int main(int argc, char** args) {
     e.disk[1] = &disk_b;
     e.diskdir[0] = 0;
     e.snap_path[0] = 0;
-    const char* snap_name = file_snap_cline(argc, argv);
-    if (snap_name != nullptr)
-        snprintf(e.snap_path, sizeof(e.snap_path), "%s", snap_name);
     screen.toast_ms = 10000;
     e.mem_mask = 0;
     e.map_mask = -1;
     e.junet_addr = 0xf3;
     e.debug = 0;
 
-    if (file_lookup_option(argc, argv, "-help") ||
-        file_lookup_option(argc, argv, "-h") ||
-        file_lookup_option(argc, argv, "--help"))
-    {
+    /* linia poleceń jest interpretowana jednorazowo, dalej używana jest tylko struct cmdline */
+    if (!cmdline_parse(&cmd, argc, (const char**)args)) {
+        return 1;
+    }
+    if (cmd.help) {
         file_help();
     }
-
-    if ((tmp = file_lookup_option(argc, argv, "-msg_lvl")) != 0 && tmp + 1 < argc) {
-        msg_level = strtol(argv[tmp + 1], nullptr, 0);
+    if (cmd.msg_level != CMDLINE_UNSET) {
+        msg_level = cmd.msg_level;
     }
-
     vfdd_dsk_floppy(&disk_a, VFDD_INIT, 0, 0, 0, nullptr);
     vfdd_dsk_floppy(&disk_b, VFDD_INIT, 0, 0, 0, nullptr);
 
-    disk_vlookup(argc, argv, "-adisk", "-arw", &disk_a, 'A');
-    disk_vlookup(argc, argv, "-bdisk", "-brw", &disk_b, 'B');
+    /* najpierw odczyt konfiguracji i na tej podstawie ustawienie e800, potem nadpisanie jej opcjami z linii poleceń */
 
-    /* odczyt konfiguracji i na tej podstawie ustawienie e800 */
-
-    if (file_init(&e, "e800j.cfg", argc, argv) == false) {
+    if (file_init(&e, cmd.cfg != nullptr ? cmd.cfg : "e800j.cfg", cmd.profile) == false) {
         return -1;
     }
+    cmdline_override(&e, &cmd);
+
+    disk_open(&cmd, 0, &disk_a);
+    disk_open(&cmd, 1, &disk_b);
 
     screen.zx_patt = e.ram + 16384;
     screen.zx_attr = e.ram + 16384 + 6 * 1024;
@@ -218,7 +226,7 @@ int main(int argc, char** args) {
     fdc_init(&fdc);
     i8272_fdd_connect(&fdc.i8272, vfdd_drive, &disk_a, &disk_b, nullptr, nullptr);
 
-    if (screen_init(&screen, screen.width, screen.height, screen.bpp, argc, argv, e.scn->rfsh) == false) {
+    if (screen_init(&screen, e.scn->rfsh) == false) {
         return -1;
     }
 

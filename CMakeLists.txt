@@ -50,6 +50,8 @@ FetchContent_MakeAvailable(SDL3)
 add_executable(elwro WIN32 MACOSX_BUNDLE
         src/e800j.c
         src/e800j.h
+        src/e800j_cmdline.c
+        src/e800j_cmdline.h
         src/e800j_compat.c
         src/e800j_compat.h
         src/e800j_config.h
