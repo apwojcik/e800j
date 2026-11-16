@@ -44,7 +44,8 @@ int file_snap_save(const char* filename, const struct elwro* e);
 char* file_find_cfg_option(const char* cfg, const char* name, char* str, const char* err, int lvl, int xx);
 char* file_find_cfg_section(const char* cfg, const char* name, char* str, const char* err, int lvl);
 
-char* file_get_profile(const char* cfg, char* profile);
+/* forced: nazwa profilu z linii poleceń (nadpisuje main::profile) lub NULL */
+char* file_get_profile(const char* cfg, const char* forced, char* profile);
 
 int file_bios_load(const char* cfg, const unsigned char* rom, const char* profile, int rom_size);
 

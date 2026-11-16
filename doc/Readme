@@ -88,4 +88,4 @@ Konfiguracja:
 Konfiguracja trzymana jest w pliku e800j.cfg w katalogu bieżącym (o ile nie zostało inne miejsce wymuszone).
 Plik konfiguracji jest podzielony na sekcje, z możliwością tworzenia różnych profili konfiguracji.
 Podstawową sekcją jest 'main', która zawiera nazwę domyślnie użytego profilu (można wymusić inny opcją
-uruchomienia ).
+uruchomienia: -profile nazwa, np. elwro -profile profile_01 ).

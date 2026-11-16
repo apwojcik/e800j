@@ -378,22 +378,29 @@ char* file_find_cfg_section(const char* cfg, const char* name, char* str,
 
 /**************************************************************/
 
-char* file_get_profile(const char* cfg, char* profile) {
+char* file_get_profile(const char* cfg, const char* forced, char* profile) {
     char* tmp;
     if ((tmp = malloc(strlen(cfg) + 1)) == NULL) {
         msg_printf(MSG_ERROR, "Error allocate memory for configuration.\n");
         return NULL;
     }
-    if (file_find_cfg_section(cfg, "main", tmp, NULL, 0) == NULL) {
-        free(tmp);
-        return NULL;
+    if (forced != NULL) {
+        /* profil z linii poleceń nadpisuje main::profile */
+        snprintf(tmp, strlen(cfg) + 1, "%s", forced);
+        msg_printf(MSG_MSG, "Chosen profile (command line): %s\n", tmp);
+    } else {
+        if (file_find_cfg_section(cfg, "main", tmp, NULL, 0) == NULL) {
+            free(tmp);
+            return NULL;
+        }
+        if (file_find_cfg_option(cfg, "profile", tmp, NULL, 1, 0) == NULL) {
+            free(tmp);
+            return NULL;
+        }
+        msg_printf(MSG_MSG, "Chosen profile: %s\n", tmp);
     }
-    if (file_find_cfg_option(cfg, "profile", tmp, NULL, 1, 0) == NULL) {
-        free(tmp);
-        return NULL;
-    }
-    msg_printf(MSG_MSG, "Chosen profile: %s\n", tmp);
     if (file_find_cfg_section(cfg, tmp, profile, NULL, 0) == NULL) {
+        msg_printf(MSG_CRITICAL_ERROR, "Profile section not found in the config file: %s\n", tmp);
         free(tmp);
         return NULL;
     }
@@ -848,12 +855,8 @@ bool file_init(struct elwro* e, const char* config_path, const char* forced_prof
         free(cfg);
         return false;
     }
-    if (file_get_profile(cfg, profile) == nullptr) {
+    if (file_get_profile(cfg, forced_profile, profile) == nullptr) {
         return false;
-    }
-    if (forced_profile != nullptr) {
-        /* TODO: wymuszenie profilu opcją -profile nie jest jeszcze zaimplementowane */
-        msg_printf(MSG_WARN, "Option -profile is not supported yet, ignored: %s\n", forced_profile);
     }
     if (file_memo_set(cfg, e, profile)) {
         return false;
