@@ -30,6 +30,7 @@
 #include "e800j_mem.h"
 #include "e800j_io.h"
 #include "e800j_fdc.h"
+#include "e800j_disk.h"
 #include "virt_fdd.h"
 #include "e800j_msg.h"
 
@@ -144,6 +145,7 @@ int main(int argc, const char** argv) {
     snd_init(&snd, &cpu, (double)e.tr * 1000.0 / (double)e.cpu_refresh);
     file_get_cline(argc, argv, &e, e.ram, &e.scn->border_color, 0);
 
+    disk_announce(&e);
     zx_main(&e);
 
     snd_free_buffers(&snd);

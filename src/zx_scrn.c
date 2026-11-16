@@ -293,15 +293,45 @@ static void screen_draw_help(struct screen* s) {
     screen_draw_texture(s, s->help_tex, (s->width - w) / 2, (s->height - h) / 2, w, h);
 }
 
-/* komunikat o ostatniej operacji w lewym górnym rogu, znika po s->toast_ms */
+/* tekst (wiersze rozdzielone '\n') jako nowy komunikat na czas s->toast_ms */
+static void screen_toast_show(struct screen* s, const char* text) {
+    char buf[sizeof(s->toast_next)];
+    const char* lines[8];
+    int n = 0;
+    snprintf(buf, sizeof(buf), "%s", text);
+    for (char* p = buf; n < 8 && p != nullptr;) {
+        lines[n++] = p;
+        p = strchr(p, '\n');
+        if (p != nullptr) {
+            *p++ = 0;
+        }
+    }
+    if (s->toast_tex != 0) {
+        glDeleteTextures(1, &s->toast_tex);
+    }
+    s->toast_tex = screen_text_texture(lines, n, OSD_TOAST_VPAD, &s->toast_w, &s->toast_h);
+    s->toast_until = SDL_GetTicks() + (Uint64)s->toast_ms;
+    s->toast_sticky = false;
+}
+
+/* komunikat o ostatniej operacji w lewym górnym rogu, znika po s->toast_ms, potem ewentualny następny */
 static void screen_draw_toast(struct screen* s) {
     if (s->toast_tex == 0) {
         return;
     }
-    if (SDL_GetTicks() >= s->toast_until) {
+    /* komunikat przypięty do pomocy trwa, dopóki pomoc jest widoczna, i znika razem z nią */
+    const bool expired = s->toast_sticky ? !s->help : SDL_GetTicks() >= s->toast_until;
+    if (expired) {
+        s->toast_sticky = false;
         glDeleteTextures(1, &s->toast_tex);
         s->toast_tex = 0;
-        return;
+        if (s->toast_pending) {
+            s->toast_pending = false;
+            screen_toast_show(s, s->toast_next);
+        }
+        if (s->toast_tex == 0) {
+            return;
+        }
     }
     /* ten sam rozmiar znaków co pomoc, zmniejszany tylko, gdy komunikat nie mieści się w oknie */
     const int zoom = SDL_max(1, SDL_min(screen_osd_zoom(s), (s->width - OSD_TOAST_MARGIN) / s->toast_w));
@@ -313,18 +343,25 @@ void screen_toast(struct screen* s, const char* fmt, ...) {
     if (s->toast_ms <= 0) {
         return;
     }
-    char text[256];
+    char text[sizeof(s->toast_next)];
     va_list args;
     va_start(args, fmt);
     vsnprintf(text, sizeof(text), fmt, args);
     va_end(args);
+    s->toast_pending = false;
+    screen_toast_show(s, text);
+}
 
-    if (s->toast_tex != 0) {
-        glDeleteTextures(1, &s->toast_tex);
+void screen_toast_next(struct screen* s, const char* text) {
+    if (s->toast_ms <= 0) {
+        return;
     }
-    const char* const line = text;
-    s->toast_tex = screen_text_texture(&line, 1, OSD_TOAST_VPAD, &s->toast_w, &s->toast_h);
-    s->toast_until = SDL_GetTicks() + (Uint64)s->toast_ms;
+    if (s->toast_tex == 0) {
+        screen_toast_show(s, text);
+        return;
+    }
+    snprintf(s->toast_next, sizeof(s->toast_next), "%s", text);
+    s->toast_pending = true;
 }
 
 void screen_help(struct screen* s, const bool show) {
@@ -629,7 +666,11 @@ int zx_main(struct elwro* e) {
                 screen_help(e->scn, false);
             } else if (event.key.key == SDLK_F1) {
                 if (!event.key.repeat) {
+                    char status[128];
                     screen_help(e->scn, true);
+                    disk_status(e, "Floppy ", status, sizeof(status));
+                    screen_toast(e->scn, "%s", status);
+                    e->scn->toast_sticky = e->scn->toast_tex != 0;
                 }
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
@@ -637,7 +678,11 @@ int zx_main(struct elwro* e) {
             } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_CTRL) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
+                    char status[128];
                     elwro_reset(e);
+                    screen_toast(e->scn, "Reset");
+                    disk_status(e, "Floppy ", status, sizeof(status));
+                    screen_toast_next(e->scn, status);
                 }
             } else if (event.key.key == SDLK_F12) {
                 screen_help(e->scn, false);

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <SDL3/SDL.h>
 
 struct elwro;
@@ -35,3 +36,9 @@ bool disk_hotkey(struct elwro* e, SDL_Keycode key, SDL_Keymod mod);
 
 /* obsługa zdarzenia z okna wyboru pliku, zwraca true, jeśli zdarzenie było przeznaczone dla modułu */
 bool disk_event(struct elwro* e, const SDL_Event* event);
+
+/* stan napędów A i B ("<prefix>A: nazwa (RW)" / "<prefix>A: no disk"), w jednym wierszu */
+void disk_status(const struct elwro* e, const char* prefix, char* buf, size_t size);
+
+/* komunikat ze stanem obu napędów, pokazywany po uruchomieniu emulatora */
+void disk_announce(struct elwro* e);

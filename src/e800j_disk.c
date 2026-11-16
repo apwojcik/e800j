@@ -48,6 +48,26 @@ static const char* disk_basename(const char* path) {
     return base;
 }
 
+void disk_status(const struct elwro* e, const char* prefix, char* buf, const size_t size) {
+    buf[0] = 0;
+    size_t len = 0;
+    for (int drive = 0; drive < 2 && len < size; drive++) {
+        const struct vfdd_disk* disk = e->disk[drive];
+        const char* sep = drive == 0 ? "" : ", ";
+        const int n = disk->f == nullptr
+            ? snprintf(buf + len, size - len, "%s%c: no disk", drive == 0 ? prefix : sep, drive_name(drive))
+            : snprintf(buf + len, size - len, "%s%c: %s (%s)", drive == 0 ? prefix : sep, drive_name(drive),
+                disk_basename(disk->path), (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
+        len += (size_t)n;
+    }
+}
+
+void disk_announce(struct elwro* e) {
+    char text[256];
+    disk_status(e, "Floppy ", text, sizeof(text));
+    screen_toast(e->scn, "%s", text);
+}
+
 static void disk_insert(struct elwro* e, const int drive, const char* path) {
     struct vfdd_disk* disk = e->disk[drive];
     if (vfdd_swap(disk, path, disk->rw) < 0) {

@@ -94,6 +94,9 @@ struct screen {
     unsigned int toast_tex;
     int toast_w;
     int toast_h;
+    char toast_next[256]; /* komunikat do pokazania po zniknięciu bieżącego */
+    bool toast_pending;
+    bool toast_sticky; /* komunikat nie wygasa w czasie, dopóki widoczna jest pomoc (F1) */
     Uint64 toast_until; /* SDL_GetTicks(), po którym komunikat znika */
 };
 
@@ -106,6 +109,9 @@ void screen_help(struct screen* s, bool show);
 
 /* komunikat o operacji (printf) w lewym górnym rogu na czas s->toast_ms, zastępuje poprzedni */
 void screen_toast(struct screen* s, const char* fmt, ...);
+
+/* komunikat (wiersze rozdzielone '\n') pokazywany po zniknięciu bieżącego, a gdy go nie ma - od razu */
+void screen_toast_next(struct screen* s, const char* text);
 
 /* argv -> -fullscreen, -noframe */
 bool screen_init(struct screen* s, int width, int height, int bpp, int argc, const char** argv, int refresh);
