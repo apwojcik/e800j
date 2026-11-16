@@ -182,7 +182,7 @@ static const char* const help_lines[] = {
     "F5 / F6       insert disk in drive A / B",
     "Shift+F5/F6   eject disk from drive A / B",
     HK_ALT_NAME "+F5/F6" HK_ALT_PAD "     toggle RO/RW of disk in A / B",
-    HK_CTRL_NAME "+F1..F5" HK_CTRL_PAD "   window scale x1 / 1.5 / 2 / 2.5 / 3",
+    HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
     HK_CTRL_NAME "+F12" HK_CTRL_PAD "      cold restart (fresh start)",
@@ -419,7 +419,7 @@ static void screen_set_scale(struct screen* s, const float scale) {
     const int h = (int)((192 * scale + (float)s->yresv) / inner / density + 0.5f);
     SDL_RestoreWindow(s->window);
     SDL_SetWindowSize(s->window, w, h);
-    screen_toast(s, "Window scale x%g", (double)scale);
+    screen_toast(s, "Window scale x%g", (double)scale / 2.0);
 }
 
 static void screen_glinit(struct screen* s) {
@@ -728,7 +728,7 @@ int zx_main(struct elwro* e) {
         case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_ESCAPE && e->scn->help) {
                 screen_help(e->scn, false);
-            } else if (event.key.key == SDLK_F1) {
+            } else if (event.key.key == SDLK_F1 && (event.key.mod & HK_CTRL_MOD) == 0) {
                 if (!event.key.repeat) {
                     char status[128];
                     screen_help(e->scn, true);
@@ -736,8 +736,8 @@ int zx_main(struct elwro* e) {
                     screen_toast(e->scn, "%s", status);
                     e->scn->toast_sticky = e->scn->toast_tex != 0;
                 }
-            } else if ((event.key.mod & HK_CTRL_MOD) != 0 && event.key.key >= SDLK_F1 && event.key.key <= SDLK_F5) {
-                static const float scales[] = { 1.0f, 1.5f, 2.0f, 2.5f, 3.0f };
+            } else if ((event.key.mod & HK_CTRL_MOD) != 0 && event.key.key >= SDLK_F1 && event.key.key <= SDLK_F9) {
+                static const float scales[] = { 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f };
                 if (!event.key.repeat) {
                     screen_help(e->scn, false);
                     screen_set_scale(e->scn, scales[event.key.key - SDLK_F1]);
