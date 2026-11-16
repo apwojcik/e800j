@@ -232,14 +232,6 @@ const char* file_snap_cline(const int argc, const char** argv) {
     return nullptr;
 }
 
-void file_get_cline(const int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, const char rest) {
-    const char* name = file_snap_cline(argc, argv);
-    if (name != nullptr) {
-        msg_printf(MSG_MSG, "Loading snapshot: %s\n", name);
-        file_snap_load(name, e, ram, r373, rest);
-    }
-}
-
 /****************************************************************/
 
 static int is_letter(const int a) {

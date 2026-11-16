@@ -28,11 +28,6 @@ struct elwro;
 const char* file_snap_cline(int argc, const char** argv);
 
 /*
- Wczytuje snapshot podany w linii poleceń (patrz file_snap_cline), jeśli go podano
-*/
-void file_get_cline(int argc, const char** argv, const struct elwro* e, unsigned char* ram, unsigned char* r373, char rest);
-
-/*
  Wczytuje snapshot:
  c - struktura CPU Z80,
  ram - bufor pamięci ZX SPECTRUM/ JUNIOR

@@ -99,8 +99,27 @@ int elwro_restart_snap(struct elwro* e, const char* path) {
         return 1;
     if (file_snap_load(path, e, e->ram, &e->scn->border_color, 0) != 0)
         return 1;
-    screen_toast(e->scn, "Snapshot restarted: %s", path);
     return 0;
+}
+
+static const char* snap_basename(const char* path) {
+    const char* base = path;
+    for (const char* p = path; *p != 0; ++p) {
+        if (*p == '/' || *p == '\\')
+            base = p + 1;
+    }
+    return base;
+}
+
+void elwro_snap_announce(struct elwro* e, const char* path, const int error) {
+    char text[320];
+    if (path == nullptr || path[0] == 0) {
+        msg_printf(MSG_MSG, "No snapshot loaded\n");
+        snprintf(text, sizeof(text), "No snapshot loaded");
+    } else {
+        snprintf(text, sizeof(text), error != 0 ? "Snapshot load failed: %s" : "Snapshot loaded: %s", snap_basename(path));
+    }
+    screen_toast_next(e->scn, text);
 }
 
 int elwro_snap_restart(struct elwro* e) {
@@ -173,9 +192,16 @@ int main(int argc, const char** argv) {
     }
 
     snd_init(&snd, &cpu, (double)e.tr * 1000.0 / (double)e.cpu_refresh);
-    file_get_cline(argc, argv, &e, e.ram, &e.scn->border_color, 0);
+    int snap_error = 0;
+    if (e.snap_path[0] != 0) {
+        msg_printf(MSG_MSG, "Loading snapshot: %s\n", e.snap_path);
+        snap_error = file_snap_load(e.snap_path, &e, e.ram, &e.scn->border_color, 0);
+    }
 
     disk_announce(&e);
+    /* komunikat o snapshocie po zniknięciu komunikatu o dyskietkach; bez snapshotu w linii poleceń nic nie pokazujemy */
+    if (e.snap_path[0] != 0)
+        elwro_snap_announce(&e, e.snap_path, snap_error);
     zx_main(&e);
 
     snd_free_buffers(&snd);

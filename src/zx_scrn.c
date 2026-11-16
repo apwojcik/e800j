@@ -298,7 +298,7 @@ static void screen_draw_help(struct screen* s) {
 
 /* tekst (wiersze rozdzielone '\n') jako nowy komunikat na czas s->toast_ms */
 static void screen_toast_show(struct screen* s, const char* text) {
-    char buf[sizeof(s->toast_next)];
+    char buf[sizeof(s->toast_next[0])];
     const char* lines[8];
     int n = 0;
     snprintf(buf, sizeof(buf), "%s", text);
@@ -328,9 +328,12 @@ static void screen_draw_toast(struct screen* s) {
         s->toast_sticky = false;
         glDeleteTextures(1, &s->toast_tex);
         s->toast_tex = 0;
-        if (s->toast_pending) {
-            s->toast_pending = false;
-            screen_toast_show(s, s->toast_next);
+        if (s->toast_queued > 0) {
+            char text[sizeof(s->toast_next[0])];
+            snprintf(text, sizeof(text), "%s", s->toast_next[0]);
+            memmove(s->toast_next[0], s->toast_next[1], sizeof(s->toast_next[0]) * (TOAST_QUEUE - 1));
+            s->toast_queued--;
+            screen_toast_show(s, text);
         }
         if (s->toast_tex == 0) {
             return;
@@ -346,12 +349,12 @@ void screen_toast(struct screen* s, const char* fmt, ...) {
     if (s->toast_ms <= 0) {
         return;
     }
-    char text[sizeof(s->toast_next)];
+    char text[sizeof(s->toast_next[0])];
     va_list args;
     va_start(args, fmt);
     vsnprintf(text, sizeof(text), fmt, args);
     va_end(args);
-    s->toast_pending = false;
+    s->toast_queued = 0;
     screen_toast_show(s, text);
 }
 
@@ -363,8 +366,9 @@ void screen_toast_next(struct screen* s, const char* text) {
         screen_toast_show(s, text);
         return;
     }
-    snprintf(s->toast_next, sizeof(s->toast_next), "%s", text);
-    s->toast_pending = true;
+    if (s->toast_queued < TOAST_QUEUE) {
+        snprintf(s->toast_next[s->toast_queued++], sizeof(s->toast_next[0]), "%s", text);
+    }
 }
 
 void screen_help(struct screen* s, const bool show) {
@@ -699,10 +703,11 @@ int zx_main(struct elwro* e) {
         if (event.type == SNAP_EVENT_TYPE) {
             char status[128];
             char* path = event.user.data1;
-            elwro_restart_snap(e, path);
-            SDL_free(path);
+            const int error = elwro_restart_snap(e, path);
             disk_status(e, "Floppy ", status, sizeof(status));
             screen_toast_next(e->scn, status);
+            elwro_snap_announce(e, path, error);
+            SDL_free(path);
             continue;
         }
         switch (event.type) {
@@ -729,8 +734,10 @@ int zx_main(struct elwro* e) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     char status[128];
-                    if ((event.key.mod & HK_ALT_MOD) != 0) {
-                        elwro_snap_restart(e);
+                    const bool with_snap = (event.key.mod & HK_ALT_MOD) != 0;
+                    int error = 0;
+                    if (with_snap) {
+                        error = elwro_snap_restart(e);
                     } else if ((event.key.mod & HK_CTRL_MOD) != 0) {
                         elwro_cold_reset(e);
                     } else {
@@ -738,6 +745,8 @@ int zx_main(struct elwro* e) {
                     }
                     disk_status(e, "Floppy ", status, sizeof(status));
                     screen_toast_next(e->scn, status);
+                    if (with_snap)
+                        elwro_snap_announce(e, e->snap_path, error);
                 }
             } else if (event.key.key == SDLK_F12) {
                 screen_help(e->scn, false);

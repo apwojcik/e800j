@@ -75,4 +75,7 @@ void elwro_cold_reset(struct elwro*);
 int elwro_snap_restart(struct elwro*);
 /* zimny restart + wczytanie snapshotu z podanej ścieżki (nullptr/pusta -> sam zimny restart); zwraca 0 gdy wczytano */
 int elwro_restart_snap(struct elwro*, const char* path);
+/* kolejkuje komunikat o wczytanym snapshocie (sama nazwa pliku), błędzie lub - dla pustej ścieżki - braku snapshotu;
+   wołać po komunikacie o dyskietkach, error = wynik file_snap_load */
+void elwro_snap_announce(struct elwro*, const char* path, int error);
 int zx_main(struct elwro*);
