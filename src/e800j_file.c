@@ -33,6 +33,7 @@
 #endif
 
 #include "e800j.h"
+#include "e800j_kbrd.h"
 #include "e800j_compat.h"
 #include "z80_cpu.h"
 #include "e800j_msg.h"
@@ -940,7 +941,7 @@ void file_help(void) {
         "Usage:   e800j [snapshot filename] [options]\n\n"
         "Command line options:\n"
         " -h,-help,--help     this text\n"
-        " -snap <fname>       load snapshot at startup (also Alt+F12 reloads it)\n"
+        " -snap <fname>       load snapshot at startup (also " HK_ALT_NAME "+F12 reloads it)\n"
         " -cfg <fname>        alternative configiguration file\n"
         " -profile <pname>    configuration profile name\n"
         " -fs                 fullscreen\n"
@@ -959,16 +960,12 @@ void file_help(void) {
         " F1                  show hot keys help overlay (Esc or any hot key closes)\n"
         " F5/F6               insert disk in drive A/B (file dialog, or next *.dsk from 'diskdir' in the profile)\n"
         " Shift+F5/F6         eject disk from drive A/B\n"
-        " Ctrl+F5/F6          toggle RO/RW of disk in drive A/B\n"
+        " " HK_CTRL_NAME "+F5/F6" HK_CTRL_PAD "          toggle RO/RW of disk in drive A/B\n"
         " F12                 save snapshot e800j_NNN.sna\n"
         " Shift+F12           soft reset (CPU, memory mapping, FDC; RAM is kept)\n"
-        " Ctrl+F12            cold restart (as a fresh start: RAM randomized, then reset)\n"
-        " Alt+F12             cold restart, then reload the snapshot given on the command line\n"
-#ifdef __APPLE__
-        " Cmd+F12             cold restart, then load a snapshot chosen in a file dialog (cancel: restart only)\n"
-#else
-        " Win+F12             cold restart, then load a snapshot chosen in a file dialog (cancel: restart only)\n"
-#endif
+        " " HK_CTRL_NAME "+F12" HK_CTRL_PAD "            cold restart (as a fresh start: RAM randomized, then reset)\n"
+        " " HK_ALT_NAME "+F12" HK_ALT_PAD "             cold restart, then reload the snapshot given on the command line\n"
+        " " HK_WIN_NAME "+F12" HK_WIN_PAD "            cold restart, then load a snapshot chosen in a file dialog (cancel: restart only)\n"
         "\n"
         "Elwro dedicated keys (in the emulator window):\n"
         " Home                CP/J\n"

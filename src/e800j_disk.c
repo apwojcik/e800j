@@ -22,6 +22,7 @@
 #include <string.h>
 #include "e800j.h"
 #include "e800j_disk.h"
+#include "e800j_kbrd.h"
 #include "e800j_msg.h"
 #include "virt_fdd.h"
 #include "zx_scrn.h"
@@ -170,7 +171,7 @@ bool disk_hotkey(struct elwro* e, const SDL_Keycode key, const SDL_Keymod mod) {
     const int drive = key == SDLK_F5 ? 0 : 1;
     if ((mod & SDL_KMOD_SHIFT) != 0) {
         disk_eject(e, drive);
-    } else if ((mod & SDL_KMOD_CTRL) != 0) {
+    } else if ((mod & HK_CTRL_MOD) != 0) {
         disk_toggle_rw(e, drive);
     } else if (e->diskdir[0] != 0) {
         disk_cycle(e, drive);

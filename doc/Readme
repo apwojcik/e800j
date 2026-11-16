@@ -34,7 +34,13 @@ Dyskietki można wymieniać w trakcie pracy emulatora:
     Shift+F5 / Shift+F6   wysunięcie dyskietki z napędu A / B
     Ctrl+F5 / Ctrl+F6     przełączenie trybu RO/RW dyskietki w napędzie A / B
     F12                   zapis snapshotu e800j_NNN.sna
-    Ctrl+F12              przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
+    Shift+F12             przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
+    Ctrl+F12              zimny restart (jak po włączeniu zasilania, RAM losowy)
+    Alt+F12               zimny restart i ponowne wczytanie snapshotu z linii poleceń
+    Win+F12               zimny restart i snapshot wybrany w oknie wyboru pliku (anulowanie: sam restart)
+
+Na macOS skróty używają odpowiedników: Cmd zamiast Ctrl, Option zamiast Alt, Control zamiast Win.
+Klawisz Ctrl komputera Elwro (tryb E) leży wtedy również pod Cmd.
 
 Klawisze dedykowane Elwro 800 Junior są odwzorowane na klawiszach PC:
 

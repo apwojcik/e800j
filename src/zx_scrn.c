@@ -181,16 +181,12 @@ static const char* const help_lines[] = {
     "F1            this help",
     "F5 / F6       insert disk in drive A / B",
     "Shift+F5/F6   eject disk from drive A / B",
-    "Ctrl+F5/F6    toggle RO/RW of disk in A / B",
+    HK_CTRL_NAME "+F5/F6" HK_CTRL_PAD "    toggle RO/RW of disk in A / B",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
-    "Ctrl+F12      cold restart (fresh start)",
-    "Alt+F12       cold restart + reload command-line snapshot",
-#ifdef __APPLE__
-    "Cmd+F12       cold restart + snapshot from file dialog",
-#else
-    "Win+F12       cold restart + snapshot from file dialog",
-#endif
+    HK_CTRL_NAME "+F12" HK_CTRL_PAD "      cold restart (fresh start)",
+    HK_ALT_NAME "+F12" HK_ALT_PAD "       cold restart + reload command-line snapshot",
+    HK_WIN_NAME "+F12" HK_WIN_PAD "      cold restart + snapshot from file dialog",
     "",
     "Elwro keys:",
     "Home          CP/J",
@@ -724,18 +720,18 @@ int zx_main(struct elwro* e) {
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
                 screen_help(e->scn, false);
-            } else if (event.key.key == SDLK_F12 && (event.key.mod & SDL_KMOD_GUI) != 0) {
+            } else if (event.key.key == SDLK_F12 && (event.key.mod & HK_WIN_MOD) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     snap_dialog(e);
                 }
-            } else if (event.key.key == SDLK_F12 && (event.key.mod & (SDL_KMOD_CTRL | SDL_KMOD_SHIFT | SDL_KMOD_ALT)) != 0) {
+            } else if (event.key.key == SDLK_F12 && (event.key.mod & (HK_CTRL_MOD | SDL_KMOD_SHIFT | HK_ALT_MOD)) != 0) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     char status[128];
-                    if ((event.key.mod & SDL_KMOD_ALT) != 0) {
+                    if ((event.key.mod & HK_ALT_MOD) != 0) {
                         elwro_snap_restart(e);
-                    } else if ((event.key.mod & SDL_KMOD_CTRL) != 0) {
+                    } else if ((event.key.mod & HK_CTRL_MOD) != 0) {
                         elwro_cold_reset(e);
                     } else {
                         elwro_reset(e);

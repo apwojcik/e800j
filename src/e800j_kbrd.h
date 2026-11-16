@@ -283,8 +283,41 @@ unsigned char key_kempston(const struct keyboard*);
 #define E8K_SPC		SDLK_SPACE
 #define E8K_ALT_L	SDLK_LALT
 #define E8K_ALT_R	SDLK_RALT
+#ifdef __APPLE__
+/* macOS: Ctrl Elwro (tryb E) leży pod Cmd, jak Ctrl w skrótach komputerów PC */
+#define E8K_CTRL_L	SDLK_LGUI
+#define E8K_CTRL_R	SDLK_RGUI
+#else
 #define E8K_CTRL_L	SDLK_LCTRL
 #define E8K_CTRL_R	SDLK_RCTRL
+#endif
+
+/*
+ Modyfikatory skrótów emulatora (F5/F6/F12). Role z PC: Ctrl, Alt, Win. Na macOS odpowiadają im
+ Cmd (zamiast Ctrl), Option (zamiast Alt) i Control (zamiast Win). Shift bez zmian.
+ HK_*_NAME - nazwa do komunikatów, HK_*_PAD - dopełnienie do szerokości "Ctrl"/"Alt"/"Win" w tabelkach.
+*/
+#ifdef __APPLE__
+#define HK_CTRL_MOD	SDL_KMOD_GUI
+#define HK_CTRL_NAME	"Cmd"
+#define HK_CTRL_PAD	" "
+#define HK_ALT_MOD	SDL_KMOD_ALT
+#define HK_ALT_NAME	"Opt"
+#define HK_ALT_PAD	""
+#define HK_WIN_MOD	SDL_KMOD_CTRL
+#define HK_WIN_NAME	"Ctrl"
+#define HK_WIN_PAD	""
+#else
+#define HK_CTRL_MOD	SDL_KMOD_CTRL
+#define HK_CTRL_NAME	"Ctrl"
+#define HK_CTRL_PAD	""
+#define HK_ALT_MOD	SDL_KMOD_ALT
+#define HK_ALT_NAME	"Alt"
+#define HK_ALT_PAD	""
+#define HK_WIN_MOD	SDL_KMOD_GUI
+#define HK_WIN_NAME	"Win"
+#define HK_WIN_PAD	" "
+#endif
 #define E8K_DEL		SDLK_DELETE
 #define E8K_BS		SDLK_BACKSPACE
 /* klawisze dedykowane Elwro 800 Junior; CP/J i ERASE to sekwencje klawiszy (patrz key_macro_frame), reszta to zwykłe klawisze matrycy (F1, F5, F6 i F12 zajmują skróty emulatora, zx_scrn.c / e800j_disk.c) */
