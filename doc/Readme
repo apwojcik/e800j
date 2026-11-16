@@ -44,6 +44,8 @@ Klawisze dedykowane Elwro 800 Junior są odwzorowane na klawiszach PC:
     Page Up               LOAD
     Page Down             SAVE
 
+Home i End wpisują komendy CP/J i ERASE jako sekwencję klawiszy: Ctrl (tryb E), a następnie Alt+6 / Alt+7.
+
 Po zapisie snapshotu, wymianie dyskietki i resecie w lewym górnym rogu pojawia się komunikat (np.
 "Snapshot saved: e800j_000.sna", "Floppy inserted: A: plik.dsk (RO)"). Czas jego wyświetlania (w sekundach,
 domyślnie 10, 0 = wyłączone) ustawia opcja 'osd_time' w sekcji ekranu (zx_screen) pliku e800j.cfg.

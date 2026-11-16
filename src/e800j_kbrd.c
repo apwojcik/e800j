@@ -27,6 +27,7 @@ void key_init(struct keyboard* kb) {
     /* zerowanie całej struktury */
     memset(kb, 0, sizeof(*kb));
     kb->mode = KB_MODE_PC;
+    kb->macro_pos = -1;
     /* wypełnienie matrycy klawiatury wartościami 0xff - nie naciśnięty żaden klawisz */
     for (i = 0; i < sizeof(kb->matrix); i++)
         *(kb->matrix + i) = 0xff;
@@ -200,16 +201,12 @@ static unsigned int key_special(const unsigned int key) {
         return KB_DEL;
     case E8K_BS:
         return KB_BS;
-    case E8K_CPJ:
-        return KB_CPJ;
     case E8K_DIR:
         return KB_DIR;
     case E8K_LOAD:
         return KB_LOAD;
     case E8K_SAVE:
         return KB_SAVE;
-    case E8K_ERASE:
-        return KB_ERASE;
     case E8K_ARROW_L:
         return KB_CUR_L;
     case E8K_ARROW_R:
@@ -227,7 +224,50 @@ static unsigned int key_special(const unsigned int key) {
     }
 }
 
+/* krok sekwencji: klawisz SDL (0 - cyfra z macro_key), stan i liczba klatek oczekiwania po kroku
+ * (ROM czyta klawiaturę co klatkę) */
+static const struct {
+    unsigned int key;
+    int state;
+    int wait;
+} macro_steps[] = {
+    { E8K_CTRL_L, 1, 4 },  /* Ctrl -> tryb E */
+    { E8K_CTRL_L, 0, 3 },
+    { E8K_ALT_L, 1, 2 },   /* Alt + cyfra */
+    { 0, 1, 4 },
+    { 0, 0, 1 },
+    { E8K_ALT_L, 0, 0 },
+};
+
+static void key_macro_start(struct keyboard* kb, const unsigned int digit) {
+    if (kb->macro_pos < 0) {
+        kb->macro_pos = 0;
+        kb->macro_wait = 0;
+        kb->macro_key = digit;
+    }
+}
+
+void key_macro_frame(struct keyboard* kb) {
+    if (kb->macro_pos < 0)
+        return;
+    if (kb->macro_wait > 0) {
+        kb->macro_wait--;
+        return;
+    }
+    const unsigned int key = macro_steps[kb->macro_pos].key;
+    key_set(kb, key != 0 ? key : kb->macro_key, macro_steps[kb->macro_pos].state);
+    kb->macro_wait = macro_steps[kb->macro_pos].wait;
+    if (++kb->macro_pos >= (int)(sizeof(macro_steps) / sizeof(macro_steps[0])))
+        kb->macro_pos = -1;
+}
+
 void key_set(struct keyboard* kb, const unsigned int key, const int state) {
+    /* CP/J i ERASE: sekwencja Ctrl, Alt+6 / Alt+7; puszczenie klawisza nic nie zwalnia */
+    if (key == E8K_CPJ || key == E8K_ERASE) {
+        if (state)
+            key_macro_start(kb, key == E8K_CPJ ? '6' : '7');
+        return;
+    }
     /* prawy ALT tylko przełącza warstwę polskich liter, nie wciska klawisza matrycy */
     if (key == E8K_ALT_R) {
         kb->alt_r = state;

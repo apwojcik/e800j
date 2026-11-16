@@ -599,6 +599,7 @@ static void time_int(struct cpu* z, void* ptr) {
     const struct elwro* e = ptr;
     /* call_cnt przekracza okres o takty, które minęły od faktycznego początku klatki */
     screen_frame_start(e->scn, z->ticks - (z->call_cnt - e->ifreq), e->ifreq);
+    key_macro_frame(e->kbd);
     z80_int(z, NULL);
 }
 

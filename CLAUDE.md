@@ -96,7 +96,7 @@ buffers and global timing state.
   profile's optional `diskdir`), Shift+F5/F6 / Ctrl+F5/F6 eject/toggle RO/RW. The dialog callback only pushes an SDL event
   (`SDL_EVENT_USER + 1`; `SDL_EVENT_USER` is the CPU/screen timer); the swap runs in `zx_main` between `z80_loop` calls via `vfdd_swap()` (opens the new image before closing the
   old one). `struct vfdd_disk` remembers `path`/`rw` across eject. Drives are reachable as `e.disk[0..1]`.
-- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); F1, F5, F6, F12 are emulator hot keys.
+- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F5, F6, F12 are emulator hot keys.
 - **Config/CLI/snapshot loading** (`e800j_file.c`): a small custom parser for the `section { key = value; }`
   style of `e800j.cfg` (see that file for the full schema — BIOS ROM sets, CPU timing, screen/video/sound/
   joystick profiles), plus `.sna`/snapshot loading that restores CPU + RAM state directly from the raw

@@ -42,6 +42,9 @@ struct keyboard {
         unsigned int key; /* kod SDL klawisza fizycznego */
         unsigned char idx; /* wciśnięty klawisz matrycy (KB_NONE - wolny wpis) */
     } held[KB_HELD_MAX];
+    int macro_pos; /* kolejny krok sekwencji klawiszy (key_set dla CP/J, ERASE), -1 - brak aktywnej */
+    int macro_wait; /* ile klatek jeszcze czekać przed następnym krokiem sekwencji */
+    unsigned int macro_key; /* cyfra wciskana z Alt w sekwencji */
     char* matrix_map1; /* pierwszy stopień mapowania klawiszy */
     unsigned short int row_mask; /* maska adresu (odcina część linii adresowych) */
     unsigned char col_mask; /* maska danych (odcina czść linii kolumn) */
@@ -90,6 +93,13 @@ void key_set(struct keyboard*, unsigned int key, int state);
     state - 1 wciśnięty, 0- wyciśnięty
 
 */
+/*
+    Klawisze CP/J i ERASE są w matrycy cyframi 6 i 7, które znaczą to dopiero po Ctrl (tryb E) i Alt+cyfra.
+    key_set() dla E8K_CPJ/E8K_ERASE uruchamia więc sekwencję: Ctrl (naciśnięcie i puszczenie), potem Alt+cyfra.
+    key_macro_frame() należy wywoływać raz na klatkę (przerwanie), wykonuje kolejne kroki sekwencji.
+*/
+void key_macro_frame(struct keyboard*);
+
 /*******************************************************************/
 unsigned char key_matrix(const struct keyboard*, unsigned short int addr);
 
@@ -277,7 +287,7 @@ unsigned char key_kempston(const struct keyboard*);
 #define E8K_CTRL_R	SDLK_RCTRL
 #define E8K_DEL		SDLK_DELETE
 #define E8K_BS		SDLK_BACKSPACE
-/* klawisze dedykowane Elwro 800 Junior (F1, F5, F6 i F12 zajmują skróty emulatora, zx_scrn.c / e800j_disk.c) */
+/* klawisze dedykowane Elwro 800 Junior; CP/J i ERASE to sekwencje klawiszy (patrz key_macro_frame), reszta to zwykłe klawisze matrycy (F1, F5, F6 i F12 zajmują skróty emulatora, zx_scrn.c / e800j_disk.c) */
 #define E8K_CPJ		SDLK_HOME
 #define E8K_DIR		SDLK_F10
 #define E8K_ERASE	SDLK_END
