@@ -26,6 +26,8 @@
 #include "z80_core.h"
 #include "z80_debug.h"
 
+#define DBG_EOT '\x04' /* koniec wejścia konsoli debuggera (Ctrl-D lub EOF) */
+
 static const char* blk[] = { "IR", "DR", "I", "D" };
 
 static const char* ddt[] = {
@@ -316,7 +318,13 @@ void dbg_input(struct dbg* d) {
     if (!d->in)
         return;
     d->out("dbg# ");
-    for (i = 0; ((d->cmdline[i] = d->in()) != '\n') && i < 255; i++) {}
+    for (i = 0; ((d->cmdline[i] = d->in()) != '\n') && i < 255; i++) {
+        if (d->cmdline[i] == DBG_EOT) {
+            d->out("\n");
+            dbg_quit(d);
+            return;
+        }
+    }
     d->cmdline[i] = 0;
     if (i)
         dbg_cmd(d);
@@ -429,6 +437,8 @@ void dbg_quit(struct dbg* d) {
     d->out("Exit debugger...\n");
     d->z->force_in = -1;
     d->console = 0;
+    if (d->on_quit)
+        d->on_quit();
 }
 
 void dbg_help(struct dbg* d) {
@@ -1019,6 +1029,9 @@ void dbg_goto(struct dbg* d) {
         d->addr = strtol(tmp, nullptr, 0);
     }
     d->console = 0;
+    /* nie ma na co czekać (brak adresu i pułapki): pełna prędkość bez wywołań debuggera, wejście przez dbg_break */
+    if (!d->cond)
+        d->z->debug_on = 0;
 }
 
 void dbg_trace(struct dbg* d) {
@@ -1204,8 +1217,10 @@ static void dbg_sout(char* a) {
     printf("%s", a);
 }
 
+/* koniec wejścia (brak terminala, zamknięty strumień) jako Ctrl-D, żeby dbg_input mógł zakończyć debugger */
 static char dbg_sin(void) {
-    return (char)getchar();
+    const int c = getchar();
+    return c == EOF ? DBG_EOT : (char)c;
 }
 
 void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on) {
@@ -1226,5 +1241,20 @@ void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on) {
 void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*)) {
     d->out = s_out;
     d->in = s_in;
+}
+
+void dbg_set_hooks(struct dbg* d, void (*on_enter)(void), void (*on_quit)(void)) {
+    d->on_enter = on_enter;
+    d->on_quit = on_quit;
+}
+
+void dbg_break(struct dbg* d) {
+    if (d->on_enter)
+        d->on_enter();
+    d->trace = 0;
+    d->deasm = 0;
+    d->cond = 0;
+    d->console = 1;
+    d->z->debug_on = 1;
 }
 

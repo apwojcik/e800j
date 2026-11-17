@@ -54,6 +54,8 @@ struct dbg {
     char trace; /* flaga trybu śledzenia */
     void (*out)(char*); /* funkcja zwrotna do wyrzucania tekstu */
     char (*in)(void);
+    void (*on_enter)(void); /* opcjonalne wywołanie przed wejściem do debuggera z klawisza (np. otwarcie okna konsoli) */
+    void (*on_quit)(void); /* opcjonalne wywołanie po poleceniu quit (np. zamknięcie okna konsoli debuggera) */
 
     struct cpu* z;
 /* warunek załaczenia */
@@ -87,3 +89,14 @@ void dbg_init(struct dbg* d, struct cpu* z, char debug_on, char console_on);
     przekierowanie strumienia komunikatów I/O
 */
 void dbg_set_stream(struct dbg* d, char (*s_in)(void), void (*s_out)(char*));
+
+/*
+    funkcje wywoływane przy wejściu do debuggera (dbg_break) i po wyjściu z niego poleceniem quit, mogą być nullptr
+*/
+void dbg_set_hooks(struct dbg* d, void (*on_enter)(void), void (*on_quit)(void));
+
+/*
+    wejście do debuggera w dowolnej chwili (między instrukcjami): włącza debugger, przerywa śledzenie
+    i uruchomienie do adresu, następna instrukcja zaczyna się od znaku zachęty
+*/
+void dbg_break(struct dbg* d);

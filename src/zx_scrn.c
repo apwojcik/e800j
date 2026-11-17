@@ -30,6 +30,7 @@
 #include "e800j.h"
 #include "e800j_compat.h"
 #include "z80_cpu.h"
+#include "z80_debug.h"
 #include "e800j_kbrd.h"
 #include "e800j_fdc.h"
 #include "e800j_sound.h"
@@ -217,6 +218,7 @@ static const char* const help_lines[] = {
     HK_WIN_NAME "+F5/F6" HK_WIN_PAD "    new blank disk in A / B (save dialog)",
     HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
     "F2 / F3       volume down / up",
+    "F11           Z80 debugger (console)",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
     HK_CTRL_NAME "+F12" HK_CTRL_PAD "      cold restart (fresh start)",
@@ -832,6 +834,12 @@ int zx_main(struct elwro* e) {
                 if (!event.key.repeat) {
                     screen_help(e->scn, false);
                     screen_set_scale(e->scn, scales[event.key.key - SDLK_F1]);
+                }
+            } else if (event.key.key == SDLK_F11) {
+                /* debugger w dowolnej chwili; okno emulatora czeka na polecenia z konsoli */
+                screen_help(e->scn, false);
+                if (!event.key.repeat) {
+                    dbg_break(e->cpu->ptx);
                 }
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */

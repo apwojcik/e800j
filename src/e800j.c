@@ -148,6 +148,76 @@ int elwro_snap_restart(struct elwro* e) {
     return elwro_restart_snap(e, e->snap_path);
 }
 
+#ifdef _WIN32
+/* strumienie standardowe przekierowane przez uruchamiającego (potok/plik), np. elwro --debug < cmds.txt */
+static bool win_in_redirected;
+static bool win_out_redirected;
+static bool win_own_console; /* --debug otworzył własną konsolę */
+
+static bool win_std_redirected(const DWORD id) {
+    const HANDLE h = GetStdHandle(id);
+    if (h == nullptr || h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    const DWORD type = GetFileType(h);
+    return type == FILE_TYPE_PIPE || type == FILE_TYPE_DISK;
+}
+
+static void win_use_console(const bool in, const bool out) {
+    if (out) {
+        (void)freopen("CONOUT$", "w", stdout);
+        (void)freopen("CONOUT$", "w", stderr);
+    }
+    if (in) {
+        (void)freopen("CONIN$", "r", stdin);
+    }
+}
+
+/* aplikacja GUI: dla --help i komunikatów błędów podłącz się do konsoli procesu nadrzędnego (jeśli jest);
+   przekierowane strumienie zostają nietknięte */
+static void win_console_attach(void) {
+    win_in_redirected = win_std_redirected(STD_INPUT_HANDLE);
+    win_out_redirected = win_std_redirected(STD_OUTPUT_HANDLE);
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        win_use_console(!win_in_redirected, !win_out_redirected);
+    }
+}
+
+/*
+ --debug: terminal nadrzędny nie czeka na aplikację GUI (znak zachęty wraca od razu i walczy z debuggerem
+ o wejście), więc debugger dostaje własną konsolę (okno "Elwro 800 Junior - debugger"); terminal pozostaje
+ sprawny, a zamrożone jest tylko okno emulatora. Przy przekierowanym wejściu i wyjściu nic się nie zmienia.
+*/
+static void win_debug_console(void) {
+    if (win_own_console || (win_in_redirected && win_out_redirected)) {
+        return;
+    }
+    FreeConsole();
+    if (!AllocConsole()) {
+        return;
+    }
+    SetConsoleTitleA("Elwro 800 Junior - debugger");
+    win_use_console(!win_in_redirected, !win_out_redirected);
+    win_own_console = true;
+}
+
+/* po quit w debuggerze: zamknięcie jego okna konsoli, dalsze komunikaty (msg_printf) idą w próżnię */
+static void win_debug_console_close(void) {
+    if (!win_own_console) {
+        return;
+    }
+    win_own_console = false;
+    FreeConsole();
+    if (!win_out_redirected) {
+        (void)freopen("NUL", "w", stdout);
+        (void)freopen("NUL", "w", stderr);
+    }
+    if (!win_in_redirected) {
+        (void)freopen("NUL", "r", stdin);
+    }
+}
+#endif
+
 int main(const int argc, char** args) {
     struct elwro e;
     struct config cfg;
@@ -159,12 +229,7 @@ int main(const int argc, char** args) {
     struct vfdd_disk disk_a, disk_b;
 
 #ifdef _WIN32
-    /* aplikacja GUI: podlacz sie do konsoli procesu nadrzednego (jesli jest) dla --help/--debug */
-    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        (void)freopen("CONOUT$", "w", stdout);
-        (void)freopen("CONOUT$", "w", stderr);
-        (void)freopen("CONIN$", "r", stdin);
-    }
+    win_console_attach();
 #endif
 #ifdef __APPLE__
     /* uruchomienie z elwro.app (Finder): katalog biezacy to "/", zasoby sa w Contents/Resources */
@@ -215,6 +280,11 @@ int main(const int argc, char** args) {
     if (cfg.msg_level >= 0) {
         msg_level = cfg.msg_level;
     }
+#ifdef _WIN32
+    if (cfg.debug) {
+        win_debug_console();
+    }
+#endif
     if (!config_apply(&cfg, &e)) {
         return 1;
     }
@@ -231,6 +301,9 @@ int main(const int argc, char** args) {
     key_init(&kbd);
     z80_init(&cpu, mem_e800j_read, mem_e800j_write, io_read, io_write, &e, nullptr);
     dbg_init(&dbg, &cpu, e.debug, 1);
+#ifdef _WIN32
+    dbg_set_hooks(&dbg, win_debug_console, win_debug_console_close);
+#endif
 
     fdc_init(&fdc);
     i8272_fdd_connect(&fdc.i8272, vfdd_drive, &disk_a, &disk_b, nullptr, nullptr);
