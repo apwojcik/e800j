@@ -214,6 +214,7 @@ static const char* const help_lines[] = {
     "F5 / F6       insert disk in drive A / B",
     "Shift+F5/F6   eject disk from drive A / B",
     HK_ALT_NAME "+F5/F6" HK_ALT_PAD "     toggle RO/RW of disk in A / B",
+    HK_WIN_NAME "+F5/F6" HK_WIN_PAD "    new blank disk in A / B (save dialog)",
     HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
     "F2 / F3       volume down / up",
     "F12           save snapshot (e800j_NNN.sna)",

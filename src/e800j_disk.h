@@ -29,7 +29,9 @@ struct elwro;
 
 /*
  F5/F6 - wymiana dyskietki w napędzie A/B (okno wyboru pliku lub, gdy ustawiono diskdir,
- kolejny plik *.dsk z katalogu), Shift - wysunięcie, Ctrl (macOS: Cmd) - przełączenie RO/RW.
+ kolejny plik *.dsk z katalogu), Shift - wysunięcie, Alt (macOS: Opt) - przełączenie RO/RW,
+ Win (macOS: Ctrl) - nowa pusta dyskietka: okno zapisu pliku pyta o nazwę i miejsce, powstaje obraz
+ bez ścieżek (do sformatowania w emulowanym komputerze), wkładany w trybie RW.
  Zwraca true, jeśli klawisz został obsłużony.
 */
 bool disk_hotkey(struct elwro* e, SDL_Keycode key, SDL_Keymod mod);

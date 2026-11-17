@@ -30,6 +30,10 @@
 /* SDL_EVENT_USER jest zajęte przez zegar CPU/ekranu (zx_scrn.c), a SDL_RegisterEvents() zwraca właśnie je */
 #define DISK_EVENT_TYPE (SDL_EVENT_USER + 1)
 
+/* w user.code: numer napędu, z DISK_NEW_FLAG dla nowej (pustej) dyskietki z okna zapisu pliku */
+#define DISK_NEW_FLAG 0x10
+#define DISK_BLANK_NAME "blank.dsk"
+
 static const SDL_DialogFileFilter disk_filters[] = {
     { "CPCEmu disk image", "dsk" },
     { "All files", "*" },
@@ -69,9 +73,9 @@ void disk_announce(struct elwro* e) {
     screen_toast(e->scn, "%s", text);
 }
 
-static void disk_insert(struct elwro* e, const int drive, const char* path) {
+static void disk_insert_mode(struct elwro* e, const int drive, const char* path, const unsigned char mode) {
     struct vfdd_disk* disk = e->disk[drive];
-    if (vfdd_swap(disk, path, disk->rw) < 0) {
+    if (vfdd_swap(disk, path, mode) < 0) {
         msg_printf(MSG_ERROR, "Drive %c: opening file %s failed.\n", drive_name(drive), path);
         screen_toast(e->scn, "Floppy insert failed: %c: %s", drive_name(drive), disk_basename(path));
         return;
@@ -80,6 +84,31 @@ static void disk_insert(struct elwro* e, const int drive, const char* path) {
         (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
     screen_toast(e->scn, "Floppy inserted: %c: %s (%s)", drive_name(drive), disk_basename(path),
         (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
+}
+
+static void disk_insert(struct elwro* e, const int drive, const char* path) {
+    disk_insert_mode(e, drive, path, e->disk[drive]->rw);
+}
+
+/* tworzy pusty (niesformatowany) obraz i wkłada go do napędu w trybie RW; plik formatuje dopiero system w emulowanym komputerze */
+static void disk_insert_blank(struct elwro* e, const int drive, const char* chosen) {
+    char path[1024];
+    const char* base = disk_basename(chosen);
+    const bool has_ext = strrchr(base, '.') != nullptr;
+    snprintf(path, sizeof(path), "%s%s", chosen, has_ext ? "" : ".dsk");
+    for (int i = 0; i < 2; i++) {
+        if (e->disk[i]->f != nullptr && strcmp(e->disk[i]->path, path) == 0) {
+            msg_printf(MSG_ERROR, "Blank disk %s is already inserted in drive %c:\n", path, drive_name(i));
+            screen_toast(e->scn, "Blank disk not created: %s is inserted in %c:", disk_basename(path), drive_name(i));
+            return;
+        }
+    }
+    if (vfdd_create_image(path) < 0) {
+        msg_printf(MSG_ERROR, "Creating blank disk image %s failed.\n", path);
+        screen_toast(e->scn, "Blank disk creation failed: %s", disk_basename(path));
+        return;
+    }
+    disk_insert_mode(e, drive, path, VFDD_RW);
 }
 
 static void disk_eject(struct elwro* e, const int drive) {
@@ -169,7 +198,23 @@ bool disk_hotkey(struct elwro* e, const SDL_Keycode key, const SDL_Keymod mod) {
         return false;
     }
     const int drive = key == SDLK_F5 ? 0 : 1;
-    if ((mod & SDL_KMOD_SHIFT) != 0) {
+    if ((mod & HK_WIN_MOD) != 0) {
+        /* katalog: diskdir, w przeciwnym razie miejsce ostatnio wczytanej dyskietki, w przeciwnym razie bieżący */
+        char start[1024];
+        const char* path = e->disk[drive]->path;
+        if (e->diskdir[0] != 0) {
+            snprintf(start, sizeof(start), "%s/" DISK_BLANK_NAME, e->diskdir);
+        } else if (path[0] != 0) {
+            const size_t dirlen = (size_t)(disk_basename(path) - path);
+            snprintf(start, sizeof(start), "%.*s" DISK_BLANK_NAME, (int)dirlen, path);
+        } else {
+            char* cwd = SDL_GetCurrentDirectory();
+            snprintf(start, sizeof(start), "%s" DISK_BLANK_NAME, cwd != nullptr ? cwd : "");
+            SDL_free(cwd);
+        }
+        SDL_ShowSaveFileDialog(disk_dialog_done, (void*)(intptr_t)(drive | DISK_NEW_FLAG), e->scn->window,
+            disk_filters, SDL_arraysize(disk_filters), start);
+    } else if ((mod & SDL_KMOD_SHIFT) != 0) {
         disk_eject(e, drive);
     } else if ((mod & HK_ALT_MOD) != 0) {
         disk_toggle_rw(e, drive);
@@ -195,9 +240,13 @@ bool disk_event(struct elwro* e, const SDL_Event* event) {
         return false;
     }
     char* path = event->user.data1;
-    const int drive = event->user.code;
+    const int drive = event->user.code & ~DISK_NEW_FLAG;
     if (path != nullptr) {
-        disk_insert(e, drive, path);
+        if ((event->user.code & DISK_NEW_FLAG) != 0) {
+            disk_insert_blank(e, drive, path);
+        } else {
+            disk_insert(e, drive, path);
+        }
         SDL_free(path);
     }
     return true;

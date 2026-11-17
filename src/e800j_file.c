@@ -230,6 +230,7 @@ void file_help(void) {
         " Shift+F5/F6         eject disk from drive A/B\n"
         " F2 / F3             volume down / up (progress bar shown at the bottom)\n"
         " " HK_ALT_NAME "+F5/F6" HK_ALT_PAD "           toggle RO/RW of disk in drive A/B\n"
+        " " HK_WIN_NAME "+F5/F6" HK_WIN_PAD "           new blank (unformatted) disk in drive A/B: save dialog asks for the .dsk name and place\n"
         " " HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "         window scale x1 .. x5, step 0.5 (F1 = x1, F9 = x5)\n"
         " F12                 save snapshot e800j_NNN.sna\n"
         " Shift+F12           soft reset (CPU, memory mapping, FDC; RAM is kept)\n"

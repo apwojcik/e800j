@@ -133,6 +133,12 @@ struct vfdd_fmt {
 int vfdd_format_track(struct vfdd_disk*, const struct vfdd_fmt*);
 
 /*
+    Tworzy (lub zeruje) plik z pustym, niesformatowanym obrazem: sam nagłówek, bez ścieżek.
+    Ścieżki powstają dopiero rozkazem FORMAT A TRACK. Zwraca FDD_OK albo -1.
+*/
+int vfdd_create_image(const char* path);
+
+/*
     Wymiana dyskietki: najpierw otwiera nowy obraz i dopiero po sukcesie zamyka stary,
     więc przy błędzie (-1) poprzednia dyskietka pozostaje we flopie. Dozwolone path == dsk->path.
 */

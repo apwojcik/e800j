@@ -184,6 +184,24 @@ static int vfdd_move(FILE* f, const long from, const long to, const long len) {
     return 0;
 }
 
+/* nagłówek obrazu bez żadnej ścieżki (dyskietka niesformatowana) */
+static void vfdd_init_hdr(struct vfdd_hdr* hdr) {
+    memset(hdr, 0, sizeof *hdr);
+    memcpy(hdr->format_name, "MV - CPCEMU Disk-File\r\nDisk-Info\r\n", 34);
+    snprintf(hdr->creator, sizeof hdr->creator, "e800j");
+}
+
+int vfdd_create_image(const char* path) {
+    struct vfdd_hdr hdr;
+    vfdd_init_hdr(&hdr);
+    FILE* f = fopen(path, "wb");
+    if (f == nullptr) {
+        return -1;
+    }
+    const bool ok = fwrite(&hdr, sizeof hdr, 1, f) == 1;
+    return (fclose(f) == 0 && ok) ? FDD_OK : -1;
+}
+
 int vfdd_format_track(struct vfdd_disk* dsk, const struct vfdd_fmt* fmt) {
     FILE* f = dsk->f;
     if (f == nullptr || (dsk->stat & VFDD_DOPEN) != 0) {
@@ -229,9 +247,7 @@ int vfdd_format_track(struct vfdd_disk* dsk, const struct vfdd_fmt* fmt) {
     }
     if (fsize < 0x100) {
         /* pusty plik: nowy nagłówek obrazu */
-        memset(&dsk->hdr, 0, sizeof dsk->hdr);
-        memcpy(dsk->hdr.format_name, "MV - CPCEMU Disk-File\r\nDisk-Info\r\n", 34);
-        snprintf(dsk->hdr.creator, sizeof dsk->hdr.creator, "e800j");
+        vfdd_init_hdr(&dsk->hdr);
         if (fseek(f, 0, SEEK_SET) != 0 || fwrite(&dsk->hdr, sizeof dsk->hdr, 1, f) != 1) {
             goto done;
         }
