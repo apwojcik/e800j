@@ -215,9 +215,9 @@ void file_help(void) {
         " -y <value>                    Y resolution\n"
         "     --debug                   debugger enable, emulator starts with debugger console\n"
         " -a, --a-read-only <fname>     mount CPCEMU *.DSK image in Drive A read-only\n"
-        " -A, --a-read-write <fname>    mount CPCEMU *.DSK image in Drive A read-write (excludes -a)\n"
+        " -A, --a-read-write <fname>    mount CPCEMU *.DSK image in Drive A read-write (excludes -a), a missing file is created as a blank disk\n"
         " -b, --b-read-only <fname>     mount CPCEMU *.DSK image in Drive B read-only\n"
-        " -B, --b-read-write <fname>    mount CPCEMU *.DSK image in Drive B read-write (excludes -b)\n"
+        " -B, --b-read-write <fname>    mount CPCEMU *.DSK image in Drive B read-write (excludes -b), a missing file is created as a blank disk\n"
         "     --log-level <value>       message level 0..6, default 0\n"
 #ifdef _WIN32
         "\n"

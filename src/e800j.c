@@ -56,6 +56,17 @@ static void disk_open(const struct config* cfg, const int n, struct vfdd_disk* d
         return;
     const char dn = (char)('A' + n);
     const bool rw = cfg->disk_rw[n];
+    if (rw) {
+        /* -A/-B z nieistniejącym plikiem: powstaje pusta (niesformatowana) dyskietka */
+        FILE* f = fopen(path, "rb");
+        if (f != nullptr) {
+            fclose(f);
+        } else if (vfdd_create_image(path) == FDD_OK) {
+            msg_printf(MSG_MSG, "File %s does not exist, created a blank disk for drive %c.\n", path, dn);
+        } else {
+            msg_printf(MSG_ERROR, "Creating blank disk image %s failed.\n", path);
+        }
+    }
     if (vfdd_dsk_floppy(disk, VFDD_LOAD, rw ? VFDD_RW : VFDD_RO, 0, 0, path) < 0) {
         msg_printf(MSG_ERROR, "Opening file %s failed.\n", path);
     }
