@@ -549,9 +549,85 @@ void i8272_rid_cmd(struct i8272* fdc) {
     i8272_invalid_cmd(fdc);
 }
 
+/* koniec FORMAT A TRACK: sformatowanie ścieżki w napędzie i wystawienie fazy result */
+static void i8272_ft_finish(struct i8272* fdc) {
+    const unsigned char us = (unsigned char)((fdc->ds & 0x03) | ((fdc->hds & 1) << 2));
+    fdc->st0 = us;
+    fdc->st1 = 0;
+    fdc->st2 = 0;
+    fdc->st3 = FDC_RDY;
+    const int err = fdc->drive(fdc, fdc->parameter[fdc->ds], FDD_FORMAT_TRACK, 0);
+    if (err == FDD_ERR_WPROT) {
+        fdc->st0 = FDC_NR | us | 0x40;
+        fdc->st1 = FDC_NW;
+        fdc->st3 = FDC_WP;
+    } else if (err == FDD_ERR_NODISK) {
+        fdc->st0 = FDC_NR | us | 0x40;
+        fdc->st3 = 0;
+    } else if (err < 0) {
+        fdc->st0 = us | 0x40;
+        fdc->st1 = FDC_ND;
+    }
+    /* w fazie result C,H,R,N ostatnio sformatowanego sektora */
+    const unsigned char* last = fdc->eot != 0 ? &fdc->fmt_id[(fdc->eot - 1) * 4] : fdc->fmt_id;
+    fdc->idx_0 = 0;
+    fdc->idx_1 = fdc->opcode->res_len;
+    fdc->opcode = (void*)0;
+    fdc->buffer[0] = fdc->st0;
+    fdc->buffer[1] = fdc->st1;
+    fdc->buffer[2] = fdc->st2;
+    fdc->buffer[3] = fdc->eot != 0 ? last[0] : 0;
+    fdc->buffer[4] = fdc->eot != 0 ? last[1] : 0;
+    fdc->buffer[5] = fdc->eot != 0 ? last[2] : 0;
+    fdc->buffer[6] = fdc->nb;
+    fdc->phase = FDC_RESULT;
+    fdc->rw = 0;
+    i8272_result(fdc, FDC_CMD);
+    i8272_int(fdc, FDC_IC_IC);
+}
+
+/*
+  FORMAT A TRACK: po bajtach rozkazu (HD/US, N, SC, GPL, D) CPU przysyła SC razy po 4 bajty
+  C,H,R,N, po ostatnim układ kończy sam (TC nie jest używane).
+*/
 void i8272_ft_cmd(struct i8272* fdc) {
-    msg_printf(MSG_ERROR, "Unsupported command\n");
-    i8272_invalid_cmd(fdc);
+    if (fdc->phase != FDC_EXEC)
+        return;
+    if (fdc->rw == 0) {
+        fdc->ds = fdc->buffer[1] & 0x03;
+        fdc->hds = (fdc->buffer[1] >> 2) & 0x01;
+        fdc->nb = fdc->buffer[2];
+        fdc->eot = fdc->buffer[3]; /* SC */
+        fdc->gpl = fdc->buffer[4];
+        fdc->dtl = fdc->buffer[5]; /* bajt wypełnienia D */
+        fdc->rw = 1;
+        fdc->sbyte = 0;
+        fdc->rec = 0;
+        fdc->msr |= FDC_RQM;
+        fdc->msr &= ~FDC_DIO;
+        msg_printf(MSG_NVERB_MSG, "D:%i H:%i N:%i SC:%i GPL:%i D:%02X\n",
+                   fdc->ds, fdc->hds, fdc->nb, fdc->eot, fdc->gpl, fdc->dtl);
+        if (fdc->eot == 0)
+            i8272_ft_finish(fdc);
+        return;
+    }
+    if (fdc->rw == 2) {
+        /* TC w trakcie formatowania jest ignorowane */
+        fdc->rw = 1;
+        fdc->msr |= FDC_RQM;
+        fdc->msr &= ~FDC_DIO;
+        return;
+    }
+    fdc->fmt_id[fdc->rec * 4 + fdc->sbyte] = fdc->data;
+    if (++fdc->sbyte == 4) {
+        fdc->sbyte = 0;
+        if (++fdc->rec >= fdc->eot) {
+            i8272_ft_finish(fdc);
+            return;
+        }
+    }
+    fdc->msr |= FDC_RQM;
+    fdc->msr &= ~FDC_DIO;
 }
 
 void i8272_seq_cmd(struct i8272* fdc) {

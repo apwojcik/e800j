@@ -80,6 +80,9 @@ struct i8272 {
     unsigned int slen; // rozmiar sektora w bajtach
     unsigned int trlen; // rozmiar ścieżki w bajtach
     int err; // błąd napędu
+
+    /* rozkaz FORMAT A TRACK: pola ID (C,H,R,N) kolejnych sektorów przysłane przez CPU */
+    unsigned char fmt_id[256 * 4];
 };
 
 /* Bity rejestru MSR */
@@ -255,6 +258,7 @@ enum {
     FDD_READ_TRACK,
     FDD_WRITE_TRACK,
     FDD_SEEK_SECTOR,
+    FDD_FORMAT_TRACK, // sformatowanie ścieżki pcn/hds parametrami z FDC (nb, eot=SC, gpl, dtl=D, fmt_id)
     // Wartości zwracane przez FDD
     FDD_ERR_WPROT = -1,
     FDD_ERR_NODISK = -2,

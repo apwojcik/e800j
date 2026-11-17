@@ -76,7 +76,9 @@ buffers and global timing state.
   chip (command phases, status registers), and `e800j_fdc.c` is the Elwro-specific glue connecting that
   chip to port I/O and drive-select register 0x175. The actual disk *image* access is abstracted one
   level further in `virt_fdd.c`/`virt_fdd.h` (`vfdd_dsk_floppy`), currently only supporting CPCEmu `.dsk`
-  files — `VFDD_EMUL_DIR`/`VFDD_EMUL_REAL` emulation modes are declared but not implemented
+  files. FORMAT A TRACK (`i8272_ft_cmd`) collects the C/H/R/N IDs and calls `vfdd_format_track()`, which
+  creates/replaces the track of `pcn`/`hds` in track order, shifting later tracks and growing/truncating the
+  file when the size changes (limits: N<=6, <=29 sectors per track, the DSK track-header capacity) — `VFDD_EMUL_DIR`/`VFDD_EMUL_REAL` emulation modes are declared but not implemented
   (see `doc/ToDo`).
 - **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL3 window/GL context (legacy `glDrawPixels`/`SDL_GL_SwapWindow`) and renders the ZX Spectrum
   pixel+attribute framebuffer (`screen.zx_patt`/`zx_attr`, pointers directly into `e.ram` at the

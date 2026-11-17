@@ -108,6 +108,30 @@ int vfdd_dsk_floppy(
     const char* path /* ścieżka do pliku/katalogu */
 );
 
+/* ograniczenia formatu DSK: N sektora (0x80 << N) i liczba sektorów mieszcząca się w nagłówku ścieżki */
+enum {
+    VFDD_MAX_N = 6,
+    VFDD_MAX_SPT = 29,
+};
+
+/* parametry rozkazu FORMAT A TRACK */
+struct vfdd_fmt {
+    unsigned char trk;              // numer fizycznej ścieżki
+    unsigned char hd;               // głowica
+    unsigned char n;                // kod rozmiaru sektora (dane), jednakowy dla całej ścieżki
+    unsigned char sc;               // ilość sektorów
+    unsigned char gap3;
+    unsigned char filler;           // bajt wypełnienia danych
+    const unsigned char* ids;       // sc * {C, H, R, N}: pola ID sektorów w kolejności na ścieżce
+};
+
+/*
+    Formatowanie ścieżki: tworzy ją lub zastępuje (w kolejności ścieżka/głowica); jeśli rozmiar
+    się zmienia, dalsze ścieżki są przesuwane, a plik skracany lub wydłużany.
+    Zwraca FDD_OK albo FDD_ERR_NODISK / FDD_ERR_WPROT / FDD_ERR_OVER (błędne parametry lub błąd zapisu).
+*/
+int vfdd_format_track(struct vfdd_disk*, const struct vfdd_fmt*);
+
 /*
     Wymiana dyskietki: najpierw otwiera nowy obraz i dopiero po sukcesie zamyka stary,
     więc przy błędzie (-1) poprzednia dyskietka pozostaje we flopie. Dozwolone path == dsk->path.
