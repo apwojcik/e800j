@@ -949,17 +949,17 @@ static char dbg_setreg(struct dbg* d, char* t) {
             d->z->HLs1 = (unsigned short)val;
     }
     else if (!strcmp(tmp0, "ix"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->IX_r = (unsigned short)val;
     else if (!strcmp(tmp0, "iy"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->IY_r = (unsigned short)val;
     else if (!strcmp(tmp0, "sp"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->SP_r = (unsigned short)val;
     else if (!strcmp(tmp0, "pc"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->PC_r = (unsigned short)val;
     else if (!strcmp(tmp0, "i"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->I_r = (unsigned char)val;
     else if (!strcmp(tmp0, "r"))
-        *d->z->A_r = (unsigned char)val;
+        *d->z->R_r = (unsigned char)val;
     else {
         d->out("Unknown register name.\n");
         return 1;
