@@ -21,14 +21,25 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <SDL3/SDL_messagebox.h>
+#include "e800j_config.h"
 #include "e800j_msg.h"
 
 char msg_stream = 0;
 long msg_level = 0;
+bool msg_dialog = false;
+
+/* tekst bieżącego komunikatu krytycznego (bez prefiksu), zbierany dla okna komunikatu */
+static char msg_text[512];
+static size_t msg_text_len;
+static bool msg_capture;
 
 static void msg_putchar(const char chr) {
     if (msg_stream == 0) {
         putchar(chr);
+    }
+    if (msg_capture && msg_text_len < sizeof(msg_text) - 1) {
+        msg_text[msg_text_len++] = chr;
     }
 }
 
@@ -79,6 +90,8 @@ void msg_printf(int level, const char* fmt, ...) {
             level = 6;
         }
         msg_putstr(msg[level]);
+        msg_text_len = 0;
+        msg_capture = msg_dialog && level == MSG_CRITICAL_ERROR;
         va_start(ap, fmt);
         for (const char* p = (char*)fmt; *p; ++p) {
             if (*p != '%') {
@@ -113,5 +126,14 @@ void msg_printf(int level, const char* fmt, ...) {
         }
         va_end(ap);
         fflush(stdout);
+        if (msg_capture) {
+            msg_capture = false;
+            while (msg_text_len > 0 && (msg_text[msg_text_len - 1] == '\n' || msg_text[msg_text_len - 1] == ' ')) {
+                msg_text_len--;
+            }
+            msg_text[msg_text_len] = 0;
+            /* dozwolone także przed SDL_Init() */
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Elwro 800 Junior", msg_text, nullptr);
+        }
     }
 }

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 /*
  zmienna globalna definiująca gdzie komunikaty mają zostać wysyłane
  wartość 0 (domyślna) to stdout
@@ -31,6 +33,12 @@ extern char msg_stream;
  domyślną wartością jest 0, czyli jedynie błędy krytyczne będą wysyłane
 */
 extern long msg_level;
+
+/*
+ true -> błędy krytyczne (MSG_CRITICAL_ERROR) są dodatkowo pokazywane w oknie komunikatu; ustawiane przez main,
+ gdy program nie ma terminala (start z Explorera/Findera), bo wtedy sam tekst na konsoli nigdy nie zostanie zobaczony
+*/
+extern bool msg_dialog;
 
 /*
     wysłanie komunikatu

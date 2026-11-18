@@ -110,6 +110,10 @@ struct screen {
     int vol_w;
     int vol_h;
     Uint64 vol_until; /* SDL_GetTicks(), po którym pasek znika */
+    bool paused; /* emulacja wstrzymana (klawisz Pause), zx_main nie wywołuje wtedy CPU */
+    unsigned int pause_tex; /* wskaźnik "PAUSED" w prawym górnym rogu, 0 -> jeszcze nie utworzony */
+    int pause_w;
+    int pause_h;
 };
 
 void screen_make_palette(struct screen* s, int nrm, int brt, int wht);
@@ -118,6 +122,15 @@ void screen_refresh(struct screen* s);
 
 /* pokazuje/ukrywa nakładkę z pomocą, od następnego odświeżenia ekranu */
 void screen_help(struct screen* s, bool show);
+
+/* wstrzymanie/wznowienie emulacji: ustawia s->paused i pokazuje wskaźnik "PAUSED" w prawym górnym rogu */
+void screen_pause(struct screen* s, bool paused);
+
+/* przełączenie pełnego ekranu i okna */
+void screen_fullscreen_toggle(struct screen* s);
+
+/* zapis bieżącego obrazu Spectrum (256x192, bez ramki) do pliku PNG, true gdy się udało */
+bool screen_screenshot(struct screen* s, const char* path);
 
 /* komunikat o operacji (printf) w lewym górnym rogu na czas s->toast_ms, zastępuje poprzedni */
 void screen_toast(struct screen* s, const char* fmt, ...);

@@ -22,9 +22,11 @@
 #include <stdlib.h>
 
 #include <SDL3/SDL_main.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #ifdef __APPLE__
 #include <string.h>
-#include <unistd.h>
 #include <SDL3/SDL_filesystem.h>
 #endif
 #ifdef _WIN32
@@ -178,9 +180,12 @@ static void win_use_console(const bool in, const bool out) {
 static void win_console_attach(void) {
     win_in_redirected = win_std_redirected(STD_INPUT_HANDLE);
     win_out_redirected = win_std_redirected(STD_OUTPUT_HANDLE);
-    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+    const bool attached = AttachConsole(ATTACH_PARENT_PROCESS);
+    if (attached) {
         win_use_console(!win_in_redirected, !win_out_redirected);
     }
+    /* bez terminala (start z Explorera) błędy krytyczne trafiają do okna komunikatu */
+    msg_dialog = !attached && !win_out_redirected;
 }
 
 /*
@@ -230,6 +235,9 @@ int main(const int argc, char** args) {
 
 #ifdef _WIN32
     win_console_attach();
+#else
+    /* bez terminala (start z Findera/menu systemu) błędy krytyczne trafiają do okna komunikatu */
+    msg_dialog = isatty(STDERR_FILENO) == 0;
 #endif
 #ifdef __APPLE__
     /* uruchomienie z elwro.app (Finder): katalog biezacy to "/", zasoby sa w Contents/Resources */

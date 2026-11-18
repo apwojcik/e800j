@@ -218,6 +218,9 @@ static const char* const help_lines[] = {
     HK_WIN_NAME "+F5/F6" HK_WIN_PAD "    new blank disk in A / B (save dialog)",
     HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
     "F2 / F3       volume down / up",
+    "F8            screenshot (e800j_NNN.png)",
+    "F9            fullscreen on / off",
+    "Pause         pause / resume",
     "F11           Z80 debugger (console)",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
@@ -487,6 +490,63 @@ void screen_help(struct screen* s, const bool show) {
     s->help = show;
 }
 
+void screen_pause(struct screen* s, const bool paused) {
+    s->paused = paused;
+}
+
+/* wskaźnik wstrzymania w prawym górnym rogu, w stylu komunikatu, niezależny od komunikatów operacji */
+static void screen_draw_pause(struct screen* s) {
+    if (s->pause_tex == 0) {
+        static const char* const lines[] = { "PAUSED" };
+        s->pause_tex = screen_text_texture(lines, 1, OSD_TOAST_VPAD, &s->pause_w, &s->pause_h);
+        if (s->pause_tex == 0) {
+            return;
+        }
+    }
+    const int zoom = SDL_max(1, SDL_min(screen_osd_zoom(s), (s->width - OSD_TOAST_MARGIN) / s->pause_w));
+    const int margin = OSD_TOAST_MARGIN * zoom;
+    const int w = s->pause_w * zoom;
+    screen_draw_texture(s, s->pause_tex, s->width - w - margin, margin, w, s->pause_h * zoom);
+}
+
+void screen_fullscreen_toggle(struct screen* s) {
+    const bool fullscreen = (SDL_GetWindowFlags(s->window) & SDL_WINDOW_FULLSCREEN) != 0;
+    if (!SDL_SetWindowFullscreen(s->window, !fullscreen)) {
+        msg_printf(MSG_ERROR, "Fullscreen switch failed: %s\n", SDL_GetError());
+        return;
+    }
+    s->fscrn = !fullscreen;
+}
+
+bool screen_screenshot(struct screen* s, const char* path) {
+    /* bufor bywa nieaktualny, jeśli od ostatniej klatki ekran się zmienił - przelicz i odśwież teksturę */
+    if (screen_transform(s)) {
+        screen_upload(s);
+    }
+    unsigned char* rgba = SDL_malloc(sizeof(s->scr_buffer));
+    if (rgba == nullptr) {
+        return false;
+    }
+    /* wiersz 0 bufora to dół obrazu; PNG jest zapisywany od góry, bajty R,G,B,A, bez przezroczystości */
+    for (int y = 0; y < 192; y++) {
+        memcpy(rgba + (size_t)y * 256 * 4, (const unsigned char*)s->scr_buffer + (size_t)(191 - y) * 256 * 4, 256 * 4);
+    }
+    for (size_t i = 3; i < sizeof(s->scr_buffer); i += 4) {
+        rgba[i] = 0xff;
+    }
+    bool ok = false;
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(256, 192, SDL_PIXELFORMAT_RGBA32, rgba, 256 * 4);
+    if (surface != nullptr) {
+        ok = SDL_SavePNG(surface, path);
+        SDL_DestroySurface(surface);
+    }
+    if (!ok) {
+        msg_printf(MSG_ERROR, "Screenshot %s failed: %s\n", path, SDL_GetError());
+    }
+    SDL_free(rgba);
+    return ok;
+}
+
 void screen_refresh(struct screen* s) {
     /* zawartość bufora po zamianie jest nieokreślona, więc ramka musi być rysowana w każdej klatce */
     screen_draw_border(s);
@@ -498,6 +558,9 @@ void screen_refresh(struct screen* s) {
     }
     screen_draw_toast(s);
     screen_draw_volume(s);
+    if (s->paused) {
+        screen_draw_pause(s);
+    }
     SDL_GL_SwapWindow(s->window);
 }
 
@@ -841,6 +904,34 @@ int zx_main(struct elwro* e) {
                 if (!event.key.repeat) {
                     dbg_break(e->cpu->ptx);
                 }
+            } else if (event.key.key == SDLK_F8) {
+                /* zrzut ekranu do pierwszego wolnego pliku e800j_NNN.png */
+                screen_help(e->scn, false);
+                if (!event.key.repeat) {
+                    char name[32];
+                    for (int n = 0; n < 1000; n++) {
+                        snprintf(name, sizeof(name), "e800j_%03d.png", n);
+                        FILE* f = fopen(name, "rb");
+                        if (f == NULL)
+                            break;
+                        fclose(f);
+                    }
+                    if (screen_screenshot(e->scn, name)) {
+                        screen_toast(e->scn, "Screenshot saved: %s", name);
+                    } else {
+                        screen_toast(e->scn, "Screenshot failed: %s", name);
+                    }
+                }
+            } else if (event.key.key == SDLK_F9 && (event.key.mod & HK_CTRL_MOD) == 0) {
+                screen_help(e->scn, false);
+                if (!event.key.repeat) {
+                    screen_fullscreen_toggle(e->scn);
+                }
+            } else if (event.key.key == SDLK_PAUSE) {
+                screen_help(e->scn, false);
+                if (!event.key.repeat) {
+                    screen_pause(e->scn, !e->scn->paused);
+                }
             } else if (disk_hotkey(e, event.key.key, event.key.mod)) {
                 /* wymiana dyskietki */
                 screen_help(e->scn, false);
@@ -918,11 +1009,15 @@ int zx_main(struct elwro* e) {
                 SDL_SetAtomicInt(&e->scn->refresh, 0);
             }
             if (e->tcpu) {
-                z80_loop(e->cpu, e->tr, e->ifreq, time_int, e);
-                snd_flush(e->snd);
+                if (!e->scn->paused) {
+                    z80_loop(e->cpu, e->tr, e->ifreq, time_int, e);
+                    snd_flush(e->snd);
+                }
                 e->tcpu = false;
             }
-            fdc_clk(e->fdc);
+            if (!e->scn->paused) {
+                fdc_clk(e->fdc);
+            }
             break;
         default:
             break;
