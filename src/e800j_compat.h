@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 /* MSVC/Windows have no on_exit(3) (it's a glibc/BSD extension), so provide a
  * minimal drop-in replacement backed by atexit(). */
 #if defined(_MSC_VER) || defined(__APPLE__) || (defined(_WIN32) && !defined(__GNUC__))
@@ -27,3 +29,19 @@
 int on_exit(void (*function)(int, void*), void* arg);
 
 #endif
+
+/*
+ Konsola procesu. Na Windows emulator jest aplikacją GUI, więc terminal trzeba podłączyć ręcznie; na pozostałych
+ systemach funkcje poza compat_console_attach() nic nie robią.
+*/
+
+/* na początku main(): podłącza konsolę procesu nadrzędnego (--help, błędy), przekierowane strumienie zostają
+   nietknięte; zwraca true, gdy program nie ma terminala (start z Explorera/Findera) i błędy krytyczne
+   trzeba pokazać w oknie komunikatu */
+bool compat_console_attach(void);
+
+/* wejście do debuggera: własne okno konsoli (terminal nadrzędny nie czeka na aplikację GUI), wielokrotne wywołanie jest bezpieczne */
+void compat_debug_console(void);
+
+/* wyjście z debuggera: zamknięcie okna konsoli, dalsze komunikaty (msg_printf) idą w próżnię */
+void compat_debug_console_close(void);

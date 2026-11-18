@@ -850,8 +850,11 @@ static void time_int(struct cpu* z, void* ptr) {
 /* SDL_EVENT_USER = zegar CPU/ekranu, +1 = dyskietki (e800j_disk.c) */
 #define SNAP_EVENT_TYPE (SDL_EVENT_USER + 2)
 
+/* rozszerzenia snapshotów: filtr okna wyboru pliku i rozpoznawanie upuszczonych plików */
+#define SNAP_EXTS "sna;z80;szx;sp;snp;zxs;sit;slt"
+
 static const SDL_DialogFileFilter snap_filters[] = {
-    { "Snapshots", "sna;z80;szx;sp;snp;zxs;sit;slt" },
+    { "Snapshots", SNAP_EXTS },
     { "All files", "*" },
 };
 
@@ -895,18 +898,27 @@ static bool path_has_ext(const char* path, const char* ext) {
 }
 
 static bool path_is_snapshot(const char* path) {
-    static const char* const exts[] = { "sna", "z80", "szx", "sp", "snp", "zxs", "sit", "slt" };
-    for (size_t i = 0; i < SDL_arraysize(exts); i++) {
-        if (path_has_ext(path, exts[i])) {
+    const char* dot = strrchr(path, '.');
+    if (dot == nullptr) {
+        return false;
+    }
+    const size_t ext_len = strlen(dot + 1);
+    for (const char* p = SNAP_EXTS; *p != 0;) {
+        const size_t len = strcspn(p, ";");
+        if (len == ext_len && SDL_strncasecmp(dot + 1, p, len) == 0) {
             return true;
         }
+        p += len + (p[len] == ';' ? 1 : 0);
     }
     return false;
 }
 
+/* napęd pierwszego pliku *.dsk bieżącego upuszczenia (-1 przed pierwszym, zerowane w SDL_EVENT_DROP_BEGIN) */
+static int first_drop_drive = -1;
+
 /* upuszczony plik: *.dsk do napędu A (lewa połowa okna) lub B (prawa), drugi plik *.dsk z tego samego upuszczenia do
  * drugiego napędu; snapshot jest wczytywany; reszta to komunikat o nieobsługiwanym pliku */
-static void drop_file(struct elwro* e, const SDL_DropEvent* drop, int* first_drive) {
+static void drop_file(struct elwro* e, const SDL_DropEvent* drop) {
     const char* path = drop->data;
     if (path == nullptr) {
         return;
@@ -915,19 +927,25 @@ static void drop_file(struct elwro* e, const SDL_DropEvent* drop, int* first_dri
     if (path_has_ext(path, "dsk")) {
         int w = 0, h = 0;
         SDL_GetWindowSize(e->scn->window, &w, &h);
-        int drive = (w > 0 && drop->x >= (float)w / 2.0f) ? 1 : 0;
-        if (*first_drive >= 0) {
-            drive = 1 - *first_drive;
-        }
-        *first_drive = drive;
-        disk_drop(e, drive, path);
+        const int drive = first_drop_drive >= 0 ? 1 - first_drop_drive : (w > 0 && drop->x >= (float)w / 2.0f ? 1 : 0);
+        first_drop_drive = drive;
+        disk_insert(e, drive, path);
     } else if (path_is_snapshot(path)) {
         snap_open(e, path);
     } else {
-        const char* name = strrchr(path, '/');
-        const char* back = strrchr(path, '\\');
-        name = back > name ? back : name;
-        screen_toast(e->scn, "Unsupported file: %s", name != nullptr ? name + 1 : path);
+        screen_toast(e->scn, "Unsupported file: %s", disk_basename(path));
+    }
+}
+
+/* pierwsza wolna nazwa e800j_NNN.<ext> w katalogu bieżącym (przy 1000 zajętych ostatnia, nadpisywana) */
+static void next_free_name(char* name, const size_t size, const char* ext) {
+    for (int n = 0; n < 1000; n++) {
+        snprintf(name, size, "e800j_%03d.%s", n, ext);
+        FILE* f = fopen(name, "rb");
+        if (f == nullptr) {
+            return;
+        }
+        fclose(f);
     }
 }
 
@@ -947,7 +965,6 @@ int zx_main(struct elwro* e) {
     msg_printf(MSG_MSG, "CPU frequency: %fMHz\n", frequency / 1000000.0);
 
     SDL_Event event;
-    int first_drop_drive = -1; /* napęd pierwszego pliku *.dsk bieżącego upuszczenia */
     while (SDL_WaitEvent(&event)) {
         if (disk_event(e, &event)) {
             continue;
@@ -966,7 +983,7 @@ int zx_main(struct elwro* e) {
             screen_toast(e->scn, "Drop *.dsk: left half = drive A, right half = drive B; snapshot = load");
             break;
         case SDL_EVENT_DROP_FILE:
-            drop_file(e, &event.drop, &first_drop_drive);
+            drop_file(e, &event.drop);
             break;
         case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_ESCAPE && e->scn->help) {
@@ -996,13 +1013,7 @@ int zx_main(struct elwro* e) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     char name[32];
-                    for (int n = 0; n < 1000; n++) {
-                        snprintf(name, sizeof(name), "e800j_%03d.png", n);
-                        FILE* f = fopen(name, "rb");
-                        if (f == NULL)
-                            break;
-                        fclose(f);
-                    }
+                    next_free_name(name, sizeof(name), "png");
                     if (screen_screenshot(e->scn, name, (event.key.mod & HK_CTRL_MOD) == 0)) {
                         screen_toast(e->scn, "Screenshot saved: %s", name);
                     } else {
@@ -1061,13 +1072,7 @@ int zx_main(struct elwro* e) {
                 /* zapis snapshotu do pierwszego wolnego pliku e800j_NNN.sna */
                 if (!event.key.repeat) {
                     char name[32];
-                    for (int n = 0; n < 1000; n++) {
-                        snprintf(name, sizeof(name), "e800j_%03d.sna", n);
-                        FILE* f = fopen(name, "rb");
-                        if (f == NULL)
-                            break;
-                        fclose(f);
-                    }
+                    next_free_name(name, sizeof(name), "sna");
                     if (file_snap_save(name, e) == 0) {
                         screen_toast(e->scn, "Snapshot saved: %s", name);
                     } else {
@@ -1095,16 +1100,15 @@ int zx_main(struct elwro* e) {
                 screen_refresh(e->scn);
                 SDL_SetAtomicInt(&e->scn->refresh, 0);
             }
-            if (e->tcpu) {
-                if (!e->scn->paused) {
+            /* wstrzymana emulacja nie wywołuje CPU, dźwięku i FDC (ekran jest dalej odświeżany) */
+            if (!e->scn->paused) {
+                if (e->tcpu) {
                     z80_loop(e->cpu, e->tr, e->ifreq, time_int, e);
                     snd_flush(e->snd);
                 }
-                e->tcpu = false;
-            }
-            if (!e->scn->paused) {
                 fdc_clk(e->fdc);
             }
+            e->tcpu = false;
             break;
         default:
             break;

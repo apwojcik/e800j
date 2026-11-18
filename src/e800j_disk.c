@@ -43,7 +43,7 @@ static char drive_name(const int drive) {
     return (char)('A' + drive);
 }
 
-static const char* disk_basename(const char* path) {
+const char* disk_basename(const char* path) {
     const char* base = path;
     for (const char* p = path; *p != 0; ++p) {
         if (*p == '/' || *p == '\\') {
@@ -86,12 +86,8 @@ static void disk_insert_mode(struct elwro* e, const int drive, const char* path,
         (disk->stat & VFDD_WPROT) != 0 ? "RO" : "RW");
 }
 
-static void disk_insert(struct elwro* e, const int drive, const char* path) {
+void disk_insert(struct elwro* e, const int drive, const char* path) {
     disk_insert_mode(e, drive, path, e->disk[drive]->rw);
-}
-
-void disk_drop(struct elwro* e, const int drive, const char* path) {
-    disk_insert(e, drive, path);
 }
 
 /* tworzy pusty (niesformatowany) obraz i wkłada go do napędu w trybie RW; plik formatuje dopiero system w emulowanym komputerze */

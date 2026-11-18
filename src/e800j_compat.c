@@ -47,9 +47,89 @@ int on_exit(void (*function)(int, void*), void* arg) {
     return 0;
 }
 
+#endif
+
+#ifdef _WIN32
+
+#include <stdio.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "e800j_config.h"
+
+/* strumienie standardowe przekierowane przez uruchamiającego (potok/plik), np. elwro --debug < cmds.txt */
+static bool win_in_redirected;
+static bool win_out_redirected;
+static bool win_own_console; /* --debug otworzył własną konsolę */
+
+static bool win_std_redirected(const DWORD id) {
+    const HANDLE h = GetStdHandle(id);
+    if (h == nullptr || h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    const DWORD type = GetFileType(h);
+    return type == FILE_TYPE_PIPE || type == FILE_TYPE_DISK;
+}
+
+/* kieruje nieprzekierowane strumienie na urządzenia o podanych nazwach (konsola albo "NUL") */
+static void win_reopen_streams(const char* in_name, const char* out_name) {
+    if (!win_out_redirected) {
+        (void)freopen(out_name, "w", stdout);
+        (void)freopen(out_name, "w", stderr);
+    }
+    if (!win_in_redirected) {
+        (void)freopen(in_name, "r", stdin);
+    }
+}
+
+bool compat_console_attach(void) {
+    win_in_redirected = win_std_redirected(STD_INPUT_HANDLE);
+    win_out_redirected = win_std_redirected(STD_OUTPUT_HANDLE);
+    const bool attached = AttachConsole(ATTACH_PARENT_PROCESS);
+    if (attached) {
+        win_reopen_streams("CONIN$", "CONOUT$");
+    }
+    return !attached && !win_out_redirected;
+}
+
+/*
+ Terminal nadrzędny nie czeka na aplikację GUI (znak zachęty wraca od razu i walczy z debuggerem o wejście),
+ więc debugger dostaje własną konsolę (okno "Elwro 800 Junior - debugger"); terminal pozostaje sprawny,
+ a zamrożone jest tylko okno emulatora. Przy przekierowanym wejściu i wyjściu nic się nie zmienia.
+*/
+void compat_debug_console(void) {
+    if (win_own_console || (win_in_redirected && win_out_redirected)) {
+        return;
+    }
+    FreeConsole();
+    if (!AllocConsole()) {
+        return;
+    }
+    SetConsoleTitleA("Elwro 800 Junior - debugger");
+    win_reopen_streams("CONIN$", "CONOUT$");
+    win_own_console = true;
+}
+
+void compat_debug_console_close(void) {
+    if (!win_own_console) {
+        return;
+    }
+    win_own_console = false;
+    FreeConsole();
+    win_reopen_streams("NUL", "NUL");
+}
+
 #else
 
-/* ISO C zabrania pustej jednostki translacji */
-typedef int e800j_compat_unused_t;
+#include <unistd.h>
+
+bool compat_console_attach(void) {
+    return isatty(STDERR_FILENO) == 0;
+}
+
+void compat_debug_console(void) {
+}
+
+void compat_debug_console_close(void) {
+}
 
 #endif

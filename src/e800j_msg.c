@@ -79,6 +79,17 @@ static void msg_putaddr(const unsigned int value) {
     msg_putstr(t);
 }
 
+/* pokazuje zebrany tekst bez końcowych znaków nowej linii i spacji */
+static void msg_show_dialog(void) {
+    msg_capture = false;
+    while (msg_text_len > 0 && (msg_text[msg_text_len - 1] == '\n' || msg_text[msg_text_len - 1] == ' ')) {
+        msg_text_len--;
+    }
+    msg_text[msg_text_len] = 0;
+    /* dozwolone także przed SDL_Init() */
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Elwro 800 Junior", msg_text, nullptr);
+}
+
 static const char* msg[] = {
     "(E!) ", "(EE) ", "(WW) ", "(II) ", "(VI) ", "(NI) ", "(UI) "
 };
@@ -127,13 +138,7 @@ void msg_printf(int level, const char* fmt, ...) {
         va_end(ap);
         fflush(stdout);
         if (msg_capture) {
-            msg_capture = false;
-            while (msg_text_len > 0 && (msg_text[msg_text_len - 1] == '\n' || msg_text[msg_text_len - 1] == ' ')) {
-                msg_text_len--;
-            }
-            msg_text[msg_text_len] = 0;
-            /* dozwolone także przed SDL_Init() */
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Elwro 800 Junior", msg_text, nullptr);
+            msg_show_dialog();
         }
     }
 }

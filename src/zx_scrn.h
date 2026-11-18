@@ -123,7 +123,8 @@ void screen_refresh(struct screen* s);
 /* pokazuje/ukrywa nakładkę z pomocą, od następnego odświeżenia ekranu */
 void screen_help(struct screen* s, bool show);
 
-/* wstrzymanie/wznowienie emulacji: ustawia s->paused i pokazuje wskaźnik "PAUSED" w prawym górnym rogu */
+/* wstrzymanie/wznowienie emulacji: ustawia s->paused (zx_main nie wywołuje wtedy CPU), screen_refresh rysuje
+ * wskaźnik "PAUSED" w prawym górnym rogu */
 void screen_pause(struct screen* s, bool paused);
 
 /* przełączenie pełnego ekranu i okna */
