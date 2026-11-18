@@ -6,7 +6,7 @@ Notes from going through `doc/ToDo` (Krzysztof Komarnicki, 2006). Status as of 2
 |---|---|
 | Add the FORMAT command to the FDC | Implemented (commit "fdc: implement FORMAT A TRACK ...") |
 | Handle RST #48 under CP/J | Verified, no emulator change needed, item removed |
-| GUI | Open, options below |
+| GUI | Partly done: error message boxes, drag and drop, fullscreen/pause keys and PNG screenshot are implemented; the rest is open (see section 3) |
 
 ---
 
@@ -104,36 +104,38 @@ works as expected and the item was removed from `doc/ToDo`.
 
 ---
 
-## 3. GUI (open)
+## 3. GUI (partly done)
 
 ### What exists
 
-- SDL3 window with a legacy OpenGL texture, nearest-neighbour scaling, resize, scale presets (Ctrl+F1..F9),
-  `-f` fullscreen and `-n` no-frame at startup, per-scanline border.
-- Overlays drawn with SDL's debug font into GL textures: F1 hot-key help, operation toasts (`osd_time`), volume bar.
+- SDL3 window with a legacy OpenGL texture, nearest-neighbour scaling, resize, scale presets (Ctrl+F1..F5,
+  x1..x3), `-f` fullscreen and `-n` no-frame at startup, per-scanline border.
+- Overlays drawn with SDL's debug font into GL textures: F1 hot-key help, operation toasts (`osd_time`), volume
+  bar, "PAUSED" indicator.
 - Native file open / save dialogs for disks (F5/F6, Win+F5/F6) and snapshots (Win+F12).
-- Hot keys for disks, volume, snapshots, resets and the debugger (F11); Elwro keys on Home, End, PgUp, PgDn, F10.
+- Hot keys for disks, volume, snapshots, resets, screenshot (F8 / Ctrl+F8), fullscreen (F9), pause (Pause) and the
+  debugger (F11); Elwro keys on Home, End, PgUp, PgDn, F10. Files dropped on the window are loaded.
+- Critical startup errors are shown in a message box when the program has no terminal.
 - Leftovers of an older design: `struct screen` still has `parent` (GTK window ID) and `yresv` (strip reserved
   for a GTK menu), so the 2006 version apparently embedded the screen in a GTK frontend with a menu.
 
-### Gaps (checked in the code)
+### Gaps still open (checked in the code)
 
-- No drag and drop of `.dsk` / `.sna` (`SDL_EVENT_DROP_FILE` not handled).
-- No fullscreen hot key (only `-f` / config) and no pause or focus-loss handling.
-- No error dialogs: as a GUI-subsystem exe, startup failures (missing ROM, bad config) go only to a console,
-  invisible when started from Explorer / Finder.
 - No mouse, gamepad or speed (turbo / slow) control; the window title never shows disk or speed status.
-- No scaling filter, aspect ratio, integer scaling or vsync options; no PNG screenshot.
+- No focus-loss pause.
+- No scaling filter, aspect ratio, integer scaling or vsync options.
+- No menus, settings screen or on-screen keyboard; the debugger is console only.
 - libspectrum is linked but its tape support is unused.
 
 ### Options by effort
 
 Small:
-1. Fatal startup errors in a message box (`SDL_ShowSimpleMessageBox`).
-2. Drag and drop of `.dsk` (A, or B with a modifier) and `.sna`.
-3. Fullscreen hot key and pause key.
+1. ~~Fatal startup errors in a message box~~ done (`msg_dialog`, `SDL_ShowSimpleMessageBox`).
+2. ~~Drag and drop of `.dsk` and snapshots~~ done: `.dsk` to drive A (left half of the window) or B (right half),
+   a second `.dsk` of the same drop to the other drive, snapshots loaded like Win+F12.
+3. ~~Fullscreen hot key and pause key~~ done (F9, Pause).
 4. Window title with disk names and RO/RW.
-5. PNG screenshot.
+5. ~~PNG screenshot~~ done (F8 with border 352x288, Ctrl+F8 without 256x192).
 6. Drive activity LED during FDC access.
 
 Medium:
@@ -150,5 +152,5 @@ Large:
 
 ### Recommendation
 
-Do 1-4 first (cheap, real usability gaps), then choose between 7 (on-screen keyboard) and ImGui (covers 8 and 11
-as well): ImGui for a "proper" GUI, the overlay approach to keep the project dependency-light.
+Items 1, 2, 3 and 5 are done. Next: 4 and 6 (cheap), then choose between 7 (on-screen keyboard) and ImGui
+(covers 8 and 11 as well): ImGui for a "proper" GUI, the overlay approach to keep the project dependency-light.

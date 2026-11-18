@@ -22,6 +22,9 @@ opcje -a i -A wykluczają się, tak samo -b i -B):
 
     elwro -A plik.dsk
 
+Jeśli plik podany z -A / -B nie istnieje, zostanie utworzony jako pusta, niesformatowana dyskietka (sformatuje ją
+system w emulowanym komputerze; kontroler FDC obsługuje rozkaz FORMAT A TRACK).
+
 jeśli chcemy mieć oba napędy, w tym jeden RO a drugi RW:
 
     elwro -a plik1.dsk -B plik2.dsk
@@ -46,6 +49,8 @@ Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pr
     F5 / F6               włożenie dyskietki do napędu A / B (okno wyboru pliku)
     Shift+F5 / Shift+F6   wysunięcie dyskietki z napędu A / B
     Alt+F5 / Alt+F6       przełączenie trybu RO/RW dyskietki w napędzie A / B
+    Win+F5 / Win+F6       nowa pusta dyskietka w napędzie A / B: okno zapisu pyta o nazwę i miejsce pliku *.dsk,
+                          dyskietka jest wkładana w trybie RW (niesformatowana)
     Ctrl+F1 .. Ctrl+F5    skala okna x1 .. x3 co 0,5 (F1 = x1, F5 = x3)
     F8                    zrzut ekranu e800j_NNN.png z ramką (352x288)
     Ctrl+F8               zrzut ekranu bez ramki (256x192)
@@ -54,7 +59,7 @@ Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pr
     upuszczenie pliku     *.dsk na okno: lewa połowa = napęd A, prawa = napęd B (drugi plik *.dsk trafia do drugiego
                           napędu); plik snapshotu jest wczytywany (zimny restart)
     F11                   debugger Z80 w dowolnej chwili (konsola)
-    F12                  zapis snapshotu e800j_NNN.sna
+    F12                   zapis snapshotu e800j_NNN.sna
     Shift+F12             przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
     Ctrl+F12              zimny restart (jak po włączeniu zasilania, RAM losowy)
     Alt+F12               zimny restart i ponowne wczytanie snapshotu z linii poleceń
@@ -94,7 +99,13 @@ Program zawiera również debugger/deasembler, aby emulator uruchomić w jego tr
     elwro --debug
 
 W tym momencie sterowanie programu przejmuje konsola tekstowa, aby dowiedzieć się o możliwych opcjach
-debuggera, należy wpisać h i nacisnąć enter.
+debuggera, należy wpisać h i nacisnąć enter. W systemie Windows debugger otwiera własne okno konsoli (terminal,
+z którego uruchomiono emulator, pozostaje sprawny); polecenie q zamyka debugger i to okno, g wznawia pracę.
+Debugger można też uruchomić w dowolnej chwili klawiszem F11 (okno emulatora czeka wtedy na polecenia z konsoli).
+Przy przekierowanym wejściu można go używać skryptowo, np. 'printf "u 0 4\nq\n" | elwro --debug'.
+
+Gdy program nie ma terminala (start z Eksploratora / Findera), błędy krytyczne (np. brak pliku ROM, błąd w
+konfiguracji lub w opcjach) są pokazywane w oknie komunikatu.
 
 Konfiguracja:
 

@@ -43,8 +43,8 @@ There is no test suite in this repository.
 The built `elwro` executable reads `e800j.cfg` from the current working directory for hardware/profile
 configuration (BIOS ROM set, CPU timing, screen palette, SDL video, sound, joystick mapping). Key CLI
 flags (see `file_help()` in `e800j_file.c`):
-- `-a/--a-read-only <file>` (read-only) or `-A/--a-read-write <file>` (read-write, capital = write) — mount a CPCEmu `.dsk` image in drive A; `-b/--b-read-only` / `-B/--b-read-write` for drive B. The read-only and read-write form of one drive are mutually exclusive
-- `--debug` — start in the text-console Z80 debugger/disassembler instead of free-running
+- `-a/--a-read-only <file>` (read-only) or `-A/--a-read-write <file>` (read-write, capital = write) — mount a CPCEmu `.dsk` image in drive A; `-b/--b-read-only` / `-B/--b-read-write` for drive B. The read-only and read-write form of one drive are mutually exclusive. With `-A`/`-B` a missing file is created as a blank (header-only, unformatted) image (`disk_open()` in `e800j.c`)
+- `--debug` — start in the text-console Z80 debugger/disassembler instead of free-running (on Windows the GUI exe opens its own console window for it, see the Debugger bullet)
 - `--log-level <n>` — verbosity of `msg_printf` diagnostics (see `e800j_msg.h` for levels)
 - `-h/--help` — full option list; others: `-c/--config`, `-p/--profile` (overrides `main::profile`), `-f/--full-screen`, `-n/--no-frame`, `--bits-per-pixel`, `-x`, `-y`. On Windows `/` may replace `-`/`--`
 
@@ -78,12 +78,14 @@ buffers and global timing state.
   level further in `virt_fdd.c`/`virt_fdd.h` (`vfdd_dsk_floppy`), currently only supporting CPCEmu `.dsk`
   files. FORMAT A TRACK (`i8272_ft_cmd`) collects the C/H/R/N IDs and calls `vfdd_format_track()`, which
   creates/replaces the track of `pcn`/`hds` in track order, shifting later tracks and growing/truncating the
-  file when the size changes (limits: N<=6, <=29 sectors per track, the DSK track-header capacity) — `VFDD_EMUL_DIR`/`VFDD_EMUL_REAL` emulation modes are declared but not implemented
-  (see `doc/ToDo`).
-- **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL3 window/GL context (legacy `glDrawPixels`/`SDL_GL_SwapWindow`) and renders the ZX Spectrum
+  file when the size changes (limits: N<=6, <=29 sectors per track, the DSK track-header capacity).
+  `vfdd_create_image()` writes a header-only (unformatted) image, used for blank disks (Win+F5/F6, `-A`/`-B` with
+  a missing file); the guest formats it. `VFDD_EMUL_DIR`/`VFDD_EMUL_REAL` emulation modes are declared but not
+  implemented (see `doc/ToDo`).
+- **Screen** (`zx_scrn.c`/`zx_scrn.h`): owns the SDL3 window/GL context (legacy fixed-function GL: the converted frame is a 256x192 texture drawn as a quad, `SDL_GL_SwapWindow`) and renders the ZX Spectrum
   pixel+attribute framebuffer (`screen.zx_patt`/`zx_attr`, pointers directly into `e.ram` at the
-  standard Spectrum screen addresses). F1 shows a help overlay (hot-key list rendered once with SDL's built-in debug font into a GL texture, drawn in `screen_refresh`; Esc or any other hot key closes it). `screen_toast()` shows an operation message (snapshot saved, floppy inserted/ejected, reset) top-left in the same style/zoom for `osd_time` seconds (`zx_screen` section, default 10, 0 = off). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
-  FDC, and screen refresh together.
+  standard Spectrum screen addresses). The border is drawn per scanline (`screen_border_colors()`: 288 visible lines, colour changes recorded by `screen_border_set()`). F1 shows a help overlay (hot-key list rendered once with SDL's built-in debug font into a GL texture, drawn in `screen_refresh`; Esc or any other hot key closes it). `screen_toast()` shows an operation message (snapshot saved, floppy inserted/ejected, reset) top-left in the same style/zoom for `osd_time` seconds (`zx_screen` section, default 10, 0 = off). Also hosts the main SDL event loop (`zx_main`) that ticks the CPU,
+  FDC, and screen refresh together, and the window hot keys: Ctrl+F1..F5 window scale x1..x3 in steps of 0.5 (internally 2..6, the shown value is halved), F8 / Ctrl+F8 PNG screenshot with (352x288) / without (256x192) border via `screen_screenshot()` (`e800j_NNN.png`, `next_free_name()`), F9 fullscreen (`screen_fullscreen_toggle()`), Pause (`screen_pause()`: `screen.paused` stops the CPU, sound flush and FDC clock in `zx_main`, `screen_refresh` draws the "PAUSED" indicator), F11 debugger. Files dropped on the window (`SDL_EVENT_DROP_FILE`, `drop_file()`): `*.dsk` to drive A (left half) or B (right half; a second one of the same drop goes to the other drive), snapshots (`SNAP_EXTS`) via `snap_open()` (same path as the Win+F12 dialog), anything else gets a toast.
 - **Sound** (`e800j_sound.c`): a beeper emulator (port 0xFE bit) rendered on the CPU clock: `snd_beeper()`
   records each level change at the current T-state (`cpu` ticks), so timing is independent of the SDL timer.
   With the `alias` config flag each edge is added as a band-limited step (windowed-sinc BLEP, 16 taps, 64
@@ -96,21 +98,31 @@ buffers and global timing state.
   Volume is `volume` 0..`SND_VOL_MAX` (192; config `mixvol` = start value, default 128) in steps of `SND_VOL_STEP` (16, 12 levels):
   F2/F3 call `snd_volume_step()` and `screen_volume()` draws a bottom-centre bar (0 .. max) for 1.5 s (`osd_time` 0 = off). AY-3-8910 sound is listed in `doc/ToDo` as unimplemented.
 - **Disk hot-swap** (`e800j_disk.c`): F5/F6 insert a disk in drive A/B (SDL file dialog, or the next `*.dsk` from the
-  profile's optional `diskdir`), Shift+F5/F6 / Alt+F5/F6 eject/toggle RO/RW, Win+F5/F6 (`HK_WIN_MOD`) new blank disk: a save-file dialog asks for the name/place, `vfdd_create_image()` writes a header-only (unformatted) `.dsk`, inserted RW, the guest formats it with FORMAT A TRACK (Ctrl+F1..F5 set the window scale x1..x3 in steps of 0.5; internally 2..6, the shown value is halved; F8 / Ctrl+F8 save a PNG screenshot with / without border, F9 toggles fullscreen, Pause pauses). The dialog callback only pushes an SDL event
+  profile's optional `diskdir`), Shift+F5/F6 / Alt+F5/F6 eject/toggle RO/RW, Win+F5/F6 (`HK_WIN_MOD`) new blank disk: a save-file dialog asks for the name/place, `vfdd_create_image()` writes a header-only (unformatted) `.dsk`, inserted RW, the guest formats it with FORMAT A TRACK. `disk_insert()` (also used for dropped files) and `disk_basename()` are exported. The dialog callback only pushes an SDL event
   (`SDL_EVENT_USER + 1`; `SDL_EVENT_USER` is the CPU/screen timer); the swap runs in `zx_main` between `z80_loop` calls via `vfdd_swap()` (opens the new image before closing the
   old one). `struct vfdd_disk` remembers `path`/`rw` across eject. Drives are reachable as `e.disk[0..1]`.
-- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F2/F3 (volume), F5, F6, F12 are emulator hot keys. Hot-key modifiers go through the `HK_*` macros in `e800j_kbrd.h`; on macOS Ctrl->Cmd, Alt->Option, Win->Control (and the Elwro Ctrl/E-mode key `E8K_CTRL_*` is Cmd), so never hard-code `SDL_KMOD_CTRL/ALT/GUI` or key names in hot-key code or help texts.
+- **Keyboard** (`e800j_kbrd.c`): maps SDL key events to the ZX Spectrum/Elwro keyboard matrix read via I/O. The Elwro's dedicated keys sit on PC keys: Home=CP/J, F10=DIR, End=ERASE, PgUp=LOAD, PgDn=SAVE (`E8K_*` in `e800j_kbrd.h`); CP/J and ERASE are the matrix keys 6/7, so Home/End replay Ctrl (E mode) then Alt+6/Alt+7 frame by frame (`key_macro_frame()`, stepped from `time_int`); F1, F2/F3 (volume), F5, F6, F8, F9, F11, F12 and Pause are emulator hot keys (handled in `zx_main`, so they never reach the matrix). Hot-key modifiers go through the `HK_*` macros in `e800j_kbrd.h`; on macOS Ctrl->Cmd, Alt->Option, Win->Control (and the Elwro Ctrl/E-mode key `E8K_CTRL_*` is Cmd), so never hard-code `SDL_KMOD_CTRL/ALT/GUI` or key names in hot-key code or help texts.
 - **Config context** (`e800j_cfg.c`/`e800j_cfg.h`): `struct config` is the single context for everything configurable: values from the config file (selected profile) plus command-line overrides. `cfg_parse()` is a real recursive-descent parser for the `section name { key = value; }` format (`#` comments, quoted or bare values, nested sections, repeated keys kept in order) that builds a `cfg_section` tree with line-numbered errors; `config_load()` resolves the profile (`--profile` or `main::profile`) and its `rombios`/`memory`/`cpu`/`screen`/`video`/`sound` section references into `struct config` (missing optional keys keep the defaults from `config_init()`, bad values are errors); `config_apply()` moves the context into `struct elwro`/`screen`/`sound` (allocates RAM/ROM, loads the ROM files). Numbers in the file use C syntax (`0x` for hex).
 - **Command line** (`e800j_cmdline.c`): table-driven (`options[]`), two passes over the same `struct config` in `main()`: `cmdline_preparse()` picks only `--config`, `--profile`, `--log-level`, `--help` (so the right config file/profile is loaded and logging obeys the level), then `config_load()`, then `cmdline_parse()` validates everything and overrides the values from the file (snapshot, disks, debug, `-x/-y/--bits-per-pixel`, `-f`, `-n`). Never pass `argc`/`argv` around; add new options to the `options[]` table, to `struct config` (and to `file_help()`).
 - **Snapshot loading / help** (`e800j_file.c`): `.sna`/snapshot loading and saving that restores CPU + RAM state directly from the raw `struct cpu` byte layout, and `file_help()` (the `--help` text).
 - **Portability shims** (`e800j_compat.c`/`.h`): MSVC/Windows replacement for glibc's `on_exit()` (backed by
-  `atexit()`), used by `zx_scrn.c` for resource cleanup.
+  `atexit()`), used by `zx_scrn.c` for resource cleanup; console handling for the Windows GUI-subsystem exe:
+  `compat_console_attach()` (start of `main()`: attaches the parent console for `--help`/errors, leaves redirected
+  stdin/stdout alone, returns true when there is no terminal), `compat_debug_console()` / `compat_debug_console_close()`
+  (own console window for the debugger). On other systems they are stubs (`compat_console_attach()` = `!isatty(stderr)`).
+  Keep platform `#ifdef`s out of `main()` by adding shims here.
 - **Messages/logging** (`e800j_msg.c`/`e800j_msg.h`): all diagnostic output goes through `msg_printf`
   with a severity level (`MSG_CRITICAL_ERROR` .. `MSG_UNVERB_MSG`); verbosity is controlled globally by
   `msg_level` (settable via `--log-level`). Don't use `printf`/`fprintf` directly for emulator diagnostics —
-  use `msg_printf` so verbosity filtering stays consistent.
+  use `msg_printf` so verbosity filtering stays consistent. When the program has no terminal (`msg_dialog`, set
+  from `compat_console_attach()`) every `MSG_CRITICAL_ERROR` is also shown in an `SDL_ShowSimpleMessageBox`.
 - **Debugger** (`z80_debug.c`/`z80_debug.h`): an interactive text-console Z80 disassembler/debugger,
-  entered via `--debug` or at runtime; it hooks the CPU via the `debug_t` callback in `struct cpu`.
+  entered via `--debug` or at any time with F11 (`dbg_break()`); it hooks the CPU via the `debug_t` callback in
+  `struct cpu`. `dbg_set_hooks()` registers enter/quit callbacks (`main()` plugs in the compat console functions, so
+  on Windows the debugger gets its own console window, closed again on `q`); EOF/Ctrl-D on its input quits it, and
+  `g` with nothing to wait for switches `debug_on` off so the emulation runs at full speed. Commands are listed by `h`.
+  Because the debugger blocks in `dbg_input()`, the emulator window freezes while the prompt is active. Scripted
+  use works over pipes, e.g. `printf 'u 0 4\nq\n' | elwro --debug`.
 
 ### ROM/BIOS layout
 
