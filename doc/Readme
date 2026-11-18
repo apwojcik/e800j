@@ -46,7 +46,12 @@ Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pr
     F5 / F6               włożenie dyskietki do napędu A / B (okno wyboru pliku)
     Shift+F5 / Shift+F6   wysunięcie dyskietki z napędu A / B
     Alt+F5 / Alt+F6       przełączenie trybu RO/RW dyskietki w napędzie A / B
-    Ctrl+F1 .. Ctrl+F9    skala okna x1 .. x5 co 0,5 (F1 = x1, F9 = x5)
+    Ctrl+F1 .. Ctrl+F5    skala okna x1 .. x3 co 0,5 (F1 = x1, F5 = x3)
+    F8                    zrzut ekranu e800j_NNN.png z ramką (352x288)
+    Ctrl+F8               zrzut ekranu bez ramki (256x192)
+    F9                    pełny ekran / okno
+    Pause                 wstrzymanie / wznowienie emulacji
+    F11                   debugger Z80 w dowolnej chwili (konsola)
     F12                  zapis snapshotu e800j_NNN.sna
     Shift+F12             przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)
     Ctrl+F12              zimny restart (jak po włączeniu zasilania, RAM losowy)

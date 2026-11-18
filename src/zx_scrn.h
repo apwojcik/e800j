@@ -129,8 +129,9 @@ void screen_pause(struct screen* s, bool paused);
 /* przełączenie pełnego ekranu i okna */
 void screen_fullscreen_toggle(struct screen* s);
 
-/* zapis bieżącego obrazu Spectrum (256x192, bez ramki) do pliku PNG, true gdy się udało */
-bool screen_screenshot(struct screen* s, const char* path);
+/* zapis bieżącego obrazu Spectrum w natywnej rozdzielczości do pliku PNG: z ramką (352x288) albo bez (256x192),
+ * true gdy się udało */
+bool screen_screenshot(struct screen* s, const char* path, bool border);
 
 /* komunikat o operacji (printf) w lewym górnym rogu na czas s->toast_ms, zastępuje poprzedni */
 void screen_toast(struct screen* s, const char* fmt, ...);

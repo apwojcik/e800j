@@ -134,6 +134,8 @@ static bool screen_transform(struct screen* s) {
 #define SCR_LINES_TOP 48
 #define SCR_LINES_PAPER 192
 #define SCR_LINES_VIS 288
+#define SHOT_BORDER_X 48 /* szerokość ramki z boków na zrzucie ekranu (jak u góry i u dołu) */
+#define SHOT_W (256 + 2 * SHOT_BORDER_X)
 
 void screen_border_set(struct screen* s, const long ticks, const unsigned char color) {
     struct border_frame* f = &s->bframe[s->bcur];
@@ -171,10 +173,8 @@ static float screen_line_y(const struct screen* s, const int v) {
     return s->py0 - s->py0 * (float)(v - SCR_LINES_TOP - SCR_LINES_PAPER) / (SCR_LINES_VIS - SCR_LINES_TOP - SCR_LINES_PAPER);
 }
 
-/* ramka rysowana liniami: kolor każdej linii z zapisów portu w ostatniej pełnej klatce */
-static void screen_draw_border(struct screen* s) {
-    unsigned char col[SCR_LINES_VIS];
-
+/* kolor ramki każdej z widocznych linii (SCR_LINES_VIS) z zapisów portu w ostatniej pełnej klatce */
+static void screen_border_colors(const struct screen* s, unsigned char* col) {
     if (s->bhave) {
         const struct border_frame* f = &s->bframe[s->bcur ^ 1];
         unsigned char c = f->start;
@@ -187,9 +187,15 @@ static void screen_draw_border(struct screen* s) {
         }
     }
     else {
-        memset(col, s->border_color, sizeof(col));
+        memset(col, s->border_color, SCR_LINES_VIS);
     }
+}
 
+/* ramka rysowana liniami: kolor każdej linii z zapisów portu w ostatniej pełnej klatce */
+static void screen_draw_border(struct screen* s) {
+    unsigned char col[SCR_LINES_VIS];
+
+    screen_border_colors(s, col);
     glBegin(GL_QUADS);
     for (int v = 0; v < SCR_LINES_VIS;) {
         int e = v + 1;
@@ -216,9 +222,10 @@ static const char* const help_lines[] = {
     "Shift+F5/F6   eject disk from drive A / B",
     HK_ALT_NAME "+F5/F6" HK_ALT_PAD "     toggle RO/RW of disk in A / B",
     HK_WIN_NAME "+F5/F6" HK_WIN_PAD "    new blank disk in A / B (save dialog)",
-    HK_CTRL_NAME "+F1..F9" HK_CTRL_PAD "   window scale x1 .. x5, step 0.5",
+    HK_CTRL_NAME "+F1..F5" HK_CTRL_PAD "   window scale x1 .. x3, step 0.5",
     "F2 / F3       volume down / up",
-    "F8            screenshot (e800j_NNN.png)",
+    "F8            screenshot with border (e800j_NNN.png)",
+    HK_CTRL_NAME "+F8" HK_CTRL_PAD "       screenshot without border",
     "F9            fullscreen on / off",
     "Pause         pause / resume",
     "F11           Z80 debugger (console)",
@@ -518,24 +525,46 @@ void screen_fullscreen_toggle(struct screen* s) {
     s->fscrn = !fullscreen;
 }
 
-bool screen_screenshot(struct screen* s, const char* path) {
+bool screen_screenshot(struct screen* s, const char* path, const bool border) {
     /* bufor bywa nieaktualny, jeśli od ostatniej klatki ekran się zmienił - przelicz i odśwież teksturę */
     if (screen_transform(s)) {
         screen_upload(s);
     }
-    unsigned char* rgba = SDL_malloc(sizeof(s->scr_buffer));
+    /* z ramką: widoczny obszar jak na prawdziwym Spectrum (obraz 256x192 w ramce o szerokości SHOT_BORDER_X z boków
+     * oraz SCR_LINES_TOP u góry i u dołu, kolor ramki liniami, też zmiany w trakcie klatki); bez ramki: sam obraz */
+    unsigned char col[SCR_LINES_VIS];
+    screen_border_colors(s, col);
+    const int w = border ? SHOT_W : 256;
+    const int h = border ? SCR_LINES_VIS : SCR_LINES_PAPER;
+    const int left = border ? SHOT_BORDER_X : 0;
+    const int top = border ? SCR_LINES_TOP : 0;
+    unsigned char* rgba = SDL_malloc((size_t)w * h * 4);
     if (rgba == nullptr) {
         return false;
     }
-    /* wiersz 0 bufora to dół obrazu; PNG jest zapisywany od góry, bajty R,G,B,A, bez przezroczystości */
-    for (int y = 0; y < 192; y++) {
-        memcpy(rgba + (size_t)y * 256 * 4, (const unsigned char*)s->scr_buffer + (size_t)(191 - y) * 256 * 4, 256 * 4);
-    }
-    for (size_t i = 3; i < sizeof(s->scr_buffer); i += 4) {
-        rgba[i] = 0xff;
+    /* bajty R,G,B,A, bez przezroczystości; wiersz 0 bufora obrazu to jego dół, a PNG jest zapisywany od góry */
+    for (int v = 0; v < h; v++) {
+        unsigned char* row = rgba + (size_t)v * w * 4;
+        if (border) {
+            const struct rgbi* c = &s->palettei[col[v] & 0x0f];
+            for (int x = 0; x < w; x++) {
+                row[x * 4 + 0] = c->ri;
+                row[x * 4 + 1] = c->gi;
+                row[x * 4 + 2] = c->bi;
+                row[x * 4 + 3] = 0xff;
+            }
+        }
+        const int r = v - top;
+        if (r >= 0 && r < SCR_LINES_PAPER) {
+            const unsigned char* src = (const unsigned char*)s->scr_buffer + (size_t)(SCR_LINES_PAPER - 1 - r) * 256 * 4;
+            memcpy(row + (size_t)left * 4, src, 256 * 4);
+            for (int x = 0; x < 256; x++) {
+                row[(left + x) * 4 + 3] = 0xff;
+            }
+        }
     }
     bool ok = false;
-    SDL_Surface* surface = SDL_CreateSurfaceFrom(256, 192, SDL_PIXELFORMAT_RGBA32, rgba, 256 * 4);
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_RGBA32, rgba, w * 4);
     if (surface != nullptr) {
         ok = SDL_SavePNG(surface, path);
         SDL_DestroySurface(surface);
@@ -892,8 +921,8 @@ int zx_main(struct elwro* e) {
                     screen_toast(e->scn, "%s", status);
                     e->scn->toast_sticky = e->scn->toast_tex != 0;
                 }
-            } else if ((event.key.mod & HK_CTRL_MOD) != 0 && event.key.key >= SDLK_F1 && event.key.key <= SDLK_F9) {
-                static const float scales[] = { 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f };
+            } else if ((event.key.mod & HK_CTRL_MOD) != 0 && event.key.key >= SDLK_F1 && event.key.key <= SDLK_F5) {
+                static const float scales[] = { 2.0f, 3.0f, 4.0f, 5.0f, 6.0f };
                 if (!event.key.repeat) {
                     screen_help(e->scn, false);
                     screen_set_scale(e->scn, scales[event.key.key - SDLK_F1]);
@@ -905,7 +934,7 @@ int zx_main(struct elwro* e) {
                     dbg_break(e->cpu->ptx);
                 }
             } else if (event.key.key == SDLK_F8) {
-                /* zrzut ekranu do pierwszego wolnego pliku e800j_NNN.png */
+                /* zrzut ekranu do pierwszego wolnego pliku e800j_NNN.png; Ctrl: sam obraz bez ramki */
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     char name[32];
@@ -916,13 +945,13 @@ int zx_main(struct elwro* e) {
                             break;
                         fclose(f);
                     }
-                    if (screen_screenshot(e->scn, name)) {
+                    if (screen_screenshot(e->scn, name, (event.key.mod & HK_CTRL_MOD) == 0)) {
                         screen_toast(e->scn, "Screenshot saved: %s", name);
                     } else {
                         screen_toast(e->scn, "Screenshot failed: %s", name);
                     }
                 }
-            } else if (event.key.key == SDLK_F9 && (event.key.mod & HK_CTRL_MOD) == 0) {
+            } else if (event.key.key == SDLK_F9) {
                 screen_help(e->scn, false);
                 if (!event.key.repeat) {
                     screen_fullscreen_toggle(e->scn);
