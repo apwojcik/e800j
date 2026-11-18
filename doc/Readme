@@ -51,6 +51,8 @@ Skróty klawiszowe (w oknie emulatora); dyskietki można wymieniać w trakcie pr
     Ctrl+F8               zrzut ekranu bez ramki (256x192)
     F9                    pełny ekran / okno
     Pause                 wstrzymanie / wznowienie emulacji
+    upuszczenie pliku     *.dsk na okno: lewa połowa = napęd A, prawa = napęd B (drugi plik *.dsk trafia do drugiego
+                          napędu); plik snapshotu jest wczytywany (zimny restart)
     F11                   debugger Z80 w dowolnej chwili (konsola)
     F12                  zapis snapshotu e800j_NNN.sna
     Shift+F12             przycisk RESET (CPU, mapowanie pamięci, FDC; zawartość RAM zostaje)

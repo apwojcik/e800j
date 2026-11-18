@@ -234,6 +234,8 @@ void file_help(void) {
         " " HK_CTRL_NAME "+F8" HK_CTRL_PAD "              screenshot without border (256x192)\n"
         " F9                  fullscreen on / off\n"
         " Pause               pause / resume the emulation\n"
+        " (drop a file)       *.dsk onto the window: left half = drive A, right half = drive B (a second *.dsk goes to the other\n"
+        "                     drive); a snapshot file is loaded (cold restart)\n"
         " F11                 enter the Z80 debugger at any time (console; 'q' leaves it, 'g' resumes)\n"
         " " HK_ALT_NAME "+F5/F6" HK_ALT_PAD "           toggle RO/RW of disk in drive A/B\n"
         " " HK_WIN_NAME "+F5/F6" HK_WIN_PAD "           new blank (unformatted) disk in drive A/B: save dialog asks for the .dsk name and place\n"

@@ -36,6 +36,9 @@ struct elwro;
 */
 bool disk_hotkey(struct elwro* e, SDL_Keycode key, SDL_Keymod mod);
 
+/* włożenie upuszczonego na okno pliku *.dsk do napędu A (0) lub B (1), tryb RO/RW jak ustawiony dla napędu */
+void disk_drop(struct elwro* e, int drive, const char* path);
+
 /* obsługa zdarzenia z okna wyboru pliku, zwraca true, jeśli zdarzenie było przeznaczone dla modułu */
 bool disk_event(struct elwro* e, const SDL_Event* event);
 

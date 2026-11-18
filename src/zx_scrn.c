@@ -228,6 +228,7 @@ static const char* const help_lines[] = {
     HK_CTRL_NAME "+F8" HK_CTRL_PAD "       screenshot without border",
     "F9            fullscreen on / off",
     "Pause         pause / resume",
+    "Drop file     *.dsk: left half = A, right half = B; snapshot: load",
     "F11           Z80 debugger (console)",
     "F12           save snapshot (e800j_NNN.sna)",
     "Shift+F12     soft reset (reset button)",
@@ -879,6 +880,57 @@ static void snap_dialog(struct elwro* e) {
     SDL_free(cwd);
 }
 
+/* wczytanie snapshotu (okno wyboru pliku lub upuszczony plik): zimny restart + komunikaty */
+static void snap_open(struct elwro* e, const char* path) {
+    char status[128];
+    const int error = elwro_restart_snap(e, path);
+    disk_status(e, "Floppy ", status, sizeof(status));
+    screen_toast_next(e->scn, status);
+    elwro_snap_announce(e, path, error);
+}
+
+static bool path_has_ext(const char* path, const char* ext) {
+    const char* dot = strrchr(path, '.');
+    return dot != nullptr && SDL_strcasecmp(dot + 1, ext) == 0;
+}
+
+static bool path_is_snapshot(const char* path) {
+    static const char* const exts[] = { "sna", "z80", "szx", "sp", "snp", "zxs", "sit", "slt" };
+    for (size_t i = 0; i < SDL_arraysize(exts); i++) {
+        if (path_has_ext(path, exts[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* upuszczony plik: *.dsk do napędu A (lewa połowa okna) lub B (prawa), drugi plik *.dsk z tego samego upuszczenia do
+ * drugiego napędu; snapshot jest wczytywany; reszta to komunikat o nieobsługiwanym pliku */
+static void drop_file(struct elwro* e, const SDL_DropEvent* drop, int* first_drive) {
+    const char* path = drop->data;
+    if (path == nullptr) {
+        return;
+    }
+    screen_help(e->scn, false);
+    if (path_has_ext(path, "dsk")) {
+        int w = 0, h = 0;
+        SDL_GetWindowSize(e->scn->window, &w, &h);
+        int drive = (w > 0 && drop->x >= (float)w / 2.0f) ? 1 : 0;
+        if (*first_drive >= 0) {
+            drive = 1 - *first_drive;
+        }
+        *first_drive = drive;
+        disk_drop(e, drive, path);
+    } else if (path_is_snapshot(path)) {
+        snap_open(e, path);
+    } else {
+        const char* name = strrchr(path, '/');
+        const char* back = strrchr(path, '\\');
+        name = back > name ? back : name;
+        screen_toast(e->scn, "Unsupported file: %s", name != nullptr ? name + 1 : path);
+    }
+}
+
 int zx_main(struct elwro* e) {
     e->tcpu = false;
     e->t1 = SDL_AddTimer(e->cpu_refresh, zx_cpu_refresh, e);
@@ -895,21 +947,27 @@ int zx_main(struct elwro* e) {
     msg_printf(MSG_MSG, "CPU frequency: %fMHz\n", frequency / 1000000.0);
 
     SDL_Event event;
+    int first_drop_drive = -1; /* napęd pierwszego pliku *.dsk bieżącego upuszczenia */
     while (SDL_WaitEvent(&event)) {
         if (disk_event(e, &event)) {
             continue;
         }
         if (event.type == SNAP_EVENT_TYPE) {
-            char status[128];
             char* path = event.user.data1;
-            const int error = elwro_restart_snap(e, path);
-            disk_status(e, "Floppy ", status, sizeof(status));
-            screen_toast_next(e->scn, status);
-            elwro_snap_announce(e, path, error);
+            if (path != nullptr) {
+                snap_open(e, path);
+            }
             SDL_free(path);
             continue;
         }
         switch (event.type) {
+        case SDL_EVENT_DROP_BEGIN:
+            first_drop_drive = -1;
+            screen_toast(e->scn, "Drop *.dsk: left half = drive A, right half = drive B; snapshot = load");
+            break;
+        case SDL_EVENT_DROP_FILE:
+            drop_file(e, &event.drop, &first_drop_drive);
+            break;
         case SDL_EVENT_KEY_DOWN:
             if (event.key.key == SDLK_ESCAPE && e->scn->help) {
                 screen_help(e->scn, false);

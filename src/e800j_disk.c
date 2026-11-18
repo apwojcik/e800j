@@ -90,6 +90,10 @@ static void disk_insert(struct elwro* e, const int drive, const char* path) {
     disk_insert_mode(e, drive, path, e->disk[drive]->rw);
 }
 
+void disk_drop(struct elwro* e, const int drive, const char* path) {
+    disk_insert(e, drive, path);
+}
+
 /* tworzy pusty (niesformatowany) obraz i wkłada go do napędu w trybie RW; plik formatuje dopiero system w emulowanym komputerze */
 static void disk_insert_blank(struct elwro* e, const int drive, const char* chosen) {
     char path[1024];
