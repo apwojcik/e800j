@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libspectrum.h>
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
 #include "e800j_file.h"
 #include "e800j.h"
 #include "e800j_kbrd.h"
